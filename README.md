@@ -19,6 +19,8 @@ Este repositorio contiene el código personalizado utilizado en el sitio de vent
 ---
 
 ## 🔐 Roles personalizados
+- `Ambos roles`
+  No pueden cambiar el estado en pedidos cancelados
 
 - `seo_manager`  
   Puede ver y cambiar pedidos entre "En espera" y "Procesando", pero no completarlos ni borrarlos.

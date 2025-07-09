@@ -140,16 +140,29 @@ add_filter('wpo_wcpdf_listing_actions', function($listing_actions, $order) {
     return $listing_actions;
 }, 10, 2);
 
-// Elimina opciones de acciones por lotes en la lista de pedidos según rol
+// Elimina acciones por lotes según rol y estado de pedido
 add_filter('bulk_actions-edit-shop_order', function($acciones) {
-    if (!current_user_can('administrator')) {
-        unset($acciones['mark_cancelled'], $acciones['trash'], $acciones['delete']);
-        if (user_has_role('seo_manager')) {
-            unset($acciones['mark_completed']);
-        } else {
-            unset($acciones['mark_processing']);
-        }
+    $is_cancelled_view = isset($_GET['post_status']) && $_GET['post_status'] === 'wc-cancelled';
+
+    // Siempre permitir todas las acciones al administrador
+    if (current_user_can('administrator')) {
+        return $acciones;
     }
+
+    // Acciones eliminadas si se visualizan pedidos cancelados
+    if ($is_cancelled_view) {
+        unset($acciones['mark_completed'], $acciones['mark_processing'], $acciones['mark_on-hold']);
+    }
+
+    // Acciones generales por rol
+    unset($acciones['mark_cancelled'], $acciones['trash'], $acciones['delete']);
+
+    if (user_has_role('seo_manager')) {
+        unset($acciones['mark_completed']);
+    } elseif (user_has_role('storage_manager')) {
+        unset($acciones['mark_processing'], $acciones['mark_on-hold']);
+    }
+
     return $acciones;
 }, 20);
 
