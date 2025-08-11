@@ -51,9 +51,10 @@ function can_transition($from, $to, $ruleset) {
 
     // Mapa que asocia un estado inicial con la clave de permiso
     $transition_map = [
-        'on-hold'    => 'to_processing',
+        'on-hold'    => 'to_reserved',
+        'reserved'   => 'to_processing',
         'processing' => 'to_impressed',
-        'impreso'    => 'to_completed',
+        'impressed'    => 'to_completed',
     ];
 
     $key = $transition_map[$from] ?? '';
@@ -61,7 +62,7 @@ function can_transition($from, $to, $ruleset) {
 }
 
 // Carga las reglas de permisos desde un archivo de configuración externo
-require_once __DIR__ . '/roles-permissions-config.php';
+require_once __DIR__ . '/config.php';
 
 /**
  * BLOQUE 1 – Control de acceso a la página de edición de un pedido
@@ -104,17 +105,24 @@ add_filter('wc_order_statuses', function ($statuses) {
     $status = 'wc-' . $order->get_status(); // Estado actual con prefijo
     $allowed = [$status]; // Siempre incluir el actual
 
-    // Agregar transiciones permitidas según ruleset
+    // Transiciones permitidas
+    if ($status === 'wc-on-hold' && !empty($ruleset['to_reserved'])) {
+        $allowed[] = 'wc-reserved';
+    }
+    // Permitir pasar de "En espera" directamente a "Procesando" si el rol lo tiene permitido
     if ($status === 'wc-on-hold' && !empty($ruleset['to_processing'])) {
         $allowed[] = 'wc-processing';
     }
-    if ($status === 'wc-processing' && !empty($ruleset['to_impressed'])) {
-        $allowed[] = 'wc-impreso';
+    if ($status === 'wc-reserved' && !empty($ruleset['to_processing'])) {
+        $allowed[] = 'wc-processing';
     }
-    if ($status === 'wc-impreso' && !empty($ruleset['to_completed'])) {
+    if ($status === 'wc-processing' && !empty($ruleset['to_impressed'])) {
+        $allowed[] = 'wc-impressed';
+    }
+    if ($status === 'wc-impressed' && !empty($ruleset['to_completed'])) {
         $allowed[] = 'wc-completed';
     }
-    if (in_array($status, ['wc-on-hold', 'wc-processing']) && !empty($ruleset['to_cancelled'])) {
+    if (in_array($status, ['wc-on-hold', 'wc-reserved', 'wc-processing']) && !empty($ruleset['to_cancelled'])) {
         $allowed[] = 'wc-cancelled';
     }
 
@@ -134,7 +142,14 @@ add_filter('woocommerce_admin_order_actions', function($actions, $order) {
     
     // Admin: siempre ve todo, pero añade "Completar" si está en impreso
     if (current_user_can('administrator')) {
-        if ($status === 'impreso') {
+        if ($status === 'reserved') {
+            $actions['processing'] = [
+                'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_processing&order_id=$id"), 'mark_order_as_processing'),
+                'name'   => __('Procesando', 'woocommerce'),
+                'action' => 'processing',
+            ];
+        }
+        if ($status === 'impressed') {
             $actions['complete'] = [
                 'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_completed&order_id=$id"), 'mark_order_as_completed'),
                 'name'   => __('Completar', 'woocommerce'),
@@ -148,10 +163,23 @@ add_filter('woocommerce_admin_order_actions', function($actions, $order) {
     if (!$ruleset) return $actions;
 
     // Elimina todas las acciones por defecto
-    unset($actions['complete'], $actions['processing'], $actions['invoice'], $actions['impreso']);
+    unset($actions['reserved'], $actions['processing'], $actions['impressed'], $actions['complete'], $actions['invoice'] );
 
     // Añade solo las acciones permitidas
-    if ($status === 'on-hold' && $ruleset['to_processing']) {
+    if ($status === 'on-hold' && $ruleset['to_reserved']) {
+        $actions['reserved'] = [
+            'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_reserved&order_id=$id"), 'mark_order_as_reserved'),
+            'name'   => __('Reservado', 'woocommerce'),
+            'action' => 'reserved',
+        ];
+        $actions['processing'] = [
+            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=mark_order_as_processing&order_id=' . $order->get_id()), 'mark_order_as_processing'),
+            'name'   => __('Procesando', 'woocommerce'),
+            'action' => 'processing'
+        ];
+    }
+
+    if ($status === 'reserved' && $ruleset['to_processing']) {
         $actions['processing'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_processing&order_id=$id"), 'mark_order_as_processing'),
             'name'   => __('Procesando', 'woocommerce'),
@@ -160,14 +188,14 @@ add_filter('woocommerce_admin_order_actions', function($actions, $order) {
     }
 
     if ($status === 'processing' && $ruleset['to_impressed']) {
-        $actions['impreso'] = [
-            'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_impreso&order_id=$id"), 'mark_order_as_impreso'),
+        $actions['impressed'] = [
+            'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_impressed&order_id=$id"), 'mark_order_as_impressed'),
             'name'   => __('Impreso', 'woocommerce'),
-            'action' => 'impreso',
+            'action' => 'impressed',
         ];
     }
 
-    if ($status === 'impreso' && $ruleset['to_completed']) {
+    if ($status === 'impressed' && $ruleset['to_completed']) {
         $actions['complete'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_completed&order_id=$id"), 'mark_order_as_completed'),
             'name'   => __('Completar', 'woocommerce'),
@@ -175,7 +203,7 @@ add_filter('woocommerce_admin_order_actions', function($actions, $order) {
         ];
     }
 
-    if (in_array($status, ['on-hold', 'processing']) && $ruleset['to_cancelled']) {
+    if (in_array($status, ['on-hold', 'reserved', 'processing']) && $ruleset['to_cancelled']) {
         $actions['cancel'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_cancelled&order_id=$id"), 'mark_order_as_cancelled'),
             'name'   => __('Cancelar', 'woocommerce'),
@@ -197,7 +225,7 @@ add_filter('woocommerce_admin_order_preview_actions', function($actions, $order)
 
     // Si es administrador → todas las acciones sin restricción
     if (current_user_can('administrator')) {
-        if ($status === 'impreso') {
+        if ($status === 'impressed') {
             $actions['complete'] = [
                 'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_completed&order_id=$id"), 'mark_order_as_completed'),
                 'name'   => __('Completar', 'woocommerce'),
@@ -214,8 +242,20 @@ add_filter('woocommerce_admin_order_preview_actions', function($actions, $order)
     // Limpiar acciones originales
     $actions = [];
 
-    // Agregar acción "Procesando" si el rol puede pasar de on-hold → processing
-    if ($status === 'on-hold' && $ruleset['to_processing']) {
+    if ($status === 'on-hold' && $ruleset['to_reserved']) {
+      $actions['reserved'] = [
+          'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_reserved&order_id=$id"), 'mark_order_as_reserved'),
+          'name'   => __('Reservado', 'woocommerce'),
+          'action' => 'reserved',
+      ];
+      $actions['processing'] = [
+          'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=mark_order_as_processing&order_id=' . $order->get_id()), 'mark_order_as_processing'),
+          'name'   => __('Procesando', 'woocommerce'),
+          'action' => 'processing'
+      ];
+    }
+
+    if ($status === 'reserved' && $ruleset['to_processing']) {
         $actions['processing'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_processing&order_id=$id"), 'mark_order_as_processing'),
             'name'   => __('Procesando', 'woocommerce'),
@@ -223,17 +263,15 @@ add_filter('woocommerce_admin_order_preview_actions', function($actions, $order)
         ];
     }
 
-    // Agregar acción "Impreso" si el rol puede pasar de processing → impreso
     if ($status === 'processing' && $ruleset['to_impressed']) {
-        $actions['impreso'] = [
-            'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_impreso&order_id=$id"), 'mark_order_as_impreso'),
+        $actions['impressed'] = [
+            'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_impressed&order_id=$id"), 'mark_order_as_impressed'),
             'name'   => __('Impreso', 'woocommerce'),
-            'action' => 'impreso',
+            'action' => 'impressed',
         ];
     }
 
-    // Agregar acción "Completar" si el rol puede pasar de impreso → completed
-    if ($status === 'impreso' && $ruleset['to_completed']) {
+    if ($status === 'impressed' && $ruleset['to_completed']) {
         $actions['complete'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_completed&order_id=$id"), 'mark_order_as_completed'),
             'name'   => __('Completar', 'woocommerce'),
@@ -241,8 +279,7 @@ add_filter('woocommerce_admin_order_preview_actions', function($actions, $order)
         ];
     }
 
-    // Agregar acción "Cancelar" si el rol puede cancelar desde on-hold o processing
-    if (in_array($status, ['on-hold', 'processing']) && $ruleset['to_cancelled']) {
+    if (in_array($status, ['on-hold', 'reserved', 'processing']) && $ruleset['to_cancelled']) {
         $actions['cancel'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=mark_order_as_cancelled&order_id=$id"), 'mark_order_as_cancelled'),
             'name'   => __('Cancelar', 'woocommerce'),
@@ -283,11 +320,13 @@ add_filter('views_edit-shop_order', function($views) {
 
     // Lista de estados sin prefijo 'wc-'
     $allowed_plain = [];
-    if (!empty($ruleset['to_processing'])) $allowed_plain[] = 'on-hold';
+    if (!empty($ruleset['to_reserved']))   $allowed_plain[] = 'on-hold';
+    if (!empty($ruleset['to_processing'])) $allowed_plain[] = 'reserved';
     if (!empty($ruleset['to_impressed']))  $allowed_plain[] = 'processing';
-    if (!empty($ruleset['to_completed']))  $allowed_plain[] = 'impreso';
+    if (!empty($ruleset['to_completed']))  $allowed_plain[] = 'impressed';
     if (!empty($ruleset['to_cancelled'])) {
         $allowed_plain[] = 'on-hold';
+        $allowed_plain[] = 'reserved';
         $allowed_plain[] = 'processing';
     }
     if (!empty($ruleset['extra_view_status'])) {
@@ -344,19 +383,25 @@ add_filter('bulk_actions-edit-shop_order', function($bulk_actions) {
     // Acciones permitidas por estado
     $actions_map = [
         'wc-on-hold' => [
+            'mark_reserved'   => $ruleset['to_reserved'] ?? false,
+            'mark_processing' => $ruleset['to_processing'] ?? false,
+            'mark_cancelled'  => $ruleset['to_cancelled'] ?? false,
+        ],
+        'wc-reserved' => [
             'mark_processing' => $ruleset['to_processing'] ?? false,
             'mark_cancelled'  => $ruleset['to_cancelled'] ?? false,
         ],
         'wc-processing' => [
-            'mark_impreso'    => $ruleset['to_impressed'] ?? false,
+            'mark_impressed'  => $ruleset['to_impressed'] ?? false,
             'mark_cancelled'  => $ruleset['to_cancelled'] ?? false,
         ],
-        'wc-impreso' => [
+        'wc-impressed' => [
             'mark_completed'  => $ruleset['to_completed'] ?? false,
         ],
         'all' => [ // Fallback
+            'mark_reserved'   => $ruleset['to_reserved'] ?? false,
             'mark_processing' => $ruleset['to_processing'] ?? false,
-            'mark_impreso'    => $ruleset['to_impressed'] ?? false,
+            'mark_impressed'  => $ruleset['to_impressed'] ?? false,
             'mark_completed'  => $ruleset['to_completed'] ?? false,
             'mark_cancelled'  => $ruleset['to_cancelled'] ?? false,
         ],
@@ -392,7 +437,6 @@ add_filter('bulk_actions-edit-shop_order', function($bulk_actions) {
     return $filtered;
 }, 20);
 
-
 /**
  * BLOQUE 8 – Filtrado de pedidos en la consulta principal
  * Limita los pedidos que se muestran en función de los estados que el rol puede ver.
@@ -408,11 +452,13 @@ add_action('pre_get_posts', function($query) {
 
     // Construir lista de estados permitidos con prefijo 'wc-'
     $allowed = [];
-    if (!empty($ruleset['to_processing'])) $allowed[] = 'wc-on-hold';
+    if (!empty($ruleset['to_reserved']))   $allowed[] = 'wc-on-hold';
+    if (!empty($ruleset['to_processing'])) $allowed[] = 'wc-reserved';
     if (!empty($ruleset['to_impressed']))  $allowed[] = 'wc-processing';
-    if (!empty($ruleset['to_completed']))  $allowed[] = 'wc-impreso';
+    if (!empty($ruleset['to_completed']))  $allowed[] = 'wc-impressed';
     if (!empty($ruleset['to_cancelled'])) {
         $allowed[] = 'wc-on-hold';
+        $allowed[] = 'wc-reserved';
         $allowed[] = 'wc-processing';
     }
     if (!empty($ruleset['extra_view_status'])) {

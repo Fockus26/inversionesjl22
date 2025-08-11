@@ -38,8 +38,12 @@ function jl22_register_order_status_transition_action($action_name, $new_status,
             wp_die(__('Pedido no encontrado', 'woocommerce'));
         }
 
-        // Actualizamos estado y añadimos nota
-        $order->update_status($new_status, $log_note);
+        // Obtener nombre del usuario actual
+        $user = wp_get_current_user();
+        $user_name = $user->display_name ?: 'usuario';
+
+        // Actualizamos estado y añadimos nota con el nombre del usuario
+        $order->update_status($new_status, $log_note . ' (por: ' . $user_name . ')');
 
         // Redirigimos al listado de pedidos o a la página previa
         wp_safe_redirect(wp_get_referer() ?: admin_url('edit.php?post_type=shop_order'));
@@ -48,6 +52,14 @@ function jl22_register_order_status_transition_action($action_name, $new_status,
 }
 
 // Registro de transiciones por acción AJAX
+
+// 📅 Reservado
+jl22_register_order_status_transition_action(
+    'mark_order_as_reserved',
+    'reserved',
+    __('Pedido marcado como reservado manualmente.', 'woocommerce')
+);
+
 
 // 🔄 Procesando
 jl22_register_order_status_transition_action(
@@ -58,8 +70,8 @@ jl22_register_order_status_transition_action(
 
 // 🖨️ Impreso (estado personalizado)
 jl22_register_order_status_transition_action(
-    'mark_order_as_impreso',
-    'impreso',
+    'mark_order_as_impressed',
+    'impressed',
     __('Pedido marcado como impreso manualmente.', 'woocommerce')
 );
 
