@@ -20,6 +20,7 @@ add_action('wpo_wcpdf_custom_report_pdf', function($args) {
     $fecha_inicio   = $args['fecha_inicio'];
     $fecha_fin      = $args['fecha_fin'];
     $pedidos        = $args['pedidos'];
+    $pais           = $args['pais'];
 
     // Capturamos el HTML del reporte en buffer
     ob_start();

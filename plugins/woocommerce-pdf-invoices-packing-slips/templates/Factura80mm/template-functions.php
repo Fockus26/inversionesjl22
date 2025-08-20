@@ -97,28 +97,28 @@ add_action('template_redirect', function () {
         if ($order) {
             $status = $order->get_status();
 
-            // Si el pedido está en estado 'impreso', lo actualiza a 'completed'
-            if ($status === 'impreso') {
+            // Si el pedido está en estado 'impressed', lo actualiza a 'completed'
+            if ($status === 'impressed') {
                 $order->update_status('completed', 'Actualizado vía QR desde estado impreso');
                 update_post_meta($order_id, '_qr_completed_at', current_time('mysql')); // Guardar fecha de actualización
                 $order->add_order_note('La orden fue completada mediante escaneo de QR desde estado impreso.');
             }
 
             // Solo para ciertos estados muestra feedback visual
-            if (in_array($status, ['impreso', 'processing', 'completed', 'on-hold', 'cancelled'])) {
+            if (in_array($status, ['impressed', 'processing', 'completed', 'on-hold', 'cancelled'])) {
 
                 // Definir colores según estado para mostrar en notificación
                 $color = match ($status) {
                     'on-hold'   => 'rgb(248, 221, 167)',
                     'processing'=> 'rgb(198, 225, 198)',
-                    'impreso'   => 'rgb(251, 191, 18)',
+                    'impressed'   => 'rgb(251, 191, 18)',
                     'completed' => 'rgb(200, 215, 225)',
                     'cancelled' => 'rgb(229, 229, 229)',
                 };
 
                 // Mensajes amigables para cada estado
                 $message = match ($status) {
-                    'impreso'   => 'La orden fue escaneada',
+                    'impressed'   => 'La orden fue escaneada',
                     'processing'=> 'La orden se esta procesando',
                     'completed' => 'La orden ya fue completada',
                     'on-hold'   => 'La orden esta en espera',

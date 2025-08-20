@@ -8,7 +8,11 @@
 <!-- Tabla con información básica del cliente y rango de fechas -->
 <table class="client-info-table">
   <tr>
-    <td class="bold">Empresa:</td>
+    <td class="bold">País:</td>
+    <td><?php echo esc_html( $pais ); ?></td>
+  </tr>
+  <tr>
+    <td class="bold">Método de envío:</td>
     <td><?php echo esc_html( $empresa_nombre ); ?></td>
   </tr>
   <tr>

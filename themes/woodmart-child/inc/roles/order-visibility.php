@@ -422,12 +422,21 @@ add_filter('bulk_actions-edit-shop_order', function($bulk_actions) {
 
     // Filtrar acciones por las reglas
     foreach ($bulk_actions as $key => $label) {
-        if (isset($allowed_actions[$key]) && $allowed_actions[$key]) {
+        $is_allowed = isset($allowed_actions[$key]) && $allowed_actions[$key];
+
+        // Verificar si la acción está bloqueada explícitamente en config
+        $is_blocked = in_array($key, $ruleset['filter_bulk_actions'] ?? []);
+
+        if ($is_allowed && !$is_blocked) {
             $filtered[$key] = $label;
         }
-        // Mantener acciones no controladas por nosotros (plugins, exportaciones, etc.)
+
+        // Mantener acciones no controladas por nosotros (plugins externos)
         if (!isset($actions_map['all'][$key]) && !isset($actions_map[$current_status][$key])) {
-            $filtered[$key] = $label;
+            // Pero siempre respetar el filtro de config
+            if (!$is_blocked) {
+                $filtered[$key] = $label;
+            }
         }
     }
 

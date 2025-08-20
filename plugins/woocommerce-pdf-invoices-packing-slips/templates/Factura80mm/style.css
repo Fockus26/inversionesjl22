@@ -131,8 +131,8 @@ body {
 }
 
 .product-sku {
-  font-size: 7.5pt;
-  color: #555; /* Gris oscuro para diferenciar SKU */
+  font-size: 8pt;
+  color: #000; /* Gris oscuro para diferenciar SKU */
   margin-bottom: 2mm;
   display: block;
 }

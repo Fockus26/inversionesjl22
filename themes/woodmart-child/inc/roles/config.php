@@ -17,7 +17,8 @@ limit_user_permissions('seo_manager', [
   'to_cancelled'   => true,    // Puede cancelar pedidos
   'can_view_order' => true,    // Puede ver los pedidos en admin
   'filter_invoice_status' => [],  // No hay estados que oculten botón factura
-  'extra_view_status' => ['completed'] // Ver también pedidos completados en lista
+  'extra_view_status' => ['completed'], // Ver también pedidos completados por dentro 
+  'filter_bulk_actions'   => [], // No oculta ninguna acción en lote
 ]);
 
 // Permisos para Storage Manager
@@ -29,5 +30,6 @@ limit_user_permissions('storage_manager', [
   'to_cancelled'   => false,   // No puede cancelar pedidos
   'can_view_order' => false,   // No puede ver pedidos en admin
   'filter_invoice_status' => ['on-hold', 'reserved', 'completed', 'cancelled'], // Oculta botón factura en estos estados
-  'extra_view_status' => []    // Sin estados adicionales para ver
+  'extra_view_status' => [],    // Sin estados adicionales para ver por dentro
+  'filter_bulk_actions'   => ['mark_completed'], // Oculta acción de completar como accion en lote
 ]);
