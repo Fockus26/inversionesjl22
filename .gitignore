@@ -1,0 +1,68 @@
+# ===================
+# PHP / Composer
+# ===================
+vendor/
+composer.lock
+composer.phar
+
+# ===================
+# Logs / Cachés
+# ===================
+*.log
+*.cache
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+*.save
+
+# ===================
+# Entornos locales
+# ===================
+.env
+.env.local
+.env.*.local
+
+# ===================
+# IDEs y editores
+# ===================
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ===================
+# Sistema
+# ===================
+.DS_Store
+Thumbs.db
+
+# ===================
+# PHPUnit
+# ===================
+.phpunit.result.cache
+coverage/
+.clover.xml
+
+# ===================
+# Symfony / Laravel (si aplica)
+# ===================
+/node_modules/
+/public/storage
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*
+/artisan
+
+# ===================
+# WordPress (si aplica)
+# ===================
+wp-config.php
+wp-content/cache/
+wp-content/backups/
+wp-content/upgrade/
+wp-content/uploads/
+wp-content/plugins/*/vendor/
