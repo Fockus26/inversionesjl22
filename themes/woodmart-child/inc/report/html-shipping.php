@@ -148,33 +148,6 @@ function mostrar_formulario_informe_envios() {
     <?php
 }
 
-// Obtiene empresas de envío usadas (sin filtro país) - no usado actualmente
-function obtener_metodos_envio_usados() {
-    global $wpdb;
-    $resultados = $wpdb->get_col("
-        SELECT DISTINCT meta_value 
-        FROM {$wpdb->prefix}postmeta 
-        WHERE meta_key = '_shipping_company'
-        AND meta_value IS NOT NULL
-        AND meta_value != ''
-    ");
-    return array_filter($resultados);
-}
-
-// Obtiene empresas de envío para un país específico (sin filtro extra)
-function obtener_metodos_envio_por_pais($pais) {
-    global $wpdb;
-    $resultados = $wpdb->get_col($wpdb->prepare("
-        SELECT DISTINCT pm1.meta_value
-        FROM {$wpdb->prefix}postmeta AS pm1
-        INNER JOIN {$wpdb->prefix}postmeta AS pm2 ON pm1.post_id = pm2.post_id
-        WHERE pm1.meta_key = '_shipping_company'
-        AND pm2.meta_key = '_shipping_country'
-        AND pm2.meta_value = %s
-    ", $pais));
-    return array_filter($resultados);
-}
-
 // Traduce código de país a nombre legible
 function obtener_nombre_pais($codigo) {
     $nombres = [
@@ -210,7 +183,6 @@ function obtener_empresas_definidas_por_pais($pais) {
 
     return $empresas;
 }
-
 
 // AJAX: Devuelve empresas de envío válidas para un país, filtradas por las definidas
 add_action('wp_ajax_obtener_empresas_envio', 'ajax_obtener_empresas_envio');

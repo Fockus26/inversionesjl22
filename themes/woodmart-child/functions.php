@@ -2,7 +2,9 @@
 // Cargar funcionalidades de gestión de pedidos
 require_once get_stylesheet_directory() . '/inc/order/custom-status.php';
 require_once get_stylesheet_directory() . '/inc/order/transition-status.php';
+require_once get_stylesheet_directory() . '/inc/order/change-shipping-method.php';
 require_once get_stylesheet_directory() . '/inc/roles/order-visibility.php';
+
 
 // Cargar funcionalidades de reportes de envíos
 require_once get_stylesheet_directory() . '/inc/report/pdf-shipping.php';
