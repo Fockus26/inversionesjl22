@@ -3,6 +3,7 @@
 require_once get_stylesheet_directory() . '/inc/order/custom-status.php';
 require_once get_stylesheet_directory() . '/inc/order/transition-status.php';
 require_once get_stylesheet_directory() . '/inc/order/change-shipping-method.php';
+require_once get_stylesheet_directory() . '/inc/order/combined-orders.php';
 require_once get_stylesheet_directory() . '/inc/roles/order-visibility.php';
 
 
