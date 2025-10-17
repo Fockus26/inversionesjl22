@@ -38,6 +38,29 @@ function jl22_register_order_status_transition_action($action_name, $new_status,
             wp_die(__('Pedido no encontrado', 'woocommerce'));
         }
 
+        // VALIDACIÓN: Si el método de envío requiere estado de pago, debe estar seleccionado
+        $shipping_methods = [
+            'CONTRA ENTREGA EFECTIVO',
+            'DOMICILIO CUCUTA',
+            'DOMICILIO SAN CRISTOBAL',
+            'ENTREGAS TEALCA'
+        ];
+        $shipping_items = $order->get_items('shipping');
+        $current_method = '';
+        if (!empty($shipping_items)) {
+            $first_item = reset($shipping_items);
+            $current_method = $first_item->get_method_title();
+        }
+        if (in_array($current_method, $shipping_methods)) {
+          $status_pago = get_post_meta($order_id, '_jl_pago_status', true);
+          if (empty($status_pago)) {
+              // Redirige con parámetro de error
+              $redirect_url = add_query_arg('jl22_notice', 'error', wp_get_referer() ?: admin_url('edit.php?post_type=shop_order'));
+              wp_safe_redirect($redirect_url);
+              exit;
+          }
+        }
+
         // Obtener nombre del usuario actual
         $user = wp_get_current_user();
         $user_name = $user->display_name ?: 'usuario';
@@ -46,7 +69,8 @@ function jl22_register_order_status_transition_action($action_name, $new_status,
         $order->update_status($new_status, $log_note . ' (por: ' . $user_name . ')');
 
         // Redirigimos al listado de pedidos o a la página previa
-        wp_safe_redirect(wp_get_referer() ?: admin_url('edit.php?post_type=shop_order'));
+        $redirect_url = add_query_arg('jl22_notice', 'success', wp_get_referer() ?: admin_url('edit.php?post_type=shop_order'));
+        wp_safe_redirect($redirect_url);
         exit;
     });
 }

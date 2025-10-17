@@ -182,11 +182,52 @@ $qr_image = generate_base64_qr_code( $qr_text );
   </div>
 </div>
 
+<?php
+$shipping_methods = [
+    'CONTRA ENTREGA EFECTIVO',
+    'DOMICILIO CUCUTA',
+    'DOMICILIO SAN CRISTOBAL',
+    'ENTREGAS TEALCA'
+];
+
+$status = get_post_meta($order_id, '_jl_pago_status', true);
+$amount = get_post_meta($order_id, '_jl_pago_amount', true);
+$currency = get_post_meta($order_id, '_jl_pago_currency', true);
+
+// Obtener el método de envío del pedido
+$shipping_items = $order->get_items('shipping');
+$show_pago = false;
+if (!empty($shipping_items)) {
+    $first_item = reset($shipping_items);
+    $current_method = $first_item->get_method_title();
+    if (in_array($current_method, $shipping_methods)) {
+        $show_pago = true;
+    }
+}
+?>
+
 <!-- SECCIÓN 3: Comprobante de Envío -->
 <div class="shipping-section">
   <div class="delivery-spacer"></div>
   <div class="delivery-cut-message text-center">Recortar para envíos</div> <!-- Indicador para recorte físico -->
   <div class="delivery-spacer"></div>
+
+  <?php
+    if ($show_pago) {
+      if ($status === 'pagado') {
+          $pago_texto = 'PAGADO';
+      } elseif ($status === 'por_cobrar' && $amount > 0) {
+          $pago_texto = 'POR COBRAR: ' . number_format($amount, 2) . ' ' . strtoupper($currency);
+      } else {
+          $pago_texto = 'ESTADO DE PAGO NO DEFINIDO';
+      }
+      ?>
+        <div style="font-size:1.5em;font-weight:bold;margin-bottom:20px;text-align:center;text-decoration:underline">
+          <?php echo esc_html($pago_texto); ?>
+        </div>
+      <?php
+    }
+  ?>
 
   <?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
     <!-- Mostrar código QR en el comprobante de envío -->

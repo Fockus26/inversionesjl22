@@ -8,28 +8,57 @@
  * usados en la lógica de control de acceso y acciones sobre pedidos.
  */
 
+// ============================================
+// 🔁 FLUJO GLOBAL DE TRANSICIÓN DE ESTADOS
+// ============================================
+
+$global_flow = [
+    'reserved'   => 'on-hold',
+    'processing' => ['reserved', 'on-hold'],
+    'impressed'  => 'processing',
+    'completed'  => 'impressed',
+    'cancelled'  => ['on-hold', 'reserved', 'processing'],
+];
+
 // Permisos para SEO Manager
 limit_user_permissions('seo_manager', [
-  'to_reserved'    => true,    // Puede marcar pedidos como "reserva"
-  'to_processing'  => true,    // Puede marcar pedidos como "processing"
-  'to_impressed'   => false,   // No puede marcar como "impreso"
-  'to_completed'   => false,   // No puede completar pedidos
-  'to_cancelled'   => true,    // Puede cancelar pedidos
-  'can_view_order' => true,    // Puede ver los pedidos en admin
-  'filter_invoice_status' => [],  // No hay estados que oculten botón factura
-  'extra_view_status' => ['completed'], // Ver también pedidos completados por dentro 
-  'filter_bulk_actions'   => [], // No oculta ninguna acción en lote
+  'on-hold' => true,
+  'reserved' => true,
+  'processing' => true,
+  'impressed' => false,
+  'completed' => true,
+  'cancelled' => true,
+  
+  // Exclusiones por tipo de acción
+  'exclude_status_actions' => [
+    'quick_actions' => ['impressed', 'completed'],
+    'bulk_actions' => ['completed', 'wuoc_combine'],
+    'order_preview_actions' => ['completed'],
+    'order_view' => [],
+    'order_view_actions' => [],
+    'qr_actions' => ['completed']
+  ],
+
+  'flow' => $global_flow,
 ]);
 
 // Permisos para Storage Manager
 limit_user_permissions('storage_manager', [
-  'to_reserved'    => false,    // No puede marcar pedidos como "reserva"
-  'to_processing'  => false,   // No puede marcar "processing"
-  'to_impressed'   => true,    // Puede marcar "impreso"
-  'to_completed'   => true,    // Puede completar pedidos
-  'to_cancelled'   => false,   // No puede cancelar pedidos
-  'can_view_order' => false,   // No puede ver pedidos en admin
-  'filter_invoice_status' => ['on-hold', 'reserved', 'completed', 'cancelled'], // Oculta botón factura en estos estados
-  'extra_view_status' => [],    // Sin estados adicionales para ver por dentro
-  'filter_bulk_actions'   => ['mark_completed'], // Oculta acción de completar como accion en lote
+  'on-hold'     => false,
+  'reserved'    => false,   
+  'processing'  => true,   
+  'impressed'   => true,    
+  'completed'   => true,   
+  'cancelled'   => false,   
+  
+  'exclude_status_actions' => [
+    'quick_actions' => ['completed'],
+    'bulk_actions' => ['completed', 'wuoc_combine'],
+    'order_preview_actions' => ['completed'],
+    'order_view' => ['impressed'],
+    'order_view_actions' => ['impressed'],
+    'qr_actions' => ['completed']
+  ],
+
+  'flow' => $global_flow,
 ]);

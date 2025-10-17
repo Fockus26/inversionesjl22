@@ -9,8 +9,8 @@
 body {
   width: 76mm !important; /* 80mm menos márgenes laterales */
   margin: 0 auto; /* Centrar horizontalmente */
-  font-family: "Arial Narrow", sans-serif; /* Fuente condensada para más texto en menos espacio */
-  font-size: 8pt; /* Tamaño de fuente pequeño para impresión */
+  font-family: 'DejaVu Sans Mono', 'Consolas', 'Lucida Console', monospace;
+  font-size: 9pt; /* Tamaño de fuente pequeño para impresión */
   line-height: 1.1; /* Altura de línea compacta */
   color: #000; /* Texto negro */
   background: #fff; /* Fondo blanco */
