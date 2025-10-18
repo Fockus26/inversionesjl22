@@ -32,20 +32,41 @@
     <table class="items-table">
       <thead>
         <tr>
-          <th class="product-price text-center" style="width: 20%;">Pedido</th>
-          <th class="product-name text-center" style="width: 80%;">Nota</th>
+          <th class="text-center" style="width: 20%;">Pedido</th>
+          <th class="text-center" style="width: 40%;">Monto Envío</th>
+          <th class="text-center" style="width: 40%;">Nota</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Recorrer cada pedido para mostrar su número y espacio para nota -->
         <?php foreach ( $pedidos as $pedido ) :
           $order = wc_get_order( $pedido->ID );
+
+          // Datos de pago personalizados (si existen)
+          $jl_status   = get_post_meta( $order->get_id(), '_jl_pago_status', true );
+          $jl_amount   = get_post_meta( $order->get_id(), '_jl_pago_amount', true );
+          $jl_currency = get_post_meta( $order->get_id(), '_jl_pago_currency', true );
+
+          // Determinar monto y moneda final a mostrar
+          if ( $jl_status === 'por_cobrar' && $jl_amount > 0 ) {
+              // Usar el monto definido manualmente
+              $display_currency = $jl_currency === 'dolares' ? 'USD' : ($jl_currency === 'pesos' ? 'COP' : strtoupper($jl_currency));
+              $formatted_cost = number_format(floatval($jl_amount), 2, '.', '');
+              $shipping_display = sprintf('%s %s', esc_html($display_currency), esc_html($formatted_cost));
+          } else {
+              // Usar el costo de envío del pedido
+              $shipping_total = $order->get_shipping_total() + $order->get_shipping_tax();
+              $currency = $order->get_currency();
+              $formatted_cost = number_format(floatval($shipping_total), 2, '.', '');
+              $shipping_display = sprintf('%s %s', esc_html($currency), esc_html($formatted_cost));
+          }
         ?>
         <tr class="shipping-note-row">
-          <td class="shipping-order"><?php echo $order->get_order_number(); ?></td>
-          <td class="shipping-note"></td> <!-- Campo para nota editable o impresión -->
+          <td class="shipping-order text-center"><?php echo $order->get_order_number(); ?></td>
+          <td class="shipping-cost text-center"><?php echo $shipping_display; ?></td>
+          <td class="shipping-note"></td>
         </tr>
         <?php endforeach; ?>
+
       </tbody>
     </table>
   </div>
