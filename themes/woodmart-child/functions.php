@@ -17,3 +17,4 @@ require_once get_stylesheet_directory() . '/inc/integrations/yith.php';
 require_once get_stylesheet_directory() . '/inc/integrations/sku-generator.php';
 require_once get_stylesheet_directory() . '/inc/integrations/enqueue.php';
 require_once get_stylesheet_directory() . '/inc/integrations/admin-notices.php';
+require_once get_stylesheet_directory() . '/inc/integrations/open-graph.php';
