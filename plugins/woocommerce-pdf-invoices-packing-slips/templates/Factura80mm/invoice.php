@@ -4,7 +4,7 @@
 
 <?php 
 // Obtener ID del pedido de forma segura, compatible con diferentes versiones
-$order_id = ( method_exists( $this->order, 'get_id' ) ) ? $this->order->get_id() : $order->get_id();
+$order_id = ( method_exists( $this->order, 'get_id' ) ) ? $this->order->get_id() : $this->order->get_id();
 
 // Crear nonce para acciones seguras (no usado aquí directamente, pero generado)
 $nonce = wp_create_nonce( 'update_order_status' );
@@ -16,62 +16,94 @@ $qr_text  = "https://inversionesjl22.com?action=qr_scan&order_id={$order_id}";
 $qr_image = generate_base64_qr_code( $qr_text );
 ?>
 
-<?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
-<!-- Mostrar código QR solo si el usuario tiene permiso y la imagen existe -->
-<div class="qr-code" style="text-align: center; margin-bottom: 5mm;">
-  <img src="<?php echo esc_attr( $qr_image ); ?>" alt="QR Code" style="width: 20mm; height: 20mm;" />
-</div>
-<?php endif; ?>
+<?php
+// Obtener nombres legibles de país y estado usando WC_Countries
+$countries = new WC_Countries();
+$country_code = $order->get_billing_country();
+$state_code = $order->get_billing_state();
+$country_name = isset($countries->get_countries()[$country_code]) ? $countries->get_countries()[$country_code] : $country_code;
+$states = $countries->get_states($country_code);
+$state_name = isset($states[$state_code]) ? $states[$state_code] : $state_code;
 
+// Agrupar datos de facturación para usarlos más fácil
+$billing_data = [
+    'name'      => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
+    'cedula'    => $order->get_meta('_billing_cedula'),
+    'phone'     => $order->get_billing_phone(),
+    'city'      => $order->get_billing_city(),
+    'barrio'    => $order->get_meta('_billing_barrio'),
+    'address1'  => $order->get_billing_address_1(),
+    'address2'  => $order->get_billing_address_2(),
+    'country'   => $country_name,
+    'state'     => $state_name
+];
+
+// Campos que se mostrarán con sus etiquetas y si son obligatorios o no
+$fields = [
+    'name'    => ['label' => 'CLIENTE',   'value' => $billing_data['name'], 'required' => true],
+    'cedula'  => ['label' => 'CEDULA',    'value' => $billing_data['cedula'], 'required' => false],
+    'phone'   => ['label' => 'TELEFONO',  'value' => $billing_data['phone'], 'required' => true],
+    'city'    => ['label' => 'CIUDAD',    'value' => $billing_data['city'], 'required' => true],
+    'state'   => ['label' => 'ESTADO',    'value' => $billing_data['state'], 'required' => true],
+    'barrio'  => ['label' => 'BARRIO',    'value' => $billing_data['barrio'], 'required' => false],
+    'address' => [
+        'label' => 'DIRECCION', 
+        'value' => trim(implode('. ', array_filter([
+            $billing_data['address1'], 
+            $billing_data['address2']
+        ]))),
+        'required' => true
+    ],
+    'country' => ['label' => 'PAIS', 'value' => $billing_data['country'], 'required' => true]
+];
+?>
+
+<?php
+// Preparar datos de pago/envío que se usan más abajo
+$shipping_methods = [
+    'CONTRA ENTREGA EFECTIVO',
+    'DOMICILIO CUCUTA',
+    'DOMICILIO SAN CRISTOBAL',
+    'ENTREGAS TEALCA'
+];
+
+$status = get_post_meta($order_id, '_jl_pago_status', true);
+$amount = get_post_meta($order_id, '_jl_pago_amount', true);
+$currency = get_post_meta($order_id, '_jl_pago_currency', true);
+
+// Obtener el método de envío del pedido
+$shipping_items = $order->get_items('shipping');
+$show_pago = false;
+$current_method = '';
+if (!empty($shipping_items)) {
+    $first_item = reset($shipping_items);
+    $current_method = $first_item->get_method_title();
+    if (in_array($current_method, $shipping_methods)) {
+        $show_pago = true;
+    }
+}
+
+// Normalizar nombre de la empresa de envío en mayúsculas
+$shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
+?>
+
+<!-- ---------------------------
+     Renderizado: Sección Producto (COPY 1)
+     --------------------------- -->
 <!-- SECCIÓN 1: Datos del cliente -->
 <div class="customer-info-section">
+  <!-- Mover el QR aquí para que se duplique junto con esta sección -->
+  <?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
+  <div class="qr-code" style="text-align: center; margin-bottom: 5mm;">
+    <img src="<?php echo esc_attr( $qr_image ); ?>" alt="QR Code" style="width: 20mm; height: 20mm;" />
+  </div>
+  <?php endif; ?>
+
   <div class="document-header">
     <div class="document-title bold text-center mb-1">COMPROBANTE DE VENTA</div> <!-- Título centrado -->
     <div class="text-center">#<?php $this->order_number(); ?></div>               <!-- Número de factura -->
     <div class="text-center"><?php $this->invoice_date(); ?></div>                <!-- Fecha de factura -->
   </div>
-
-  <?php
-  // Obtener nombres legibles de país y estado usando WC_Countries
-  $countries = new WC_Countries();
-  $country_code = $order->get_billing_country();
-  $state_code = $order->get_billing_state();
-  $country_name = isset($countries->get_countries()[$country_code]) ? $countries->get_countries()[$country_code] : $country_code;
-  $states = $countries->get_states($country_code);
-  $state_name = isset($states[$state_code]) ? $states[$state_code] : $state_code;
-
-  // Agrupar datos de facturación para usarlos más fácil
-  $billing_data = [
-      'name'      => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
-      'cedula'    => $order->get_meta('_billing_cedula'),
-      'phone'     => $order->get_billing_phone(),
-      'city'      => $order->get_billing_city(),
-      'barrio'    => $order->get_meta('_billing_barrio'),
-      'address1'  => $order->get_billing_address_1(),
-      'address2'  => $order->get_billing_address_2(),
-      'country'   => $country_name,
-      'state'     => $state_name
-  ];
-
-  // Campos que se mostrarán con sus etiquetas y si son obligatorios o no
-  $fields = [
-      'name'    => ['label' => 'CLIENTE',   'value' => $billing_data['name'], 'required' => true],
-      'cedula'  => ['label' => 'CEDULA',    'value' => $billing_data['cedula'], 'required' => false],
-      'phone'   => ['label' => 'TELEFONO',  'value' => $billing_data['phone'], 'required' => true],
-      'city'    => ['label' => 'CIUDAD',    'value' => $billing_data['city'], 'required' => true],
-      'state'   => ['label' => 'ESTADO',    'value' => $billing_data['state'], 'required' => true],
-      'barrio'  => ['label' => 'BARRIO',    'value' => $billing_data['barrio'], 'required' => false],
-      'address' => [
-          'label' => 'DIRECCION', 
-          'value' => trim(implode('. ', array_filter([
-              $billing_data['address1'], 
-              $billing_data['address2']
-          ]))),
-          'required' => true
-      ],
-      'country' => ['label' => 'PAIS', 'value' => $billing_data['country'], 'required' => true]
-  ];
-  ?>
 
   <!-- Tabla con datos del cliente -->
   <table class="client-info-table">
@@ -182,50 +214,152 @@ $qr_image = generate_base64_qr_code( $qr_text );
   </div>
 </div>
 
+<!-- ---------------------------
+     Renderizado: Sección Producto (COPY 2) - empezar nueva página
+     --------------------------- -->
+<div class="customer-info-section" style="page-break-before: always;">
+  <!-- Repetir QR y datos del cliente para copia 2 -->
+  <?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
+  <div class="qr-code" style="text-align: center; margin-bottom: 5mm;">
+    <img src="<?php echo esc_attr( $qr_image ); ?>" alt="QR Code" style="width: 20mm; height: 20mm;" />
+  </div>
+  <?php endif; ?>
+
+  <div class="document-header">
+    <div class="document-title bold text-center mb-1">COMPROBANTE DE VENTA</div>
+    <div class="text-center">#<?php $this->order_number(); ?></div>
+    <div class="text-center"><?php $this->invoice_date(); ?></div>
+  </div>
+
+  <table class="client-info-table">
+    <?php foreach ($fields as $field): 
+      if (empty($field['value']) && !$field['required']) continue;
+      $value = !empty($field['value']) ? $field['value'] : 'NO ESPECIFICADO';
+    ?>
+    <tr>
+      <td class="bold"><?php echo esc_html($field['label']); ?></td>
+      <td><?php echo esc_html(strtoupper(trim($value))); ?></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+
+  <?php if ( !empty($customer_note) ) : ?>
+    <div class="customer-note" style="margin: 5mm 0; font-size: 8pt;">
+      <div class="bold">NOTA DEL CLIENTE</div>
+      <div><?php echo nl2br( esc_html( $customer_note ) ); ?></div>
+    </div>
+  <?php endif; ?>
+</div>
+
+<div class="product-list-section">
+  <div class="customer-product-gap"></div>
+
+  <div class="table-container">
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="product-name">PRODUCTO</th>
+          <th class="product-qty">CANT</th>
+          <th class="product-price">PU</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach( $this->get_order_items() as $item_id => $item ) : ?>
+        <tr class="product-separator">
+          <td colspan="3" style="border-top: 1px dashed #26292c; height: 3mm;"></td>
+        </tr>
+
+        <tr class="product-row">
+          <td class="product-name">
+            <div class="bold product-title">
+              <?php echo strtoupper(esc_html($item['name'])); ?>
+              <?php 
+              $product = $item['item']->get_product();
+              if ($product && $sku = $product->get_sku()) {
+                  echo '<div class="product-sku">SKU: ' . esc_html($sku) . '</div>';
+              }
+              ?>
+            </div>
+
+            <?php if(!empty($item['variation_id'])) : ?>
+              <div class="variation-attributes">
+                <?php 
+                foreach($item['item']->get_meta_data() as $meta) {
+                  $data = $meta->get_data();
+                  if ($data['key'] === '_reduced_stock') continue;
+                  $value = trim($data['value']);
+                  if (!empty($value)) {
+                      $key = str_replace(['attribute_pa_', 'pa_'], '', $data['key']);
+                      $key = ucwords(str_replace('_', ' ', $key));
+                      echo '<div class="attribute">' . esc_html($key) . ': ' . esc_html($value) . '</div>';
+                  }
+                }
+                ?>
+              </div>
+            <?php endif; ?>
+          </td>
+          <td class="product-qty"><?php echo $item['quantity']; ?></td>
+          <td class="product-price"><?php echo $item['single_price']; ?></td>
+        </tr>
+        <?php endforeach; ?>
+
+        <tr class="last-separator">
+          <td colspan="3" style="border-bottom: 1px solid #000; height: 1mm;"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="order-total">
+    <?php foreach( $this->get_woocommerce_totals() as $key => $total ) : ?>
+      <?php if( $total['label'] === 'Total' ) : ?>
+      <div class="total-row">
+        <span class="total-label"><?php echo strtoupper($total['label']); ?>:</span>
+        <span class="total-value"><?php echo $total['value']; ?></span>
+      </div>
+      <?php endif; ?>
+    <?php endforeach; ?>
+  </div>
+</div>
+
 <?php
-$shipping_methods = [
-    'CONTRA ENTREGA EFECTIVO',
-    'DOMICILIO CUCUTA',
-    'DOMICILIO SAN CRISTOBAL',
-    'ENTREGAS TEALCA'
-];
-
-$status = get_post_meta($order_id, '_jl_pago_status', true);
-$amount = get_post_meta($order_id, '_jl_pago_amount', true);
-$currency = get_post_meta($order_id, '_jl_pago_currency', true);
-
-// Obtener el método de envío del pedido
-$shipping_items = $order->get_items('shipping');
-$show_pago = false;
-if (!empty($shipping_items)) {
-    $first_item = reset($shipping_items);
-    $current_method = $first_item->get_method_title();
-    if (in_array($current_method, $shipping_methods)) {
-        $show_pago = true;
-    }
-}
+// A partir de aquí empieza la sección de envío (tercera hoja)
 ?>
 
 <!-- SECCIÓN 3: Comprobante de Envío -->
 <div class="shipping-section">
   <div class="delivery-spacer"></div>
-  <div class="delivery-cut-message text-center">Recortar para envíos</div> <!-- Indicador para recorte físico -->
+  <div class="delivery-cut-message text-center">Recortar para envíos</div>
   <div class="delivery-spacer"></div>
 
   <?php
+    // Solo procesar pago/empresa si corresponde al shipping method configurado
     if ($show_pago) {
-      if ($status === 'pagado') {
-          $pago_texto = 'PAGADO';
-      } elseif ($status === 'por_cobrar' && $amount > 0) {
-          $pago_texto = 'POR COBRAR: ' . number_format($amount, 2) . ' ' . strtoupper($currency);
-      } else {
-          $pago_texto = 'ESTADO DE PAGO NO DEFINIDO';
-      }
-      ?>
-        <div style="font-size:1.5em;font-weight:bold;margin-bottom:20px;text-align:center;text-decoration:underline">
-          <?php echo esc_html($pago_texto); ?>
-        </div>
-      <?php
+        // Mostrar $pago_texto únicamente para los estados 'pagado' o 'por_cobrar'
+        $pago_texto = '';
+        if ($status === 'pagado') {
+            $pago_texto = 'PAGADO';
+        } elseif ($status === 'por_cobrar' && $amount > 0) {
+            $pago_texto = 'POR COBRAR: ' . number_format($amount, 2) . ' ' . strtoupper($currency);
+        }
+
+        // Mostrar el texto de pago solo si está definido (no mostrar 'ESTADO DE PAGO NO DEFINIDO')
+        if (!empty($pago_texto)) {
+            ?>
+            <div style="font-size:1.5em;font-weight:bold;margin-bottom:6px;text-align:center;text-decoration:underline">
+              <?php echo esc_html($pago_texto); ?>
+            </div>
+            <?php
+        }
+
+        // Mostrar empresa de envío por encima del QR y debajo del $pago_texto (mismo estilo visual)
+        if (!empty($shipping_company)) {
+            ?>
+            <div style="font-size:1.5em;font-weight:bold;margin-bottom:12px;text-align:center;text-decoration:underline">
+              <?php echo esc_html($shipping_company); ?>
+            </div>
+            <?php
+        }
     }
   ?>
 
