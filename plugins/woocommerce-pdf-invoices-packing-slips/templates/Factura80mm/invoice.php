@@ -85,6 +85,9 @@ if (!empty($shipping_items)) {
 
 // Normalizar nombre de la empresa de envío en mayúsculas
 $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
+
+$shipping_method = strtoupper(trim($order->get_shipping_method()));
+
 ?>
 
 <!-- ---------------------------
@@ -94,6 +97,9 @@ $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
 <div class="customer-info-section">
   <!-- Mover el QR aquí para que se duplique junto con esta sección -->
   <?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
+  <div class="heading">
+    COPIA 1
+  </div>
   <div class="qr-code" style="text-align: center; margin-bottom: 5mm;">
     <img src="<?php echo esc_attr( $qr_image ); ?>" alt="QR Code" style="width: 20mm; height: 20mm;" />
   </div>
@@ -220,6 +226,10 @@ $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
 <div class="customer-info-section" style="page-break-before: always;">
   <!-- Repetir QR y datos del cliente para copia 2 -->
   <?php if ( current_user_can('manage_woocommerce') && $qr_image ) : ?>
+  <div class="heading">
+    COPIA 2
+  </div>
+
   <div class="qr-code" style="text-align: center; margin-bottom: 5mm;">
     <img src="<?php echo esc_attr( $qr_image ); ?>" alt="QR Code" style="width: 20mm; height: 20mm;" />
   </div>
@@ -346,7 +356,7 @@ $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
         // Mostrar el texto de pago solo si está definido (no mostrar 'ESTADO DE PAGO NO DEFINIDO')
         if (!empty($pago_texto)) {
             ?>
-            <div style="font-size:1.5em;font-weight:bold;margin-bottom:6px;text-align:center;text-decoration:underline">
+            <div class="heading">
               <?php echo esc_html($pago_texto); ?>
             </div>
             <?php
@@ -355,8 +365,17 @@ $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
         // Mostrar empresa de envío por encima del QR y debajo del $pago_texto (mismo estilo visual)
         if (!empty($shipping_company)) {
             ?>
-            <div style="font-size:1.5em;font-weight:bold;margin-bottom:12px;text-align:center;text-decoration:underline">
+            <div class="heading" style="margin-bottom: 16px;">
               <?php echo esc_html($shipping_company); ?>
+            </div>
+            <?php
+        }
+    } else {
+        // Mostrar empresa de envío por encima del QR y debajo del $pago_texto (mismo estilo visual)
+        if (!empty($shipping_method)) {
+            ?>
+            <div class="heading" style="margin-bottom: 16px;">
+              <?php echo esc_html($shipping_method); ?>
             </div>
             <?php
         }
@@ -382,7 +401,7 @@ $shipping_company = !empty($current_method) ? strtoupper($current_method) : '';
     <tr><td class="bold">Nombre</td><td><?php echo esc_html(strtoupper($billing_data['name'])); ?></td></tr>
     <tr><td class="bold">Cedula</td><td><?php echo esc_html(strtoupper($billing_data['cedula'])); ?></td></tr>
     <tr><td class="bold">Teléfono</td><td><?php echo esc_html(strtoupper($billing_data['phone'])); ?></td></tr>
-    <tr><td class="bold">Emp Envio</td><td><?php echo esc_html(strtoupper($order->get_shipping_method())); ?></td></tr>
+    <tr><td class="bold">Emp Envio</td><td><?php echo esc_html($shipping_method); ?></td></tr>
     <tr><td class="bold">Ciudad</td><td><?php echo esc_html(strtoupper($billing_data['city'])); ?></td></tr>
     <tr><td class="bold">Estado</td><td><?php echo esc_html(strtoupper($state_name)); ?></td></tr>
     <tr><td class="bold">Barrio</td><td><?php echo esc_html(strtoupper($billing_data['barrio'])); ?></td></tr>
