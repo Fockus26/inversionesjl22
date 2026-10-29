@@ -2,6 +2,8 @@
 # PHP / Composer
 # ===================
 vendor/
+# El plugin PDF está vendorizado y necesita sus dependencias (dompdf, etc.)
+!plugins/woocommerce-pdf-invoices-packing-slips/vendor/
 composer.lock
 composer.phar
 

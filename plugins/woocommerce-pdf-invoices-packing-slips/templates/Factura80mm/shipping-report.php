@@ -1,27 +1,26 @@
 <?php if ( ! defined( 'ABSPATH' ) ) exit; // Evitar acceso directo ?>
-
 <!-- Encabezado del reporte con título centrado -->
 <div class="document-header text-center">
-  <div class="document-title bold">Informe de Envíos</div>
+  <div class="document-title bold">Informe de Donde no se debio enviar</div>
 </div>
 
 <!-- Tabla con información básica del cliente y rango de fechas -->
 <table class="client-info-table">
   <tr>
     <td class="bold">País:</td>
-    <td><?php echo esc_html( $pais ); ?></td>
+    <td><?php echo esc_html( $country ); ?></td>
   </tr>
   <tr>
     <td class="bold">Método de envío:</td>
-    <td><?php echo esc_html( $empresa_nombre ); ?></td>
+    <td><?php echo esc_html( $company ); ?></td>
   </tr>
   <tr>
     <td class="bold">Rango de fechas:</td>
-    <td><?php echo esc_html( $fecha_inicio . ' a ' . $fecha_fin ); ?></td>
+    <td><?php echo esc_html( $startDate . ' a ' . $endDate ); ?></td>
   </tr>
   <tr>
     <td class="bold">Total pedidos:</td>
-    <td><?php echo count( $pedidos ); // Número total de pedidos ?></td>
+    <td><?php echo count( $orders ); // Número total de pedidos ?></td>
   </tr>
 </table>
 
@@ -38,31 +37,31 @@
         </tr>
       </thead>
       <tbody>
-        <?php foreach ( $pedidos as $pedido ) :
-          $order = wc_get_order( $pedido->ID );
+        <?php foreach ( $orders as $order ) :
+          $order = wc_get_order( $order->ID );
 
           // Datos de pago personalizados (si existen)
-          $jl_status   = get_post_meta( $order->get_id(), '_jl_pago_status', true );
-          $jl_amount   = get_post_meta( $order->get_id(), '_jl_pago_amount', true );
-          $jl_currency = get_post_meta( $order->get_id(), '_jl_pago_currency', true );
+          $status   = get_post_meta( $order->get_id(), '_jl_pago_status', true );
+          $amount   = get_post_meta( $order->get_id(), '_jl_pago_amount', true );
+          $currency = get_post_meta( $order->get_id(), '_jl_pago_currency', true );
 
           // Determinar monto y moneda final a mostrar
-          if ( $jl_status === 'por_cobrar' && $jl_amount > 0 ) {
+          if ( $status === 'por_cobrar' && $amount > 0 ) {
               // Usar el monto definido manualmente
-              $display_currency = $jl_currency === 'dolares' ? 'USD' : ($jl_currency === 'pesos' ? 'COP' : strtoupper($jl_currency));
-              $formatted_cost = number_format(floatval($jl_amount), 2, '.', '');
-              $shipping_display = sprintf('%s %s', esc_html($display_currency), esc_html($formatted_cost));
+              $currency = $currency === 'dolares' ? 'USD' : ($currency === 'pesos' ? 'COP' : strtoupper($currency));
+              $amount = number_format(floatval($amount), 2, '.', '');
+              $total = sprintf('%s %s', esc_html($currency), esc_html($amount));
           } else {
               // Usar el costo de envío del pedido
-              $shipping_total = $order->get_shipping_total() + $order->get_shipping_tax();
+              $cost = $order->get_shipping_total() + $order->get_shipping_tax();
               $currency = $order->get_currency();
-              $formatted_cost = number_format(floatval($shipping_total), 2, '.', '');
-              $shipping_display = sprintf('%s %s', esc_html($currency), esc_html($formatted_cost));
+              $cost = number_format(floatval($cost), 2, '.', '');
+              $total = sprintf('%s %s', esc_html($currency), esc_html($cost));
           }
         ?>
         <tr class="shipping-note-row">
           <td class="shipping-order text-center"><?php echo $order->get_order_number(); ?></td>
-          <td class="shipping-cost text-center"><?php echo $shipping_display; ?></td>
+          <td class="shipping-cost text-center"><?php echo $total; ?></td>
           <td class="shipping-note"></td>
         </tr>
         <?php endforeach; ?>
