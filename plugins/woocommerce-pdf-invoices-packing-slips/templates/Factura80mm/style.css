@@ -9,7 +9,9 @@
 body {
   width: 76mm !important; /* 80mm menos márgenes laterales */
   margin: 0 auto; /* Centrar horizontalmente */
-  font-family: "DejaVu Sans Mono", "Consolas", "Lucida Console", monospace;
+  font-family: "Source Code Pro", "Consolas", "Lucida Console", monospace;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums; 
   font-size: 9pt; /* Tamaño de fuente pequeño para impresión */
   line-height: 1.1; /* Altura de línea compacta */
   color: #000; /* Texto negro */

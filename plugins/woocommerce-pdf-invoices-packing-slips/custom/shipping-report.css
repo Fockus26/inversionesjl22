@@ -1,0 +1,66 @@
+/**
+ * Estilos del PDF "Informe de Envíos" (WooCommerce > Informe de Envíos).
+ *
+ * Los inserta pdfUIShippingReport() (snippet "PDF UI" de WPCodeBox) dentro de un <style>.
+ * Antes venían del snippet CSS "PDF" de WPCodeBox; se movieron aquí para que el
+ * informe no dependa del archivo compilado de WPCodeBox.
+ */
+@page {
+    size: 80mm auto;
+    margin: 4mm 2mm;
+}
+
+#pdf-shipping-report {
+    font-family: "DejaVu Sans Mono", "Consolas", "Lucida Console", monospace;
+    font-size: 9pt;
+}
+
+#pdf-shipping-report > div {
+    margin-bottom: 6mm;
+}
+
+#pdf-shipping-report > div:last-child {
+    margin-bottom: 0;
+}
+
+#pdf-shipping-report h1,
+#pdf-shipping-report h2 {
+    margin: 0 0 3mm 0;
+    text-align: center;
+}
+
+#pdf-shipping-report .footer {
+    margin-top: 6mm;
+    text-align: center;
+}
+
+#pdf-shipping-report .footer p {
+    margin: 0;
+}
+
+#pdf-shipping-report .brand {
+    font-weight: bold;
+}
+
+#pdf-shipping-report .client-info {
+    border-spacing: 2mm 0;
+}
+
+#pdf-shipping-report .client-info tr td:first-child {
+    font-weight: bold;
+}
+
+#pdf-shipping-report .shipping-info {
+    text-align: center;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#pdf-shipping-report .shipping-info th {
+    width: 25%;
+}
+
+#pdf-shipping-report .shipping-info tbody tr td {
+    padding: 2mm 0;
+    border-bottom: 1px solid #9b9b9b;
+}

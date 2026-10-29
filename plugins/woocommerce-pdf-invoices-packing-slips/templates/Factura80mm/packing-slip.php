@@ -1,7 +1,14 @@
 <?php if ( ! defined( 'ABSPATH' ) ) exit; // Evitar acceso directo ?>
 
+<?php
+// Variables usadas abajo (antes no estaban definidas y generaban avisos en PHP 8)
+$shipping_method_title = $order->get_shipping_method();
+$state_list            = WC()->countries->get_states( $order->get_billing_country() );
+$state_string          = $state_list[ $order->get_billing_state() ] ?? $order->get_billing_state();
+?>
+
 <!-- Acción antes de generar el documento -->
-<?php do_action( 'wpo_wcpdf_before_document', $this->type, $this->order ); ?>
+<?php do_action( 'wpo_wcpdf_before_document', $this->get_type(), $this->order ); ?>
 
 <!-- Encabezado del documento con título y número de pedido -->
 <div class="document-header">
@@ -51,4 +58,4 @@
 </table>
 
 <!-- Acción después de generar el documento -->
-<?php do_action( 'wpo_wcpdf_after_document', $this->type, $this->order ); ?>
+<?php do_action( 'wpo_wcpdf_after_document', $this->get_type(), $this->order ); ?>
