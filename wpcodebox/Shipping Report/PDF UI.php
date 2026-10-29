@@ -1,0 +1,107 @@
+<?php 
+function pdfUIShippingReport($args) {
+    extract($args);
+
+    $date = formatDateRange($startDate, $endDate);
+    $totalOrders = count($orders);
+
+    $cssFile = WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/custom/shipping-report.css';
+    $css = file_exists($cssFile) ? file_get_contents($cssFile) : '';
+
+    ?>
+      <style>
+          <?php echo $css; ?>
+      </style>
+
+      <div id="pdf-shipping-report">
+        <!-- Client -->
+        <div>
+          <h1>Informe de Envíos</h1>
+
+          <table class="client-info">
+            <tr>
+              <td>País</td>
+              <td><?php echo esc_html($country); ?></td>
+            </tr>
+            <tr>
+              <td>Método de envío</td>
+              <td><?php echo esc_html($company); ?></td>
+            </tr>
+            <tr>
+              <td>Fechas</td>
+              <td><?php echo esc_html($date); ?></td>
+            </tr>
+            <tr>
+              <td>Pedidos Totales</td>
+              <td><?php echo esc_html($totalOrders);?></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Shipping -->
+        <div>
+          <h2>Notas de Envío</h2>
+          <table class="shipping-info">
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Hora</th>
+                <th>Monto Envío</th>
+                <th>Nota</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($orders as $order):
+                  $order = wc_get_order($order->ID);
+
+                  $status = get_post_meta($order->get_id(), "_payment-status", true);
+                  $amount = get_post_meta($order->get_id(), "_amount", true);
+                  $currency = get_post_meta($order->get_id(), "_currency", true);
+
+                  $orderId = $order->get_order_number();
+                  $orderDate = $order->get_date_completed();
+                  $orderTime = $orderDate
+                      ? strtolower($orderDate->date('g:ia'))
+                      : '--';
+
+
+                  // Determinar monto y moneda final a mostrar
+                  if ($status === "pending" && $amount > 0) {
+                      // Usar el monto definido manualmente
+                      $currency =
+                          $currency === "dolares"
+                              ? "USD"
+                              : ($currency === "pesos"
+                                  ? "COP"
+                                  : strtoupper($currency));
+                      $amount = number_format(floatval($amount), 2, ".", "");
+                  } else {
+                      // Usar el costo de envío del pedido
+                      $amount = $order->get_shipping_total() + $order->get_shipping_tax();
+                      $currency = $order->get_currency();
+                      $amount = number_format(floatval($amount), 2, ".", "");
+                  }
+
+                  $total = sprintf("%s %s", esc_html($currency), esc_html($amount));
+                  ?>
+              <tr>
+                <td><?php echo esc_html($orderId); ?></td>
+                <td><?php echo esc_html($orderTime); ?></td>
+                <td><?php echo $total; ?></td>
+                <td></td>
+              </tr>
+              <?php
+              endforeach; ?>
+
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer">
+          <p class="brand">INVERSIONES JL</p>
+          <p>Gracias por su compra</p>
+        </div>
+      </div>
+    <?php
+    return ob_get_clean();
+}
