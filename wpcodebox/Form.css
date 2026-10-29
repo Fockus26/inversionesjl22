@@ -1,0 +1,128 @@
+/**
+ * Estilos del formulario "WooCommerce > Informe de Envíos" (página shipping-report del admin).
+ * Se cargan solo en esa página desde inversionesjl-pdf.php.
+ * El color de acento sigue el esquema de color del admin de WordPress.
+ */
+.woocommerce_page_shipping-report {
+    --jl-accent: var(--wp-admin-theme-color, #2271b1);
+    --jl-accent-soft: rgba(34, 113, 177, 0.15);
+    --jl-border: #dcdcde;
+    --jl-text: #1d2327;
+    --jl-muted: #646970;
+    --jl-radius: 8px;
+}
+
+/* Tarjeta del formulario */
+.my-form {
+    display: grid;
+    gap: 20px;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--jl-border);
+    border-radius: var(--jl-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Cada grupo de campos */
+.my-form fieldset {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px 20px;
+    margin: 0;
+    padding: 0 0 20px;
+    border: 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.my-form fieldset:last-of-type {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.my-form fieldset > div {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+.my-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--jl-text);
+}
+
+/* Campos */
+.my-form input,
+.my-form select {
+    width: 100%;
+    max-width: none;
+    min-height: 38px;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--jl-text);
+    background-color: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.my-form select {
+    padding-right: 32px;
+}
+
+.my-form input:hover,
+.my-form select:hover {
+    border-color: #8c8f94;
+}
+
+.my-form input:focus,
+.my-form select:focus {
+    border-color: var(--jl-accent);
+    box-shadow: 0 0 0 3px var(--jl-accent-soft);
+    outline: 2px solid transparent;
+}
+
+/* Select de empresa vacío mientras se cargan las opciones por AJAX */
+.my-form select:disabled,
+.my-form select:empty {
+    color: var(--jl-muted);
+    background-color: #f6f7f7;
+    cursor: not-allowed;
+}
+
+/* Botón */
+.my-form .button.button-primary {
+    justify-self: start;
+    min-height: 40px;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.my-form .button.button-primary:active {
+    transform: translateY(1px);
+}
+
+/* Pantallas pequeñas: un campo por fila y botón a todo el ancho */
+@media (max-width: 600px) {
+    .my-form {
+        padding: 16px;
+    }
+
+    .my-form .button.button-primary {
+        justify-self: stretch;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .my-form input,
+    .my-form select,
+    .my-form .button.button-primary {
+        transition: none;
+    }
+}

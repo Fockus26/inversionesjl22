@@ -1,0 +1,1398 @@
+{
+  "folders": [
+    {
+      "title": "Order",
+      "id": "11",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "Shipping Report",
+      "id": "12",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "PDF",
+      "id": "13",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "Roles",
+      "id": "14",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "Utils",
+      "id": "15",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "User",
+      "id": "16",
+      "order": "0",
+      "open": false
+    },
+    {
+      "title": "Styles",
+      "id": "17",
+      "order": "0",
+      "open": false
+    }
+  ],
+  "snippets": [
+    {
+      "id": 42,
+      "title": "Boton Limpiar Carrito",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "0",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982401",
+      "order": -1,
+      "tags": "php",
+      "folder": "",
+      "file": "Boton Limpiar Carrito.php"
+    },
+    {
+      "id": 65,
+      "title": "Form",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "css",
+        "label": "CSS"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "WP Admin Header",
+            "value": "custom_admin_header"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "0",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793039303",
+      "order": -1,
+      "tags": "css",
+      "folder": "",
+      "file": "Form.css"
+    },
+    {
+      "id": 43,
+      "title": "Payment Status",
+      "description": "En los metodos de envio permitidos muestra\n- Selector de pago: Pagado / Por Cobrar\n- Campos: Monto / Divisa\n",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "10",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982405",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Payment Status.php"
+    },
+    {
+      "id": 44,
+      "title": "Combined Orders",
+      "description": "Preserve Cedula, Barrio and Shippings in Combined Orders",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982406",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Combined Orders.php"
+    },
+    {
+      "id": 45,
+      "title": "Render Feedback Status Transition",
+      "description": "Avisos del resultado de las acciones AJAX de transición de estado de pedidos.",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "7",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982406",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Render Feedback Status Transition.php"
+    },
+    {
+      "id": 46,
+      "title": "Payment Status_1",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "js",
+        "label": "JavaScript"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "WP Admin Header",
+            "value": "custom_admin_header"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "External File",
+        "value": "external"
+      },
+      "minify": true,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982406",
+      "order": -1,
+      "tags": "js",
+      "folder": "Order",
+      "file": "Order/Payment Status_1.js"
+    },
+    {
+      "id": 47,
+      "title": "Status Transition",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793233129",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Status Transition.php"
+    },
+    {
+      "id": 48,
+      "title": "Change Shipping Method",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "9",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982407",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Change Shipping Method.php"
+    },
+    {
+      "id": 49,
+      "title": "Custom Status",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "11",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982410",
+      "order": -1,
+      "tags": "php",
+      "folder": "Order",
+      "file": "Order/Custom Status.php"
+    },
+    {
+      "id": 50,
+      "title": "Fetch",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "js",
+        "label": "JavaScript"
+      },
+      "conditions": [
+        {
+          "id": "6",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Page URL",
+              "conditionVerbs": [
+                "Contains",
+                "Doesn't contain",
+                "Is"
+              ],
+              "conditionVerb": {
+                "value": 0,
+                "label": "Contains"
+              },
+              "conditionVerbIndex": 0,
+              "component": "pageUrl",
+              "andor": "AND",
+              "extraData": {
+                "label": "shipping-report",
+                "value": "shipping-report"
+              },
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "WP Admin Header",
+            "value": "custom_admin_header"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "External File",
+        "value": "external"
+      },
+      "minify": true,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982415",
+      "order": -1,
+      "tags": "js",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/Fetch.js"
+    },
+    {
+      "id": 51,
+      "title": "PDF UI",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793039115",
+      "order": -1,
+      "tags": "php",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/PDF UI.php"
+    },
+    {
+      "id": 53,
+      "title": "UI",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793039178",
+      "order": -1,
+      "tags": "php",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/UI.php"
+    },
+    {
+      "id": 55,
+      "title": "Fetch_1",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "6",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982418",
+      "order": -1,
+      "tags": "php",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/Fetch_1.php"
+    },
+    {
+      "id": 57,
+      "title": "PDF",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "5",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982419",
+      "order": -1,
+      "tags": "php",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/PDF.php"
+    },
+    {
+      "id": 61,
+      "title": "Init_1",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "12",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982422",
+      "order": -1,
+      "tags": "php",
+      "folder": "Shipping Report",
+      "file": "Shipping Report/Init_1.php"
+    },
+    {
+      "id": 58,
+      "title": "Scan Qr",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "13",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793233183",
+      "order": -1,
+      "tags": "php",
+      "folder": "PDF",
+      "file": "PDF/Scan Qr.php"
+    },
+    {
+      "id": 62,
+      "title": "Scan Qr_1",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "js",
+        "label": "JavaScript"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Frontend Header (Default)",
+            "value": "custom_frontend_header"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "13",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1793233159",
+      "order": -1,
+      "tags": "js",
+      "folder": "PDF",
+      "file": "PDF/Scan Qr_1.js"
+    },
+    {
+      "id": 52,
+      "title": "Init Globally",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "14",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982416",
+      "order": -1,
+      "tags": "php",
+      "folder": "Roles",
+      "file": "Roles/Init Globally.php"
+    },
+    {
+      "id": 54,
+      "title": "Init",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [
+        {
+          "id": "2",
+          "type": {
+            "value": "OR",
+            "label": "OR"
+          },
+          "conditions": [
+            {
+              "conditionTitle": "Location",
+              "conditionVerbs": [
+                "Is Everywhere",
+                "Is Frontend",
+                "Is Admin",
+                "Is Login"
+              ],
+              "conditionVerb": {
+                "label": "Is Admin",
+                "value": 2
+              },
+              "conditionVerbIndex": 0,
+              "component": "null",
+              "andor": "AND",
+              "extraData": false,
+              "extraData2": false
+            }
+          ]
+        }
+      ],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "14",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982417",
+      "order": -1,
+      "tags": "php",
+      "folder": "Roles",
+      "file": "Roles/Init.php"
+    },
+    {
+      "id": 56,
+      "title": "Config",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "14",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982418",
+      "order": -1,
+      "tags": "php",
+      "folder": "Roles",
+      "file": "Roles/Config.php"
+    },
+    {
+      "id": 59,
+      "title": "Format Date Range",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "15",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982420",
+      "order": -1,
+      "tags": "php",
+      "folder": "Utils",
+      "file": "Utils/Format Date Range.php"
+    },
+    {
+      "id": 60,
+      "title": "Get Pick Up Shipping Methods",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "15",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982420",
+      "order": -1,
+      "tags": "php",
+      "folder": "Utils",
+      "file": "Utils/Get Pick Up Shipping Methods.php"
+    },
+    {
+      "id": 64,
+      "title": "Custom Status",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "php",
+        "label": "PHP"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Plugins Loaded (Default)",
+            "value": "custom_plugins_loaded"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "16",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982432",
+      "order": -1,
+      "tags": "php",
+      "folder": "User",
+      "file": "User/Custom Status.php"
+    },
+    {
+      "id": 63,
+      "title": "Menu",
+      "description": "",
+      "enabled": true,
+      "priority": "10",
+      "runType": {
+        "value": "always",
+        "label": "Always (On Page Load)"
+      },
+      "codeType": {
+        "value": "scss",
+        "label": "SCSS"
+      },
+      "conditions": [],
+      "location": "",
+      "tagOptions": [],
+      "hook": [
+        {
+          "hook": {
+            "label": "Frontend Header (Default)",
+            "value": "custom_frontend_header"
+          },
+          "priority": 10
+        }
+      ],
+      "renderType": {
+        "label": "Inline",
+        "value": "inline"
+      },
+      "minify": false,
+      "snippet_order": "-1",
+      "addToQuickActions": false,
+      "savedToCloud": false,
+      "remoteId": "0",
+      "externalUrl": [],
+      "folderId": "17",
+      "error": false,
+      "errorMessage": "",
+      "errorTrace": "",
+      "errorLine": "0",
+      "devMode": false,
+      "lastModified": "1792982423",
+      "order": -1,
+      "tags": "scss",
+      "folder": "Styles",
+      "file": "Styles/Menu.scss"
+    }
+  ]
+}
