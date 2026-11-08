@@ -2,7 +2,7 @@
 # pull-site.sh — bring a WordPress site down to a local copy (web-agent-kit,
 # reference/tech/wordpress-adopt.md §3). Everything lands in .site-pull/ (gitignored).
 #
-#   bash scripts/pull-site.sh ssh     [--no-uploads]        rsync of wp-content + wp db export over SSH
+#   bash scripts/pull-site.sh ssh     [--no-uploads|--db-only]  rsync of wp-content (by folder) + wp db export over SSH
 #   bash scripts/pull-site.sh ftps    [--no-uploads]        lftp mirror of wp-content, TLS forced
 #   bash scripts/pull-site.sh archive --file <backup>       cPanel full backup (.tar.gz) or .zip
 #   bash scripts/pull-site.sh dbs     --dump <file.sql[.gz]>   split a multi-database dump, find the live one
@@ -22,10 +22,11 @@ die() { log "ERROR: $*"; exit 1; }
 need() { [ -n "${!1:-}" ] || die "$1 is not set (.env.local, see .env.example)"; }
 
 MODE=${1:-}; [ $# -gt 0 ] && shift
-NO_UPLOADS=0; FILE=; DUMP=; ENV_KIND=compose; NO_BACKUP=0
+NO_UPLOADS=0; DB_ONLY=0; FILE=; DUMP=; ENV_KIND=compose; NO_BACKUP=0
 while [ $# -gt 0 ]; do
   case $1 in
     --no-uploads) NO_UPLOADS=1 ;;
+    --db-only) DB_ONLY=1 ;;
     --file) FILE=$2; shift ;;
     --dump) DUMP=$2; shift ;;
     --env) ENV_KIND=$2; shift ;;
@@ -59,6 +60,41 @@ run_tool() {
 EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/)
 [ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(uploads/)
 
+# wp-content goes down one piece at a time (each top-level entry, and each uploads/ subfolder):
+# a single rsync of a big wp-content sends a file list so long that some hosts (GoDaddy Managed
+# WordPress) close the session before it ends. A piece already verified is written to
+# .site-pull/chunks-done.txt and skipped on the next run, so every run moves forward.
+pull_ssh_files() {
+  local done_list="$OUT/chunks-done.txt" chunks c try plan left pending=0
+  touch "$done_list"
+  chunks=$(run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" $batch \
+    "$PULL_SSH" "cd '$PULL_PATH/wp-content' && for d in * .[!.]*; do [ -e \"\$d\" ] || continue; if [ \"\$d\" = uploads ]; then for u in uploads/* uploads/.[!.]*; do [ -e \"\$u\" ] && echo \"\$u\"; done; else echo \"\$d\"; fi; done; true") ||
+    die "could not list wp-content on the server: run it again"
+  mkdir -p "$OUT/files/wp-content/uploads"
+  : >"$OUT/pending.txt"
+  while IFS= read -r c; do
+    [ -n "$c" ] || continue
+    case " ${EXCLUDES[*]} " in *" ${c#uploads/}/ "*|*" $c/ "*) continue ;; esac
+    grep -qxF "$c" "$done_list" && continue
+    log "rsync wp-content/$c"
+    for try in 1 2 3; do
+      run_tool rsync "${args[@]}" -R --info=stats1 "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null && break
+      [ "$try" = 3 ] && { log "wp-content/$c: cut off 3 times, left for the next run"; pending=1; continue 2; }
+      log "cut off (try $try): retrying in 20 s"; sleep 20
+    done
+    plan=$(run_tool rsync "${args[@]}" -R -n --out-format='%i %n' "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null) ||
+      { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue; }
+    left=$(printf '%s
+' "$plan" | grep -c '^[<>c]' || true)
+    if [ "$left" = 0 ]; then echo "$c" >>"$done_list"
+    else printf '%s
+' "$plan" | grep '^[<>c]' >>"$OUT/pending.txt"; log "wp-content/$c: $left files still differ"; pending=1; fi
+  done <<<"$chunks"
+  [ "$pending" = 0 ] || die "some pieces are not complete (list in $OUT/pending.txt): run it again (it resumes)"
+  rm -f "$OUT/pending.txt" "$done_list"
+  log "files complete"
+}
+
 # --- ssh ---------------------------------------------------------------------------------------
 pull_ssh() {
   need PULL_SSH; need PULL_PATH
@@ -83,29 +119,7 @@ pull_ssh() {
   local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts -o ServerAliveInterval=30 -o ServerAliveCountMax=6 $batch"
   local args=(-az --partial --delete -e "$sshcmd")
   for e in "${EXCLUDES[@]}"; do args+=(--exclude "$e"); done
-  local src="$PULL_SSH:$PULL_PATH/wp-content/" dst="$OUT/files/wp-content/"
-  log "rsync $src -> $dst"
-  # The host may close long sessions ("closed by remote host"): retry, --partial resumes.
-  local try
-  for try in 1 2 3; do
-    run_tool rsync "${args[@]}" --info=stats1 "$src" "$dst" && break
-    [ "$try" = 3 ] && die "rsync failed 3 times: run it again (it resumes)"
-    log "rsync cut off (try $try): retrying in 20 s"; sleep 20
-  done
-  log "verifying (dry run)"
-  local left
-  local plan
-  plan=$(run_tool rsync "${args[@]}" -n --out-format='%i %n' "$src" "$dst") ||
-    die "the verification could not reach the server: run it again"
-  left=$(printf '%s\n' "$plan" | grep -c '^[<>c]' || true)
-  if [ "$left" != 0 ]; then
-    # Saved so the next run (or the agent) can tell live files that change all the time
-    # (logs, sessions) from an incomplete copy.
-    printf '%s\n' "$plan" | grep '^[<>c]' >"$OUT/pending.txt"
-    die "$left files still differ (list in $OUT/pending.txt): run it again (it resumes)"
-  fi
-  rm -f "$OUT/pending.txt"
-  log "files complete"
+  if [ "$DB_ONLY" = 1 ]; then log "files skipped (--db-only)"; else pull_ssh_files; fi
 
   log "database: wp db export on the server"
   local dump="$OUT/db/live-$(date +%Y%m%d-%H%M%S).sql"
