@@ -52,7 +52,7 @@ run_tool() {
   [ -n "${PULL_SSH_KEY:-}" ] && ssh_mount=(-v "$(host_dir "$(cd "$(dirname "$PULL_SSH_KEY")" && pwd)/$(basename "$PULL_SSH_KEY")"):/key-src:ro")
   # MSYS_NO_PATHCONV: Git Bash would rewrite /work into a Windows path.
   MSYS_NO_PATHCONV=1 docker run --rm -i -v "$(host_dir "$PWD"):/work" -w /work "${ssh_mount[@]}" \
-    -e LFTP_PASSWORD --add-host=host.docker.internal:host-gateway "$IMAGE" \
+    -e LFTP_PASSWORD -e PULL_SSH_PASSWORD -e SSH_ASKPASS -e SSH_ASKPASS_REQUIRE --add-host=host.docker.internal:host-gateway "$IMAGE" \
     sh -c '[ -f /key-src ] && install -m 600 /key-src /tmp/key; exec "$@"' -- "$@"
 }
 
@@ -70,8 +70,17 @@ pull_ssh() {
   else
     IN_CONTAINER=1; key_opt=${PULL_SSH_KEY:+-i /tmp/key}
   fi
+  # Key AND password (GoDaddy Managed WordPress): with PULL_SSH_PASSWORD in .env.local, ssh asks
+  # scripts/ssh-askpass.sh for it instead of the terminal, and BatchMode stays off.
+  local batch="-o BatchMode=yes"
+  if [ -n "${PULL_SSH_PASSWORD:-}" ]; then
+    batch="-o BatchMode=no -o NumberOfPasswordPrompts=1"
+    export PULL_SSH_PASSWORD SSH_ASKPASS_REQUIRE=force
+    if [ -n "${IN_CONTAINER:-}" ]; then export SSH_ASKPASS=/work/scripts/ssh-askpass.sh
+    else export SSH_ASKPASS="$PWD/scripts/ssh-askpass.sh"; fi
+  fi
   # First run trusts the host key and stores it in .site-pull/known_hosts; later runs verify it.
-  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts -o BatchMode=yes"
+  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts $batch"
   local args=(-az --partial --delete -e "$sshcmd")
   for e in "${EXCLUDES[@]}"; do args+=(--exclude "$e"); done
   local src="$PULL_SSH:$PULL_PATH/wp-content/" dst="$OUT/files/wp-content/"
@@ -88,8 +97,8 @@ pull_ssh() {
 
   log "database: wp db export on the server"
   local dump="$OUT/db/live-$(date +%Y%m%d-%H%M%S).sql"
-  if run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" -o BatchMode=yes \
-    "$PULL_SSH" "cd '$PULL_PATH' && wp db export - --single-transaction" > "$dump"; then
+  if run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" $batch \
+    "$PULL_SSH" "cd '$PULL_PATH' && wp db export - --single-transaction --skip-plugins --skip-themes" > "$dump"; then
     grep -q 'CREATE TABLE' "$dump" || die "the export in $dump has no tables"
     log "database -> $dump  (next: pull-site.sh import --dump $dump)"
   else
