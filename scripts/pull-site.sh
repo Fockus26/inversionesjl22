@@ -57,10 +57,14 @@ run_tool() {
     sh -c '[ -f /key-src ] && install -m 600 /key-src /tmp/key; exec "$@"' -- "$@"
 }
 
-EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/)
+EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/ litespeed/ wc-logs/)
+# Top-level pieces of wp-content that are only live logs or host tooling: not needed locally,
+# and they change while they are copied, so they never verify.
+SKIP_PIECES=(logs mwp-download uploads/debug-log-manager)
 [ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(uploads/)
 
-# wp-content goes down one piece at a time (each top-level entry, and each uploads/ subfolder):
+# wp-content goes down one piece at a time (each top-level entry, each plugin, theme and uploads/
+# subfolder, and each month of uploads/<year>):
 # a single rsync of a big wp-content sends a file list so long that some hosts (GoDaddy Managed
 # WordPress) close the session before it ends. A piece already verified is written to
 # .site-pull/chunks-done.txt and skipped on the next run, so every run moves forward.
@@ -68,19 +72,21 @@ pull_ssh_files() {
   local done_list="$OUT/chunks-done.txt" chunks c try plan left pending=0
   touch "$done_list"
   chunks=$(run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" $batch \
-    "$PULL_SSH" "cd '$PULL_PATH/wp-content' && for d in * .[!.]*; do [ -e \"\$d\" ] || continue; if [ \"\$d\" = uploads ]; then for u in uploads/* uploads/.[!.]*; do [ -e \"\$u\" ] && echo \"\$u\"; done; else echo \"\$d\"; fi; done; true") ||
+    "$PULL_SSH" "cd '$PULL_PATH/wp-content' && for d in * .[!.]*; do [ -e \"\$d\" ] || continue; case \"\$d\" in plugins|themes|uploads) for u in \"\$d\"/* \"\$d\"/.[!.]*; do [ -e \"\$u\" ] || continue; case \"\$u\" in uploads/[0-9][0-9][0-9][0-9]) for m in \"\$u\"/*; do [ -e \"\$m\" ] && echo \"\$m\"; done ;; *) echo \"\$u\" ;; esac; done ;; *) echo \"\$d\" ;; esac; done; true") ||
     die "could not list wp-content on the server: run it again"
   mkdir -p "$OUT/files/wp-content/uploads"
   : >"$OUT/pending.txt"
   while IFS= read -r c; do
     [ -n "$c" ] || continue
-    case " ${EXCLUDES[*]} " in *" ${c#uploads/}/ "*|*" $c/ "*) continue ;; esac
-    grep -qxF "$c" "$done_list" && continue
+    case " ${EXCLUDES[*]} " in *" ${c##*/}/ "*|*" $c/ "*) continue ;; esac
+    case " ${SKIP_PIECES[*]} " in *" $c "*) continue ;; esac
+    # Done as itself, or inside a bigger piece an earlier run already verified (themes, uploads/2024).
+    grep -qxF -e "$c" -e "${c%/*}" -e "${c%%/*}" "$done_list" && continue
     log "rsync wp-content/$c"
     for try in 1 2 3; do
       run_tool rsync "${args[@]}" -R --info=stats1 "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null && break
       [ "$try" = 3 ] && { log "wp-content/$c: cut off 3 times, left for the next run"; pending=1; continue 2; }
-      log "cut off (try $try): retrying in 20 s"; sleep 20
+      log "cut off (try $try): retrying in 60 s"; sleep 60
     done
     plan=$(run_tool rsync "${args[@]}" -R -n --out-format='%i %n' "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null) ||
       { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue; }
