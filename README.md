@@ -53,30 +53,31 @@ These enhancements improved security, efficiency, and operational control for a 
 ## 📂 Project Structure
 
 ```text
-plugins/
- └── woocommerce-pdf-invoices-packing-slips
-themes/
- └── woodmart-child/
-     ├── functions.php
-     └── inc/
-         ├── integrations/
-         │   ├── admin-notices.php
-         │   ├── enqueue.php
-         │   ├── open-graph.php
-         │   ├── sku-generator.php
-         │   └── yith.php
-         ├── order/
-         │   ├── change-shipping-method.php
-         │   ├── combined-orders.php
-         │   ├── custom-status.php
-         │   ├── payment-status.php
-         │   └── transition-status.php
-         ├── report/
-         │   ├── html-shipping.php
-         │   └── pdf-shipping.php
-         └── roles/
-             ├── config.php
-             └── order-visibility.php
+wp-content/
+ ├── plugins/
+ │   └── woocommerce-pdf-invoices-packing-slips
+ └── themes/
+     └── woodmart-child/
+         ├── functions.php
+         └── inc/
+             ├── integrations/
+             │   ├── admin-notices.php
+             │   ├── enqueue.php
+             │   ├── open-graph.php
+             │   ├── sku-generator.php
+             │   └── yith.php
+             ├── order/
+             │   ├── change-shipping-method.php
+             │   ├── combined-orders.php
+             │   ├── custom-status.php
+             │   ├── payment-status.php
+             │   └── transition-status.php
+             ├── report/
+             │   ├── html-shipping.php
+             │   └── pdf-shipping.php
+             └── roles/
+                 ├── config.php
+                 └── order-visibility.php
 ```
 
 ---
