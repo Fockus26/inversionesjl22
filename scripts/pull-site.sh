@@ -80,19 +80,31 @@ pull_ssh() {
     else export SSH_ASKPASS="$PWD/scripts/ssh-askpass.sh"; fi
   fi
   # First run trusts the host key and stores it in .site-pull/known_hosts; later runs verify it.
-  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts $batch"
+  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts -o ServerAliveInterval=30 -o ServerAliveCountMax=6 $batch"
   local args=(-az --partial --delete -e "$sshcmd")
   for e in "${EXCLUDES[@]}"; do args+=(--exclude "$e"); done
   local src="$PULL_SSH:$PULL_PATH/wp-content/" dst="$OUT/files/wp-content/"
   log "rsync $src -> $dst"
-  run_tool rsync "${args[@]}" --info=stats1 "$src" "$dst"
+  # The host may close long sessions ("closed by remote host"): retry, --partial resumes.
+  local try
+  for try in 1 2 3; do
+    run_tool rsync "${args[@]}" --info=stats1 "$src" "$dst" && break
+    [ "$try" = 3 ] && die "rsync failed 3 times: run it again (it resumes)"
+    log "rsync cut off (try $try): retrying in 20 s"; sleep 20
+  done
   log "verifying (dry run)"
   local left
   local plan
   plan=$(run_tool rsync "${args[@]}" -n --out-format='%i %n' "$src" "$dst") ||
     die "the verification could not reach the server: run it again"
   left=$(printf '%s\n' "$plan" | grep -c '^[<>c]' || true)
-  [ "$left" = 0 ] || die "$left files still differ: run it again (it resumes)"
+  if [ "$left" != 0 ]; then
+    # Saved so the next run (or the agent) can tell live files that change all the time
+    # (logs, sessions) from an incomplete copy.
+    printf '%s\n' "$plan" | grep '^[<>c]' >"$OUT/pending.txt"
+    die "$left files still differ (list in $OUT/pending.txt): run it again (it resumes)"
+  fi
+  rm -f "$OUT/pending.txt"
   log "files complete"
 
   log "database: wp db export on the server"
