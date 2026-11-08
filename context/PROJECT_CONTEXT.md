@@ -32,15 +32,21 @@ Clientes finales en Colombia (y el equipo interno: storage_manager en bodega, se
 
 ## Stack
 
-- **WordPress** PENDIENTE (core) · PHP PENDIENTE (producción) · page builder: ninguno; tema
+- **WordPress** 7.1.4 · PHP 8.3 (producción; el sitio de ensayo está en 8.2) · page builder: ninguno; tema
   Woodmart (premium) + hijo `wp-content/themes/woodmart-child`
 - **Plugins clave:** WooCommerce PENDIENTE · WooCommerce PDF Invoices & Packing Slips 5.16.6,
   vendorizado en `wp-content/plugins/woocommerce-pdf-invoices-packing-slips` y **modificado**
   (`custom/`, `templates/Factura80mm/`, `templates/Factura58mm/`) · WPCodeBox 2 (24 snippets,
   respaldo en `wpcodebox/` con `manifest.json`) · YITH (integración en el tema hijo)
 - **Premium plugins:** Woodmart, WPCodeBox 2, PENDIENTE el resto (local copy: Docker from the backup)
-- **Hosting access:** GoDaddy, PENDIENTE (SSH | FTPS) · panel: PENDIENTE (cPanel | Managed WordPress)
-- **Deploy:** PENDIENTE (deploy-ssh | deploy-ftps) → staging none → production
+- **Hosting access:** SSH/SFTP · panel: GoDaddy WordPress administrado 2.0, plan Deluxe (1 sitio,
+  20 GB; el sitio usa ~11 GB). CDN de GoDaddy activa además de Cloudflare. WP-CLI por SSH:
+  PENDIENTE confirmar
+  - Producción: SSH `892841.us32.ssh.myftpupload.com` · dominio temporal `892841.us32.myftpupload.com`
+    (antes `vx0.93c.myftpupload.com`, cambiado por GoDaddy en 2026-11)
+  - Ensayo (staging): SSH `985270.us32.ssh.myftpupload.com` · URL PENDIENTE
+  - Usuarios SSH: en el panel ("Ver o cambiar"); van en `.env.local`, nunca aquí
+- **Deploy:** deploy-ssh → staging (sitio de ensayo) → production
 - **Site plugin:** `wp-content/plugins/inversionesjl22-site` (esqueleto del kit; recibe los
   snippets de WPCodeBox) · ACF: no se usa (PENDIENTE confirmar)
 - **CDN:** Cloudflare delante del sitio; cachea el HTML anónimo `max-age=2678400`
