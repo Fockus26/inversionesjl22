@@ -5,8 +5,8 @@ permisos por rol (storage_manager, seo_manager). Producción: https://inversione
 
 **Type:** e-commerce · **Client:** InversionesJL22 · **Git mode:** pr
 (see `context/GIT_STATE.md`) · **Kit:** web-agent-kit, version in `.kit-version` (`/kit-update`)
-**Hosting:** GoDaddy, acceso PENDIENTE (SSH o FTPS) · **Deploy:** PENDIENTE (deploy-ssh |
-deploy-ftps) → staging none → production
+**Hosting:** GoDaddy WordPress administrado (Deluxe), SSH/SFTP · **Deploy:** deploy-ssh →
+staging (sitio de ensayo de GoDaddy) → production
 
 **Language:** talk to César in Spanish — questions, reports, PR titles and bodies, commit
 descriptions. Site copy in Spanish. Code and comments: like the code around them.
@@ -37,7 +37,7 @@ the word or ID and open only what comes up.
 
 ## Stack
 
-- **WordPress** PENDIENTE · PHP PENDIENTE · tema Woodmart (premium) + hijo `woodmart-child` ·
+- **WordPress** 7.1.4 · PHP 8.3 · tema Woodmart (premium) + hijo `woodmart-child` ·
   WooCommerce · WooCommerce PDF Invoices & Packing Slips 5.16.6 **vendorizado y modificado**
   (`custom/`, `templates/Factura80mm|58mm/`: reaplicar en cada actualización) · WPCodeBox 2
 - **All the code in the plugin** `wp-content/plugins/inversionesjl22-site/` (ACF in its `acf-json/`),

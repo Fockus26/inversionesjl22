@@ -7,6 +7,7 @@
     "context:restore": "bash scripts/context-backup.sh --restore",
     "shots": "node scripts/pr-screenshots.ts .pr-shots.json",
     "local:up": "docker compose --env-file .env.local up -d",
+    "local:sync": "docker compose --env-file .env.local --profile tools run --rm content-sync",
     "site:pull": "bash scripts/pull-site.sh",
     "local:wp": "docker compose --env-file .env.local --profile cli run --rm wpcli wp",
     "shots:publish": "bash scripts/publish-pr-shots.sh .pr-shots",

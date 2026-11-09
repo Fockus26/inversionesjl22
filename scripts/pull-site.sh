@@ -2,7 +2,7 @@
 # pull-site.sh — bring a WordPress site down to a local copy (web-agent-kit,
 # reference/tech/wordpress-adopt.md §3). Everything lands in .site-pull/ (gitignored).
 #
-#   bash scripts/pull-site.sh ssh     [--no-uploads]        rsync of wp-content + wp db export over SSH
+#   bash scripts/pull-site.sh ssh     [--no-uploads|--db-only]  rsync of wp-content (by folder) + wp db export over SSH
 #   bash scripts/pull-site.sh ftps    [--no-uploads]        lftp mirror of wp-content, TLS forced
 #   bash scripts/pull-site.sh archive --file <backup>       cPanel full backup (.tar.gz) or .zip
 #   bash scripts/pull-site.sh dbs     --dump <file.sql[.gz]>   split a multi-database dump, find the live one
@@ -22,10 +22,11 @@ die() { log "ERROR: $*"; exit 1; }
 need() { [ -n "${!1:-}" ] || die "$1 is not set (.env.local, see .env.example)"; }
 
 MODE=${1:-}; [ $# -gt 0 ] && shift
-NO_UPLOADS=0; FILE=; DUMP=; ENV_KIND=compose; NO_BACKUP=0
+NO_UPLOADS=0; DB_ONLY=0; FILE=; DUMP=; ENV_KIND=compose; NO_BACKUP=0
 while [ $# -gt 0 ]; do
   case $1 in
     --no-uploads) NO_UPLOADS=1 ;;
+    --db-only) DB_ONLY=1 ;;
     --file) FILE=$2; shift ;;
     --dump) DUMP=$2; shift ;;
     --env) ENV_KIND=$2; shift ;;
@@ -52,12 +53,61 @@ run_tool() {
   [ -n "${PULL_SSH_KEY:-}" ] && ssh_mount=(-v "$(host_dir "$(cd "$(dirname "$PULL_SSH_KEY")" && pwd)/$(basename "$PULL_SSH_KEY")"):/key-src:ro")
   # MSYS_NO_PATHCONV: Git Bash would rewrite /work into a Windows path.
   MSYS_NO_PATHCONV=1 docker run --rm -i -v "$(host_dir "$PWD"):/work" -w /work "${ssh_mount[@]}" \
-    -e LFTP_PASSWORD --add-host=host.docker.internal:host-gateway "$IMAGE" \
+    -e LFTP_PASSWORD -e PULL_SSH_PASSWORD -e SSH_ASKPASS -e SSH_ASKPASS_REQUIRE --add-host=host.docker.internal:host-gateway "$IMAGE" \
     sh -c '[ -f /key-src ] && install -m 600 /key-src /tmp/key; exec "$@"' -- "$@"
 }
 
-EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/)
-[ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(uploads/)
+# Anchored to wp-content/ (the transfer root): a bare "cache/" also dropped every plugin folder
+# called cache (Yoast's src/.../application/cache, and wp-cli died with no output in the copy).
+# object-cache.php: the host's Redis drop-in (Object Cache Pro), useless and fatal in the copy.
+EXCLUDES=(/object-cache.php /cache/ /upgrade/ /ai1wm-backups/ /updraft/ /backups-dup-lite/ /wflogs/ /et-cache/ /litespeed/ /uploads/wc-logs/)
+# Pieces of wp-content that are only live logs or host tooling (mu-plugins: the host's own,
+# such as GoDaddy's gdcorp-wordpress, which never verified): not needed locally,
+# and they change while they are copied, so they never verify.
+SKIP_PIECES=(logs mwp-download uploads/debug-log-manager mu-plugins)
+[ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(/uploads/)
+
+# wp-content goes down one piece at a time (each top-level entry, each plugin, theme and uploads/
+# subfolder, and each month of uploads/<year>):
+# a single rsync of a big wp-content sends a file list so long that some hosts (GoDaddy Managed
+# WordPress) close the session before it ends. A piece already verified is written to
+# .site-pull/chunks-done.txt and skipped on the next run, so every run moves forward.
+pull_ssh_files() {
+  local done_list="$OUT/chunks-done.txt" chunks c try plan left pending=0
+  touch "$done_list"
+  chunks=$(run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" $batch \
+    "$PULL_SSH" "cd '$PULL_PATH/wp-content' && for d in * .[!.]*; do [ -e \"\$d\" ] || continue; case \"\$d\" in plugins|themes|uploads) for u in \"\$d\"/* \"\$d\"/.[!.]*; do [ -e \"\$u\" ] || continue; case \"\$u\" in uploads/[0-9][0-9][0-9][0-9]) for m in \"\$u\"/*; do [ -e \"\$m\" ] && echo \"\$m\"; done ;; *) echo \"\$u\" ;; esac; done ;; *) echo \"\$d\" ;; esac; done; true") ||
+    die "could not list wp-content on the server: run it again"
+  mkdir -p "$OUT/files/wp-content/uploads"
+  : >"$OUT/pending.txt"
+  while IFS= read -r c; do
+    [ -n "$c" ] || continue
+    local e skip=0
+    for e in "${EXCLUDES[@]}"; do case "/$c/" in "$e"*) skip=1 ;; esac; done
+    [ "$skip" = 1 ] && continue
+    case " ${SKIP_PIECES[*]} " in *" $c "*) continue ;; esac
+    # Done as itself, or inside a bigger piece an earlier run already verified (themes, uploads/2024).
+    grep -qxF -e "$c" -e "${c%/*}" -e "${c%%/*}" "$done_list" && continue
+    log "rsync wp-content/$c"
+    for try in 1 2 3; do
+      run_tool rsync "${args[@]}" -R --info=stats1 "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null && break
+      [ "$try" = 3 ] && { log "wp-content/$c: cut off 3 times, left for the next run"; pending=1; continue 2; }
+      log "cut off (try $try): retrying in 60 s"; sleep 60
+    done
+    plan=
+    for try in 1 2 3; do
+      plan=$(run_tool rsync "${args[@]}" -R -n --out-format='%i %n' "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null) && break
+      [ "$try" = 3 ] && { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue 2; }
+      log "verification cut off (try $try): retrying in 60 s"; sleep 60
+    done
+    left=$(printf '%s\n' "$plan" | grep -c '^[<>c]' || true)
+    if [ "$left" = 0 ]; then echo "$c" >>"$done_list"
+    else printf '%s\n' "$plan" | grep '^[<>c]' >>"$OUT/pending.txt"; log "wp-content/$c: $left files still differ"; pending=1; fi
+  done <<<"$chunks"
+  [ "$pending" = 0 ] || die "some pieces are not complete (list in $OUT/pending.txt): run it again (it resumes)"
+  rm -f "$OUT/pending.txt" "$done_list"
+  log "files complete"
+}
 
 # --- ssh ---------------------------------------------------------------------------------------
 pull_ssh() {
@@ -70,26 +120,25 @@ pull_ssh() {
   else
     IN_CONTAINER=1; key_opt=${PULL_SSH_KEY:+-i /tmp/key}
   fi
+  # Key AND password (GoDaddy Managed WordPress): with PULL_SSH_PASSWORD in .env.local, ssh asks
+  # scripts/ssh-askpass.sh for it instead of the terminal, and BatchMode stays off.
+  local batch="-o BatchMode=yes"
+  if [ -n "${PULL_SSH_PASSWORD:-}" ]; then
+    batch="-o BatchMode=no -o NumberOfPasswordPrompts=1"
+    export PULL_SSH_PASSWORD SSH_ASKPASS_REQUIRE=force
+    if [ -n "${IN_CONTAINER:-}" ]; then export SSH_ASKPASS=/work/scripts/ssh-askpass.sh
+    else export SSH_ASKPASS="$PWD/scripts/ssh-askpass.sh"; fi
+  fi
   # First run trusts the host key and stores it in .site-pull/known_hosts; later runs verify it.
-  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts -o BatchMode=yes"
+  local sshcmd="ssh -p $port $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$OUT/known_hosts -o ServerAliveInterval=30 -o ServerAliveCountMax=6 $batch"
   local args=(-az --partial --delete -e "$sshcmd")
   for e in "${EXCLUDES[@]}"; do args+=(--exclude "$e"); done
-  local src="$PULL_SSH:$PULL_PATH/wp-content/" dst="$OUT/files/wp-content/"
-  log "rsync $src -> $dst"
-  run_tool rsync "${args[@]}" --info=stats1 "$src" "$dst"
-  log "verifying (dry run)"
-  local left
-  local plan
-  plan=$(run_tool rsync "${args[@]}" -n --out-format='%i %n' "$src" "$dst") ||
-    die "the verification could not reach the server: run it again"
-  left=$(printf '%s\n' "$plan" | grep -c '^[<>c]' || true)
-  [ "$left" = 0 ] || die "$left files still differ: run it again (it resumes)"
-  log "files complete"
+  if [ "$DB_ONLY" = 1 ]; then log "files skipped (--db-only)"; else pull_ssh_files; fi
 
   log "database: wp db export on the server"
   local dump="$OUT/db/live-$(date +%Y%m%d-%H%M%S).sql"
-  if run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" -o BatchMode=yes \
-    "$PULL_SSH" "cd '$PULL_PATH' && wp db export - --single-transaction" > "$dump"; then
+  if run_tool ssh -p "$port" $key_opt -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$OUT/known_hosts" $batch \
+    "$PULL_SSH" "cd '$PULL_PATH' && wp db export - --single-transaction --skip-plugins --skip-themes" > "$dump"; then
     grep -q 'CREATE TABLE' "$dump" || die "the export in $dump has no tables"
     log "database -> $dump  (next: pull-site.sh import --dump $dump)"
   else
@@ -103,7 +152,7 @@ pull_ftps() {
   need PULL_FTP_HOST; need PULL_FTP_USER; need PULL_FTP_PASSWORD; need PULL_PATH
   export LFTP_PASSWORD=$PULL_FTP_PASSWORD
   local ex='' e
-  for e in "${EXCLUDES[@]}"; do ex+=" --exclude-glob ${e%/}/"; done
+  for e in "${EXCLUDES[@]}"; do ex+=" --exclude-glob ${e#/}"; done
   # TLS forced on control and data, certificate verified: never plain FTP.
   # PULL_FTP_CA_FILE only for a host whose CA is not public (or a test server).
   local setup="set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate yes;
@@ -242,9 +291,20 @@ import_db() {
   else
     wp_cli db import - "${DBF[@]}" < "$src"
   fi
+  # A Redis/Memcached object cache drop-in (Object Cache Pro on GoDaddy) points at the host's
+  # server: locally every wp command dies with "Error establishing a Redis connection".
+  local oc="$OUT/files/wp-content/object-cache.php"
+  if [ -f "$oc" ]; then mv "$oc" "$oc.off"; log "object-cache.php drop-in disabled in the copy (-> object-cache.php.off)"; fi
+  # The host's own must-use plugins (GoDaddy's System Plugin, Object Cache Pro) need its servers.
+  local mu
+  for mu in gd-system-plugin.php object-cache-pro.php; do
+    mu="$OUT/files/wp-content/mu-plugins/$mu"
+    if [ -f "$mu" ]; then mv "$mu" "$mu.off"; log "host mu-plugin $(basename "$mu") disabled in the copy"; fi
+  done
   local from=${SITE_URL%/} to=${LOCAL_URL%/} alt
   case $from in https://*) alt="http://${from#https://}" ;; *) alt="https://${from#http://}" ;; esac
-  local sr=(--all-tables --precise --skip-columns=guid --report-changed-only)
+  # Without plugins or theme: a broken plugin in the copy must not stop the URL change.
+  local sr=(--all-tables --precise --skip-columns=guid --report-changed-only --skip-plugins --skip-themes)
   for f in "$from" "$alt"; do
     log "search-replace $f -> $to (plain and JSON-escaped)"
     wp_cli search-replace "$f" "$to" "${sr[@]}"
