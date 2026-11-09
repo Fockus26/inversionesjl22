@@ -58,9 +58,10 @@ run_tool() {
 }
 
 EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/ litespeed/ wc-logs/)
-# Top-level pieces of wp-content that are only live logs or host tooling: not needed locally,
+# Pieces of wp-content that are only live logs or host tooling (mu-plugins: the host's own,
+# such as GoDaddy's gdcorp-wordpress, which never verified): not needed locally,
 # and they change while they are copied, so they never verify.
-SKIP_PIECES=(logs mwp-download uploads/debug-log-manager)
+SKIP_PIECES=(logs mwp-download uploads/debug-log-manager mu-plugins)
 [ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(uploads/)
 
 # wp-content goes down one piece at a time (each top-level entry, each plugin, theme and uploads/
