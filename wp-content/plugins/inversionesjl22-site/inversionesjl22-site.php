@@ -30,8 +30,10 @@ require_once INVERSIONESJL22_SITE_DIR . 'includes/migrations.php';
  * run its snippets) and only if its marker function is not there yet: while the snippet is
  * active, WPCodeBox's copy runs; once it is deactivated, this one takes over.
  *
- * file => a function the module (and its snippet) declares, or '' for a module that guards
- * each of its functions itself (helpers.php: two snippets, one function each).
+ * file => a function the module (and its snippet) declares; or 'hook:<hook>:<file>' for a snippet
+ * that declares none (only closures): skipped while <hook> has a callback from that file of
+ * wpcodebox_functionality_plugin; or '' for a module that guards each of its functions itself
+ * (helpers.php: two snippets, one function each).
  *
  * Listed in the order WPCodeBox loaded the snippets (wpcodebox_functionality_plugin/plugin.php):
  * hooks on the same priority run in that order, and some depend on it (the roles filters
@@ -41,6 +43,7 @@ add_action(
 	'plugins_loaded',
 	static function () {
 		$modules = array(
+			'includes/clear-cart.php'                 => 'hook:woocommerce_cart_actions:snippets/boton_limpiar_carrito.php',
 			'includes/helpers.php'                    => '',
 			'includes/payment-status.php'             => 'paymentStatusUI',
 			'includes/change-shipping-method.php'     => 'fetchShippingMethods',
@@ -60,7 +63,13 @@ add_action(
 			'includes/qr-scan.php'                    => 'generateQrCode',
 		);
 		foreach ( $modules as $file => $marker ) {
-			if ( '' === $marker || ! function_exists( $marker ) ) {
+			if ( 0 === strpos( $marker, 'hook:' ) ) {
+				list( , $hook, $snippet ) = explode( ':', $marker, 3 );
+				$skip = inversionesjl22_site_from_wpcodebox( $hook, $snippet );
+			} else {
+				$skip = '' !== $marker && function_exists( $marker );
+			}
+			if ( ! $skip ) {
 				require_once INVERSIONESJL22_SITE_DIR . $file;
 			}
 		}

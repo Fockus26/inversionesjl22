@@ -1,0 +1,107 @@
+// Header menus (mobile categories, desktop nav with horizontal scroll) and the floating cart's
+// remove button. Moved as is from WPCodeBox › Styles › Menu (snippet 63).
+
+// En el menu mobile
+.mobile-nav {
+    // Aquellos que hayan sido desplegados en la lista categrias
+    ul.mobile-categories-menu.wd-active {
+        > li.opener-page {
+            border-bottom: 2px solid #ffb16f;
+
+            > a {
+                background-color: #ffb16f;
+                color: white;
+            }
+
+            > ul {
+                > li.opener-page {
+                    border-bottom: 2px solid #ffcd6f;
+
+                    > a, > span {
+                        background-color: #ffcd6f;
+                        color: white;
+                    }
+
+                    > ul > li {
+                        background-color: #f6f6f6;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// En el menu desktop
+.whb-main-header {
+    // Logo Centrado en el top bar
+    > .whb-top-bar .whb-col-center {
+        flex: inherit !important;
+    }
+
+    // Navegacion con scroll horizontal en caso de overflow
+    > .whb-general-header .whb-general-header-inner {
+        gap: 20px !important;
+        
+        // No funciona el scroll horizontal sin que se muestre el dropdown
+        .whb-col-center {
+            min-width: 0 !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+
+            
+                &::-webkit-scrollbar {
+                    display: none !important;
+                }
+
+            .wd-header-main-nav {
+                overflow: visible !important;
+                white-space: nowrap !important;
+                width: max-content !important;
+
+
+                .wd-nav-main {
+                    display: flex !important;
+                    flex-wrap: nowrap !important;
+                    min-width: max-content !important;
+
+                        > li {
+                            flex: 0 0 auto !important;
+                            position: relative !important;
+
+                            .wd-dropdown {
+                                background-color: #f2f2f2 !important;
+                                border-radius: 10px !important;
+                                box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.15) !important;
+                            }
+                        }
+                }
+            }
+        }
+    }
+
+}
+
+// Modificar boton remover item carrito
+#xt_woofc .xt_woofc-list .xt_woofc-product-details .xt_woofc-actions {
+    padding-right: 10px;
+
+    .remove {
+        font-size: 0 !important;
+        position: relative;
+
+        &:hover::before {
+            color: #262626;
+        }
+
+        &::before {    
+            content: "\f1f8";
+            font-family: "Font Awesome 6 Free";
+            color: #f99705;
+            font-weight: 900;
+            font-size: 18px;
+            transition: .2s ease-in;
+        }
+    }
+}
