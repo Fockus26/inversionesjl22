@@ -42,6 +42,7 @@ add_action(
 	static function () {
 		$modules = array(
 			'includes/helpers.php'                    => '',
+			'includes/payment-status.php'             => 'paymentStatusUI',
 			'includes/order-statuses.php'             => 'createCustomStatus',
 			'includes/order-transition-notices.php'   => 'renderFeedbackStatusTransitionActions',
 			'includes/roles-config.php'               => 'setUserPermissions',
