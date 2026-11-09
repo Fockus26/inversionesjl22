@@ -32,7 +32,7 @@ Clientes finales en Colombia (y el equipo interno: storage_manager en bodega, se
 
 ## Stack
 
-- **WordPress** 7.1.4 · PHP 8.3 (producción; el sitio de ensayo está en 8.2) · page builder: ninguno; tema
+- **WordPress** 7.1.4 · PHP 8.3.36 · MySQL 8.4 (producción y ensayo en PHP 8.3) · page builder: ninguno; tema
   Woodmart (premium) + hijo `wp-content/themes/woodmart-child`
 - **Plugins clave:** WooCommerce PENDIENTE · WooCommerce PDF Invoices & Packing Slips 5.16.6,
   vendorizado en `wp-content/plugins/woocommerce-pdf-invoices-packing-slips` y **modificado**
@@ -40,8 +40,14 @@ Clientes finales en Colombia (y el equipo interno: storage_manager en bodega, se
   respaldo en `wpcodebox/` con `manifest.json`) · YITH (integración en el tema hijo)
 - **Premium plugins:** Woodmart, WPCodeBox 2, PENDIENTE el resto (local copy: Docker from the backup)
 - **Hosting access:** SSH/SFTP · panel: GoDaddy WordPress administrado 2.0, plan Deluxe (1 sitio,
-  20 GB; el sitio usa ~11 GB). CDN de GoDaddy activa además de Cloudflare. WP-CLI por SSH:
-  PENDIENTE confirmar
+  20 GB; el sitio usa ~11 GB). CDN de GoDaddy activa además de Cloudflare. WP-CLI, rsync y
+  mysqldump disponibles por SSH; raíz de WordPress `html`. wp-content ~6 GB, base ~620 MB
+  (185 tablas, prefijo `wp_`).
+  - **Acceso SSH:** llave **y** contraseña ("publickey ... partial success"). `pull-site.sh` pasa
+    la contraseña con `SSH_ASKPASS` desde `PULL_SSH_PASSWORD`. GoDaddy corta las sesiones
+    largas: wp-content se baja por carpetas (`.site-pull/chunks-done.txt` guarda lo verificado).
+  - Los plugins emiten avisos de PHP 8.3 en cada `wp` por SSH (user-role-editor,
+    woocommerce-multi-currency, floating cart): `wp db export` va con `--skip-plugins --skip-themes`.
   - Producción: SSH `892841.us32.ssh.myftpupload.com` · dominio temporal `892841.us32.myftpupload.com`
     (antes `vx0.93c.myftpupload.com`, cambiado por GoDaddy en 2026-11)
   - Ensayo (staging): SSH `985270.us32.ssh.myftpupload.com` · URL PENDIENTE
