@@ -12,19 +12,17 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 |---|---|---|
 | 1–9, 11 (24 snippets + SKU) | — | en `main` (#5 y #15, integración de la cadena #6–#14) |
 | 10 mu-plugin Turnstile | — | descartada: no hacía nada; César lo apagó en producción |
-| 12 imagen Open Graph | `feat/site-og-image` | PR #16 en revisión |
-| 13 a11y estado de pago | `fix/site-payment-status-a11y` | PR #17 en revisión |
-| 14 hallazgos del código migrado | `fix/site-snippet-findings` | PR #18 en revisión (#16 y #18 tocan la misma zona del cargador: el segundo en mergearse puede pedir resolver un conflicto) |
-| Paso 5 deploy SSH | `chore/deploy-ssh` | PR #19 en revisión; sin secrets el job se salta |
+| 12–14, paso 5 (OG, a11y pago, hallazgos, deploy SSH) | — | en `main` (#16–#19) |
+| 15 limpieza: cron huérfano + yith-activator | `chore/site-cleanup` | PR #20 en revisión (migraciones 002 y 003) |
 
 ## Blocked (actions for César or external)
 
-- Revisar y mergear #16, #17, #18, #19 (base `main`).
-- **Informe de Envíos roto en producción** (probable): `\Dompdf\Dompdf` no existe en PDF Invoices
-  5.16.6 → error fatal al generar el PDF. Arreglado en #18, llega con el deploy que apague WPCodeBox.
-- Entornos `staging` y `production` en GitHub con los secrets `DEPLOY_*` (lista en el PR #19).
-- Decidir: `yith-activator` (plugin pirata, inactivo); limpiar cron huérfano (§5 del plan) con
-  una migración; SKU sin categoría = `SIN-CATEGORIA-<id>` (categoría por defecto) ¿ok?
+- Revisar y mergear #20.
+- **Staging sin secrets**: falta el usuario SSH del sitio de ensayo (GoDaddy, panel → SSH) y su
+  huella. `production` ya tiene los 6 secrets (de `.env.local`) y solo acepta `main`; sin revisor
+  obligatorio (el plan gratuito no lo permite en repo privado).
+- **Informe de Envíos roto en producción** (probable): arreglado en `main`, llega con el deploy
+  que apague WPCodeBox.
 
 ## Notes of the copy (local only)
 

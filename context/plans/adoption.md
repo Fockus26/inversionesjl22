@@ -91,7 +91,8 @@ con las cuentas de storage_manager y seo_manager.
 `blc_*` (Broken Link Checker), `puc_cron_check_updates-hostinger`, `siteground_optimizer_*`,
 `wp_statistics_*`, `wpmudev_scheduled_jobs`, `wpo_weekly_cron_tasks`, `sbc_about_us_update`,
 `wcct_*`, `jetpack_*`/`jp_*` (Jetpack inactivo), `objectcache_*`. Se limpian con una migración
-del plugin cuando se decida (no a mano en el admin).
+del plugin cuando se decida (no a mano en el admin). **Hecho: migración 002, PR #20** (César, 2026-11-09).
+`sbc_about_us_update` (Instagram Feed) y `jetpack_*` (jetpack-connection de WooCommerce) siguen vivos: no se tocan.
 
 ## 6. Unidades (una rama y un PR cada una, después de mergear #4)
 
@@ -110,6 +111,7 @@ del plugin cuando se decida (no a mano en el admin).
 | 11 | `feat/site-sku-generator` | tema hijo | nuevo comportamiento en producción · PR #14 |
 | 12 | `feat/site-og-image` | tema hijo | vía Yoast · PR #16 · og:description de la portada: vacía (César, 2026-11-09) |
 | 13 | `fix/site-payment-status-a11y` | hallazgo de U5 | label de Moneda apunta a otro campo y Monto sin label (WCAG 1.3.1, 4.1.2) · PR #17 |
+| 15 | `chore/site-cleanup` | decisiones de César | cron huérfano (002) y borrar yith-activator (003) · PR #20 |
 | 14 | `fix/site-snippet-findings` | hallazgos de U6 y U8 | nonce de Limpiar carrito; `$transient_key` sin definir y `'wc-impreso'` en el AJAX del informe; `ob_get_clean()` sin `ob_start()` en el PDF; nonce del informe; `reset()` de una llamada en combinados; SKU: redeclaración fatal si se activa el tema hijo (U11); **PDF del informe roto: `DompdfDompdf` no existe en PDF Invoices 5.16.6** · PR #18 |
 
 **Sin doble ejecución mientras tanto (hecho en U1):** el plugin carga cada módulo migrado al
