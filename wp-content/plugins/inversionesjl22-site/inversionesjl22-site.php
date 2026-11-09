@@ -61,6 +61,7 @@ add_action(
 			'includes/shipping-report/ui.php'         => 'shippingReportUI',
 			'includes/order-transitions.php'          => 'orderStatusTransition',
 			'includes/qr-scan.php'                    => 'generateQrCode',
+			'includes/sku-generator.php'              => 'generar_sku_por_categoria_limpio',
 		);
 		foreach ( $modules as $file => $marker ) {
 			if ( 0 === strpos( $marker, 'hook:' ) ) {
