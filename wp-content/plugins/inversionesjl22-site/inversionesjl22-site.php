@@ -22,3 +22,28 @@ define( 'INVERSIONESJL22_SITE_URL', plugin_dir_url( __FILE__ ) );
 require_once INVERSIONESJL22_SITE_DIR . 'includes/assets.php';
 require_once INVERSIONESJL22_SITE_DIR . 'includes/acf-json.php';
 require_once INVERSIONESJL22_SITE_DIR . 'includes/migrations.php';
+
+/*
+ * Features moved from WPCodeBox (context/plans/adoption.md). Until the deploy that deactivates
+ * WPCodeBox, the same functions are still declared by its snippets, and declaring them twice is
+ * a fatal error. So each module loads at the very end of plugins_loaded (after WPCodeBox has
+ * run its snippets) and only if its marker function is not there yet: while the snippet is
+ * active, WPCodeBox's copy runs; once it is deactivated, this one takes over.
+ *
+ * file => a function the module (and its snippet) declares, or '' for a module that guards
+ * each of its functions itself (helpers.php: two snippets, one function each).
+ */
+add_action(
+	'plugins_loaded',
+	static function () {
+		$modules = array(
+			'includes/helpers.php' => '',
+		);
+		foreach ( $modules as $file => $marker ) {
+			if ( '' === $marker || ! function_exists( $marker ) ) {
+				require_once INVERSIONESJL22_SITE_DIR . $file;
+			}
+		}
+	},
+	PHP_INT_MAX
+);
