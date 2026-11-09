@@ -5,9 +5,13 @@
 #   docker compose --env-file .env.local run --rm wpcli wp <command>   (bun run local:wp -- <command>)
 #   docker compose --env-file .env.local --profile tools up -d phpmyadmin
 #
-# The backup's wp-content (.site-pull/files/wp-content, from scripts/pull-site.sh) is mounted,
-# and the repo's plugin on top of its copy: an edit in the repo is live, the backup's old copy
-# of the plugin is never used.
+# The backup's wp-content (.site-pull/files/wp-content, from scripts/pull-site.sh) is copied,
+# without uploads/, into the wp-content volume by `bun run local:sync` (after every site:pull):
+# PHP reading 30,000 plugin files through the Windows mount took ~50 s a page. The sync only
+# adds and updates; for a clean copy, `bun run local:down`, `docker volume rm
+# <project>_wp-content` and sync again. uploads/ stays mounted from .site-pull (5 GB of images
+# PHP does not read per request), and the repo's plugin, child theme and PDF plugin go on top:
+# an edit in the repo is live.
 name: ${COMPOSE_PROJECT_NAME:-inversionesjl22}
 
 x-wp-env: &wp-env
@@ -28,12 +32,14 @@ x-wp-env: &wp-env
 
 x-wp-volumes: &wp-volumes
   - wp-core:/var/www/html
-  - ./.site-pull/files/wp-content:/var/www/html/wp-content
+  - wp-content:/var/www/html/wp-content
+  - ./.site-pull/files/wp-content/uploads:/var/www/html/wp-content/uploads
   - ./wp-content/plugins/${SITE_PLUGIN:?set SITE_PLUGIN in .env.local}:/var/www/html/wp-content/plugins/${SITE_PLUGIN}
   - ./wp-content/themes/${CHILD_THEME}:/var/www/html/wp-content/themes/${CHILD_THEME}
   # The PDF plugin is vendored and modified in the repo: the copy runs the repo's version.
   - ./wp-content/plugins/woocommerce-pdf-invoices-packing-slips:/var/www/html/wp-content/plugins/woocommerce-pdf-invoices-packing-slips
   - ./local/mu-plugins/kit-mailpit.php:/var/www/html/wp-content/mu-plugins/kit-mailpit.php:ro
+  - ./local/php-local.ini:/usr/local/etc/php/conf.d/zz-kit-local.ini:ro
 
 services:
   db:
@@ -77,7 +83,8 @@ services:
     environment: *wp-env
     volumes:
       - wp-core:/var/www/html
-      - ./.site-pull/files/wp-content:/var/www/html/wp-content
+      - wp-content:/var/www/html/wp-content
+      - ./.site-pull/files/wp-content/uploads:/var/www/html/wp-content/uploads
       - ./wp-content/plugins/${SITE_PLUGIN}:/var/www/html/wp-content/plugins/${SITE_PLUGIN}
       - ./wp-content/themes/${CHILD_THEME}:/var/www/html/wp-content/themes/${CHILD_THEME}
       - ./wp-content/plugins/woocommerce-pdf-invoices-packing-slips:/var/www/html/wp-content/plugins/woocommerce-pdf-invoices-packing-slips
@@ -101,6 +108,16 @@ services:
     ports:
       - "${PHPMYADMIN_PORT:-8081}:80"
 
+  # bun run local:sync: the backup's wp-content (without uploads/) into the volume.
+  content-sync:
+    image: alpine:3.20
+    profiles: [tools]
+    volumes:
+      - ./.site-pull/files/wp-content:/src:ro
+      - wp-content:/dst
+    command: ["sh", "-c", "apk add --no-cache -q rsync && rsync -a --exclude /uploads/ --chown=33:33 /src/ /dst/ && du -sh /dst"]
+
 volumes:
   db:
   wp-core:
+  wp-content:
