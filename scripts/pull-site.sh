@@ -288,6 +288,12 @@ import_db() {
   # server: locally every wp command dies with "Error establishing a Redis connection".
   local oc="$OUT/files/wp-content/object-cache.php"
   if [ -f "$oc" ]; then mv "$oc" "$oc.off"; log "object-cache.php drop-in disabled in the copy (-> object-cache.php.off)"; fi
+  # The host's own must-use plugins (GoDaddy's System Plugin, Object Cache Pro) need its servers.
+  local mu
+  for mu in gd-system-plugin.php object-cache-pro.php; do
+    mu="$OUT/files/wp-content/mu-plugins/$mu"
+    if [ -f "$mu" ]; then mv "$mu" "$mu.off"; log "host mu-plugin $(basename "$mu") disabled in the copy"; fi
+  done
   local from=${SITE_URL%/} to=${LOCAL_URL%/} alt
   case $from in https://*) alt="http://${from#https://}" ;; *) alt="https://${from#http://}" ;; esac
   local sr=(--all-tables --precise --skip-columns=guid --report-changed-only)
