@@ -11,10 +11,12 @@
     "site:pull": "bash scripts/pull-site.sh",
     "local:wp": "docker compose --env-file .env.local --profile cli run --rm wpcli wp",
     "shots:publish": "bash scripts/publish-pr-shots.sh .pr-shots",
-    "local:down": "docker compose --env-file .env.local down"
+    "local:down": "docker compose --env-file .env.local down",
+    "build:css": "sass --no-source-map --style=expanded wp-content/plugins/inversionesjl22-site/assets/scss/site.scss wp-content/plugins/inversionesjl22-site/assets/site.css"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
-    "@playwright/test": "^1.65.0"
+    "@playwright/test": "^1.65.0",
+    "sass": "1.77.8"
   }
 }
