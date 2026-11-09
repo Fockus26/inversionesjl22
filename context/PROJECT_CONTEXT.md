@@ -42,7 +42,7 @@ Clientes finales en Colombia (y el equipo interno: storage_manager en bodega, se
 - **Hosting access:** SSH/SFTP · panel: GoDaddy WordPress administrado 2.0, plan Deluxe (1 sitio,
   20 GB; el sitio usa ~11 GB). CDN de GoDaddy activa además de Cloudflare. WP-CLI, rsync y
   mysqldump disponibles por SSH; raíz de WordPress `html`. wp-content ~6 GB, base ~620 MB
-  (185 tablas, prefijo `wp_`).
+  (185 tablas, prefijo no estándar: `TABLE_PREFIX` en `.env.local`).
   - **Acceso SSH:** llave **y** contraseña ("publickey ... partial success"). `pull-site.sh` pasa
     la contraseña con `SSH_ASKPASS` desde `PULL_SSH_PASSWORD`. GoDaddy corta las sesiones
     largas: wp-content se baja por carpetas (`.site-pull/chunks-done.txt` guarda lo verificado).
