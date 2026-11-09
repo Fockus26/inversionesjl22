@@ -94,8 +94,12 @@ pull_ssh_files() {
       [ "$try" = 3 ] && { log "wp-content/$c: cut off 3 times, left for the next run"; pending=1; continue 2; }
       log "cut off (try $try): retrying in 60 s"; sleep 60
     done
-    plan=$(run_tool rsync "${args[@]}" -R -n --out-format='%i %n' "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null) ||
-      { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue; }
+    plan=
+    for try in 1 2 3; do
+      plan=$(run_tool rsync "${args[@]}" -R -n --out-format='%i %n' "$PULL_SSH:$PULL_PATH/wp-content/./$c" "$OUT/files/wp-content/" </dev/null) && break
+      [ "$try" = 3 ] && { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue 2; }
+      log "verification cut off (try $try): retrying in 60 s"; sleep 60
+    done
     left=$(printf '%s
 ' "$plan" | grep -c '^[<>c]' || true)
     if [ "$left" = 0 ]; then echo "$c" >>"$done_list"
