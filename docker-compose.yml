@@ -66,6 +66,10 @@ services:
     image: wordpress:${WPCLI_IMAGE_TAG:-cli-php8.2}
     profiles: [cli]
     user: "33:33"   # www-data, like the web container: files it writes stay writable by WordPress
+    # The image's entrypoint prepends `wp` when `wp help <first arg>` succeeds; a plugin that
+    # ends wp-cli early makes that always "succeed", and every command ran as `wp wp …` doing
+    # nothing. Commands here always start with `wp`.
+    entrypoint: ["/usr/bin/env"]
     depends_on:
       db: { condition: service_healthy }
     environment: *wp-env

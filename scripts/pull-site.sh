@@ -57,12 +57,14 @@ run_tool() {
     sh -c '[ -f /key-src ] && install -m 600 /key-src /tmp/key; exec "$@"' -- "$@"
 }
 
-EXCLUDES=(cache/ upgrade/ ai1wm-backups/ updraft/ backups-dup-lite/ wflogs/ et-cache/ litespeed/ wc-logs/)
+# Anchored to wp-content/ (the transfer root): a bare "cache/" also dropped every plugin folder
+# called cache (Yoast's src/.../application/cache, and wp-cli died with no output in the copy).
+EXCLUDES=(/cache/ /upgrade/ /ai1wm-backups/ /updraft/ /backups-dup-lite/ /wflogs/ /et-cache/ /litespeed/ /uploads/wc-logs/)
 # Pieces of wp-content that are only live logs or host tooling (mu-plugins: the host's own,
 # such as GoDaddy's gdcorp-wordpress, which never verified): not needed locally,
 # and they change while they are copied, so they never verify.
 SKIP_PIECES=(logs mwp-download uploads/debug-log-manager mu-plugins)
-[ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(uploads/)
+[ "$NO_UPLOADS" = 1 ] && EXCLUDES+=(/uploads/)
 
 # wp-content goes down one piece at a time (each top-level entry, each plugin, theme and uploads/
 # subfolder, and each month of uploads/<year>):
@@ -79,7 +81,9 @@ pull_ssh_files() {
   : >"$OUT/pending.txt"
   while IFS= read -r c; do
     [ -n "$c" ] || continue
-    case " ${EXCLUDES[*]} " in *" ${c##*/}/ "*|*" $c/ "*) continue ;; esac
+    local e skip=0
+    for e in "${EXCLUDES[@]}"; do case "/$c/" in "$e"*) skip=1 ;; esac; done
+    [ "$skip" = 1 ] && continue
     case " ${SKIP_PIECES[*]} " in *" $c "*) continue ;; esac
     # Done as itself, or inside a bigger piece an earlier run already verified (themes, uploads/2024).
     grep -qxF -e "$c" -e "${c%/*}" -e "${c%%/*}" "$done_list" && continue
@@ -145,7 +149,7 @@ pull_ftps() {
   need PULL_FTP_HOST; need PULL_FTP_USER; need PULL_FTP_PASSWORD; need PULL_PATH
   export LFTP_PASSWORD=$PULL_FTP_PASSWORD
   local ex='' e
-  for e in "${EXCLUDES[@]}"; do ex+=" --exclude-glob ${e%/}/"; done
+  for e in "${EXCLUDES[@]}"; do ex+=" --exclude-glob ${e#/}"; done
   # TLS forced on control and data, certificate verified: never plain FTP.
   # PULL_FTP_CA_FILE only for a host whose CA is not public (or a test server).
   local setup="set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate yes;
@@ -296,7 +300,8 @@ import_db() {
   done
   local from=${SITE_URL%/} to=${LOCAL_URL%/} alt
   case $from in https://*) alt="http://${from#https://}" ;; *) alt="https://${from#http://}" ;; esac
-  local sr=(--all-tables --precise --skip-columns=guid --report-changed-only)
+  # Without plugins or theme: a broken plugin in the copy must not stop the URL change.
+  local sr=(--all-tables --precise --skip-columns=guid --report-changed-only --skip-plugins --skip-themes)
   for f in "$from" "$alt"; do
     log "search-replace $f -> $to (plain and JSON-escaped)"
     wp_cli search-replace "$f" "$to" "${sr[@]}"
