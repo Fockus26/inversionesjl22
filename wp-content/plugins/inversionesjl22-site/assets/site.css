@@ -1,0 +1,72 @@
+.mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page {
+  border-bottom: 2px solid #ffb16f;
+}
+.mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page > a {
+  background-color: #ffb16f;
+  color: white;
+}
+.mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page > ul > li.opener-page {
+  border-bottom: 2px solid #ffcd6f;
+}
+.mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page > ul > li.opener-page > a, .mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page > ul > li.opener-page > span {
+  background-color: #ffcd6f;
+  color: white;
+}
+.mobile-nav ul.mobile-categories-menu.wd-active > li.opener-page > ul > li.opener-page > ul > li {
+  background-color: #f6f6f6;
+}
+
+.whb-main-header > .whb-top-bar .whb-col-center {
+  flex: inherit !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner {
+  gap: 20px !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center {
+  min-width: 0 !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center::-webkit-scrollbar {
+  display: none !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center .wd-header-main-nav {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  width: max-content !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center .wd-header-main-nav .wd-nav-main {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center .wd-header-main-nav .wd-nav-main > li {
+  flex: 0 0 auto !important;
+  position: relative !important;
+}
+.whb-main-header > .whb-general-header .whb-general-header-inner .whb-col-center .wd-header-main-nav .wd-nav-main > li .wd-dropdown {
+  background-color: #f2f2f2 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+#xt_woofc .xt_woofc-list .xt_woofc-product-details .xt_woofc-actions {
+  padding-right: 10px;
+}
+#xt_woofc .xt_woofc-list .xt_woofc-product-details .xt_woofc-actions .remove {
+  font-size: 0 !important;
+  position: relative;
+}
+#xt_woofc .xt_woofc-list .xt_woofc-product-details .xt_woofc-actions .remove:hover::before {
+  color: #262626;
+}
+#xt_woofc .xt_woofc-list .xt_woofc-product-details .xt_woofc-actions .remove::before {
+  content: "\f1f8";
+  font-family: "Font Awesome 6 Free";
+  color: #f99705;
+  font-weight: 900;
+  font-size: 18px;
+  transition: 0.2s ease-in;
+}
