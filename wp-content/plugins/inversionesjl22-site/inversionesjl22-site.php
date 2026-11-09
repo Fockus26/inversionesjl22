@@ -43,6 +43,8 @@ add_action(
 		$modules = array(
 			'includes/helpers.php'                    => '',
 			'includes/payment-status.php'             => 'paymentStatusUI',
+			'includes/change-shipping-method.php'     => 'fetchShippingMethods',
+			'includes/combined-orders.php'            => 'resolveOrderId',
 			'includes/order-statuses.php'             => 'createCustomStatus',
 			'includes/order-transition-notices.php'   => 'renderFeedbackStatusTransitionActions',
 			'includes/roles-config.php'               => 'setUserPermissions',
