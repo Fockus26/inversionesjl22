@@ -41,12 +41,14 @@ add_action(
 	'plugins_loaded',
 	static function () {
 		$modules = array(
-			'includes/helpers.php'         => '',
-			'includes/order-statuses.php'  => 'createCustomStatus',
-			'includes/roles-config.php'    => 'setUserPermissions',
-			'includes/roles-actions.php'   => 'getStatusAjaxAction',
-			'includes/roles-access.php'    => 'authorizeOrderView',
-			'includes/customer-status.php' => 'get_custom_user_statuses',
+			'includes/helpers.php'                    => '',
+			'includes/order-statuses.php'             => 'createCustomStatus',
+			'includes/order-transition-notices.php'   => 'renderFeedbackStatusTransitionActions',
+			'includes/roles-config.php'               => 'setUserPermissions',
+			'includes/roles-actions.php'              => 'getStatusAjaxAction',
+			'includes/roles-access.php'               => 'authorizeOrderView',
+			'includes/customer-status.php'            => 'get_custom_user_statuses',
+			'includes/order-transitions.php'          => 'orderStatusTransition',
 		);
 		foreach ( $modules as $file => $marker ) {
 			if ( '' === $marker || ! function_exists( $marker ) ) {
