@@ -32,15 +32,21 @@ require_once INVERSIONESJL22_SITE_DIR . 'includes/migrations.php';
  *
  * file => a function the module (and its snippet) declares, or '' for a module that guards
  * each of its functions itself (helpers.php: two snippets, one function each).
+ *
+ * Listed in the order WPCodeBox loaded the snippets (wpcodebox_functionality_plugin/plugin.php):
+ * hooks on the same priority run in that order, and some depend on it (the roles filters
+ * rebuild the actions order-statuses.php adds).
  */
 add_action(
 	'plugins_loaded',
 	static function () {
 		$modules = array(
-			'includes/helpers.php'       => '',
-			'includes/roles-config.php'  => 'setUserPermissions',
-			'includes/roles-access.php'  => 'authorizeOrderView',
-			'includes/roles-actions.php' => 'getStatusAjaxAction',
+			'includes/helpers.php'         => '',
+			'includes/order-statuses.php'  => 'createCustomStatus',
+			'includes/roles-config.php'    => 'setUserPermissions',
+			'includes/roles-actions.php'   => 'getStatusAjaxAction',
+			'includes/roles-access.php'    => 'authorizeOrderView',
+			'includes/customer-status.php' => 'get_custom_user_statuses',
 		);
 		foreach ( $modules as $file => $marker ) {
 			if ( '' === $marker || ! function_exists( $marker ) ) {
