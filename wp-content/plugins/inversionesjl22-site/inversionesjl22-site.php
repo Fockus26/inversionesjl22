@@ -37,7 +37,10 @@ add_action(
 	'plugins_loaded',
 	static function () {
 		$modules = array(
-			'includes/helpers.php' => '',
+			'includes/helpers.php'       => '',
+			'includes/roles-config.php'  => 'setUserPermissions',
+			'includes/roles-access.php'  => 'authorizeOrderView',
+			'includes/roles-actions.php' => 'getStatusAjaxAction',
 		);
 		foreach ( $modules as $file => $marker ) {
 			if ( '' === $marker || ! function_exists( $marker ) ) {
