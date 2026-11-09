@@ -100,11 +100,9 @@ pull_ssh_files() {
       [ "$try" = 3 ] && { log "wp-content/$c: could not verify, left for the next run"; pending=1; continue 2; }
       log "verification cut off (try $try): retrying in 60 s"; sleep 60
     done
-    left=$(printf '%s
-' "$plan" | grep -c '^[<>c]' || true)
+    left=$(printf '%s\n' "$plan" | grep -c '^[<>c]' || true)
     if [ "$left" = 0 ]; then echo "$c" >>"$done_list"
-    else printf '%s
-' "$plan" | grep '^[<>c]' >>"$OUT/pending.txt"; log "wp-content/$c: $left files still differ"; pending=1; fi
+    else printf '%s\n' "$plan" | grep '^[<>c]' >>"$OUT/pending.txt"; log "wp-content/$c: $left files still differ"; pending=1; fi
   done <<<"$chunks"
   [ "$pending" = 0 ] || die "some pieces are not complete (list in $OUT/pending.txt): run it again (it resumes)"
   rm -f "$OUT/pending.txt" "$done_list"
