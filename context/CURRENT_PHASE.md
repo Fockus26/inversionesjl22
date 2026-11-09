@@ -15,13 +15,14 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 12 imagen Open Graph | `feat/site-og-image` | PR #16 en revisión |
 | 13 a11y estado de pago | `fix/site-payment-status-a11y` | PR #17 en revisión |
 | 14 hallazgos del código migrado | `fix/site-snippet-findings` | PR #18 en revisión (#16 y #18 tocan la misma zona del cargador: el segundo en mergearse puede pedir resolver un conflicto) |
+| Paso 5 deploy SSH | `chore/deploy-ssh` | PR #19 en revisión; sin secrets el job se salta |
 
 ## Blocked (actions for César or external)
 
-- Revisar y mergear #16, #17, #18 (base `main`).
+- Revisar y mergear #16, #17, #18, #19 (base `main`).
 - **Informe de Envíos roto en producción** (probable): `\Dompdf\Dompdf` no existe en PDF Invoices
   5.16.6 → error fatal al generar el PDF. Arreglado en #18, llega con el deploy que apague WPCodeBox.
-- Secrets de deploy en GitHub (GoDaddy: llave SSH + contraseña).
+- Entornos `staging` y `production` en GitHub con los secrets `DEPLOY_*` (lista en el PR #19).
 - Decidir: `yith-activator` (plugin pirata, inactivo); limpiar cron huérfano (§5 del plan) con
   una migración; SKU sin categoría = `SIN-CATEGORIA-<id>` (categoría por defecto) ¿ok?
 
