@@ -6,7 +6,8 @@
  *
  * This file: the submenu page with the form, and its JS (assets/js/shipping-report.js, from
  * snippet 50, which WPCodeBox printed in the <head> of the admin pages whose URL contains
- * "shipping-report": enqueued in the same place). From Shipping Report › UI (snippet 53).
+ * "shipping-report": enqueued in the same place). From Shipping Report › UI (snippet 53). Only
+ * change: the form carries a nonce (checked in init.php).
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -47,6 +48,7 @@ function shippingReportUI() {
 
         <form class="my-form" method="get" target="_blank" action="<?php echo admin_url('admin-post.php'); ?>">
             <input type="hidden" name="action" value="shipping_report">
+            <?php wp_nonce_field('shipping_report', '_wpnonce', false); ?>
 
             <!-- País y Empresa de Envío -->
             <fieldset>

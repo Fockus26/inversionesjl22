@@ -61,7 +61,7 @@ add_action(
 			'includes/shipping-report/ui.php'         => 'shippingReportUI',
 			'includes/order-transitions.php'          => 'orderStatusTransition',
 			'includes/qr-scan.php'                    => 'generateQrCode',
-			'includes/sku-generator.php'              => 'generar_sku_por_categoria_limpio',
+			'includes/sku-generator.php'              => '',
 			'includes/og-image.php'                   => '',
 		);
 		foreach ( $modules as $file => $marker ) {

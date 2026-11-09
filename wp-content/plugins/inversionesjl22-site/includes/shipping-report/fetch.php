@@ -6,7 +6,10 @@
  *
  * This file: the couriers of a country (fetchShippingCompaniesByCountry()) and the AJAX the form
  * uses to fill its courier select. From Shipping Report › Fetch_1 (snippet 55), which only ran
- * in wp-admin: same here.
+ * in wp-admin: same here. Changes since: the AJAX read a cache under an undefined $transient_key
+ * (nothing ever wrote it: a PHP warning per request), now it asks fetchShippingCompaniesByCountry()
+ * directly; and the Impreso status is wc-impressed, not wc-impreso, so the couriers of printed
+ * orders are listed too.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -57,12 +60,7 @@ function ajaxFetchShippingCompanies() {
         wp_send_json_error(['message' => 'País vacío'], 400);
     }
 
-    // Cache: intenta recuperar transients por país
-    $countryCompanies = get_transient($transient_key);
-
-    if ($countryCompanies === false) {
-        $countryCompanies = fetchShippingCompaniesByCountry($country);
-    }
+    $countryCompanies = fetchShippingCompaniesByCountry($country);
 
     if ( empty( $countryCompanies ) ) {
         wp_send_json_success(['empresas' => []]);
@@ -79,7 +77,7 @@ function ajaxFetchShippingCompanies() {
         WHERE oi.order_item_type = 'shipping'
           AND pm_country.meta_value = %s
           AND p.post_type = 'shop_order'
-          AND p.post_status IN ('wc-processing','wc-completed','wc-impreso')
+          AND p.post_status IN ('wc-processing','wc-completed','wc-impressed')
     ", $country);
 
     $queryCompanies = $wpdb->get_col($query);
