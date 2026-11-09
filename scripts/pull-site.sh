@@ -59,7 +59,8 @@ run_tool() {
 
 # Anchored to wp-content/ (the transfer root): a bare "cache/" also dropped every plugin folder
 # called cache (Yoast's src/.../application/cache, and wp-cli died with no output in the copy).
-EXCLUDES=(/cache/ /upgrade/ /ai1wm-backups/ /updraft/ /backups-dup-lite/ /wflogs/ /et-cache/ /litespeed/ /uploads/wc-logs/)
+# object-cache.php: the host's Redis drop-in (Object Cache Pro), useless and fatal in the copy.
+EXCLUDES=(/object-cache.php /cache/ /upgrade/ /ai1wm-backups/ /updraft/ /backups-dup-lite/ /wflogs/ /et-cache/ /litespeed/ /uploads/wc-logs/)
 # Pieces of wp-content that are only live logs or host tooling (mu-plugins: the host's own,
 # such as GoDaddy's gdcorp-wordpress, which never verified): not needed locally,
 # and they change while they are copied, so they never verify.
