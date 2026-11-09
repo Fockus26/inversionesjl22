@@ -5,7 +5,7 @@
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
  * This file: the admin-post handler that queries the orders and asks for the PDF. From Shipping
- * Report › Init_1 (snippet 61).
+ * Report › Init_1 (snippet 61). Only change: it checks the form's nonce after the role.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -25,6 +25,7 @@ function shippingReport() {
 
     $isUserAllowed = array_intersect($allowedRoles, (array) $user->roles);
     if (!$isUserAllowed) wp_die('No autorizado');
+    check_admin_referer('shipping_report');
 
     global $wpdb;
 

@@ -4,7 +4,8 @@
  * cédula, the barrio and the shipping line of the orders it was made from (the plugin does not
  * copy them).
  *
- * Moved as is from WPCodeBox › Order › Combined Orders (snippet 44).
+ * Moved from WPCodeBox › Order › Combined Orders (snippet 44). Only change: reset() gets a
+ * variable, not a call (a PHP notice on every combination).
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -126,7 +127,8 @@ function combinedOrderFields($newOrderId, $orderIds) {
     foreach ($orderIds as $oid) {
         $oorder = wc_get_order($oid);
         if ($oorder && $oorder->get_items('shipping')) {
-            $items = reset($oorder->get_items('shipping'));
+            $shippingItems = $oorder->get_items('shipping');
+            $items = reset($shippingItems);
             break;
         }
     }

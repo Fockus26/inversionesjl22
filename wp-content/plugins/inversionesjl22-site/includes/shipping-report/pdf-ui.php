@@ -5,7 +5,8 @@
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
  * This file: the report's HTML (with the PDF plugin's custom/shipping-report.css). From Shipping
- * Report › PDF UI (snippet 51).
+ * Report › PDF UI (snippet 51). Only change: its own ob_start() before the HTML; it returned
+ * ob_get_clean() of whatever buffer PHP had open (output_buffering), an empty PDF without one.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -19,6 +20,7 @@ function pdfUIShippingReport($args) {
     $cssFile = WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/custom/shipping-report.css';
     $css = file_exists($cssFile) ? file_get_contents($cssFile) : '';
 
+    ob_start();
     ?>
       <style>
           <?php echo $css; ?>
