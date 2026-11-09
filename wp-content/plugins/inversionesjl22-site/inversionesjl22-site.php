@@ -52,6 +52,7 @@ add_action(
 			'includes/roles-access.php'               => 'authorizeOrderView',
 			'includes/customer-status.php'            => 'get_custom_user_statuses',
 			'includes/order-transitions.php'          => 'orderStatusTransition',
+			'includes/qr-scan.php'                    => 'generateQrCode',
 		);
 		foreach ( $modules as $file => $marker ) {
 			if ( '' === $marker || ! function_exists( $marker ) ) {
