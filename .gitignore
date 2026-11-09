@@ -69,6 +69,9 @@ wp-content/plugins/*/vendor/
 # El plugin PDF está vendorizado y necesita sus dependencias (dompdf, etc.).
 # Va después de las reglas vendor/ para que gane.
 !wp-content/plugins/woocommerce-pdf-invoices-packing-slips/vendor/
+# Cachés de métricas que Dompdf escribe al generar un PDF (*.ufm.json, *.afm.json): no son del plugin.
+wp-content/plugins/woocommerce-pdf-invoices-packing-slips/vendor/strauss/dompdf/dompdf/lib/fonts/*.json
+!wp-content/plugins/woocommerce-pdf-invoices-packing-slips/vendor/strauss/dompdf/dompdf/lib/fonts/installed-fonts.dist.json
 
 # PR screenshots (web-agent-kit)
 .pr-shots/
