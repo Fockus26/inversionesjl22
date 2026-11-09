@@ -11,7 +11,9 @@
 #                        SSH_ASKPASS (scripts/ssh-askpass.sh), never on a command line
 #   DEPLOY_KNOWN_HOSTS   the host's `ssh-keyscan` line, checked once by César: never scanned
 #                        here, which would trust whatever answers
-# The production environment has César as a required reviewer.
+# The production environment only accepts runs from main (required reviewers need a paid plan
+# on a private repo): a production deploy is still only ever someone pressing Run workflow.
+# Production's DEPLOY_KNOWN_HOSTS is .site-pull/known_hosts, the key the first site:pull trusted.
 #
 # Until the secrets exist, the job says so and stops without failing (each merge would
 # otherwise be a red X). Only the site plugin is uploaded: the child theme is not active, and
