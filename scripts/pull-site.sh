@@ -284,6 +284,10 @@ import_db() {
   else
     wp_cli db import - "${DBF[@]}" < "$src"
   fi
+  # A Redis/Memcached object cache drop-in (Object Cache Pro on GoDaddy) points at the host's
+  # server: locally every wp command dies with "Error establishing a Redis connection".
+  local oc="$OUT/files/wp-content/object-cache.php"
+  if [ -f "$oc" ]; then mv "$oc" "$oc.off"; log "object-cache.php drop-in disabled in the copy (-> object-cache.php.off)"; fi
   local from=${SITE_URL%/} to=${LOCAL_URL%/} alt
   case $from in https://*) alt="http://${from#https://}" ;; *) alt="https://${from#http://}" ;; esac
   local sr=(--all-tables --precise --skip-columns=guid --report-changed-only)
