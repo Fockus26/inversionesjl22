@@ -8,7 +8,8 @@
  * Moved as is from WPCodeBox › Order › Payment Status (snippet 43, which only ran in wp-admin:
  * same here) and Payment Status_1 (snippet 46, the JS that shows currency and amount only for
  * "Por cobrar"; WPCodeBox printed it as a <script> in every wp-admin <head>, here it is
- * enqueued in the same place).
+ * enqueued in the same place). Only change since: the "Moneda" label pointed at the status
+ * select and the amount had no label (WCAG 1.3.1, 4.1.2); now each field has its own.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -60,11 +61,12 @@ function paymentStatusUI($order){
                 </select>
             </div>
             <div id="payment-info" style="<?php echo ($status == 'pending') ? '' : 'display:none;'; ?>">
-                <label for="payment-status">Moneda</label>
+                <label for="currency">Moneda</label>
                 <select id="currency" name="currency">
                     <option value="pesos" <?php selected($currency, 'pesos'); ?>>Pesos</option>
                     <option value="dolares" <?php selected($currency, 'dolares'); ?>>Dólares</option>
                 </select>
+                <label for="amount">Monto a cobrar</label>
                 <input type="number" min="1" step="any" id="amount" name="amount" value="<?php echo esc_attr($amount); ?>" placeholder="Monto a cobrar">
             </div>
         </fieldset>
