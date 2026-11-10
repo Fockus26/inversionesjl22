@@ -17,10 +17,10 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 
 ## Blocked (actions for César or external)
 
-- Revisar y mergear #20.
+- Revisar y mergear #21 (`.env.example`: variables de staging).
 - Entornos `staging` y `production` con sus 6 secrets DEPLOY_* (staging: `DEPLOY_PATH=html`,
   supuesto; huella = la de producción, clúster us32). `production` solo acepta `main`, sin revisor
-  obligatorio (el plan gratuito no lo permite en repo privado). El 1.er deploy a staging nunca corrió.
+  obligatorio (el plan gratuito no lo permite en repo privado). 1.er deploy a staging OK (run 42732238808): plugin subido, inactivo, migraciones saltadas.
 - **Informe de Envíos roto en producción** (probable): arreglado en `main`, llega con el deploy
   que apague WPCodeBox.
 
@@ -36,8 +36,9 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 
 ## Next
 
-1. Tras mergear #16–#18: en la copia, apagar WPCodeBox 2 y `wpcodebox_functionality_plugin` y hacer
-   el recorrido completo (paso 6 de `wordpress-adopt.md`) con storage_manager y seo_manager.
-2. Deploy (paso 5): workflow deploy-ssh → staging de GoDaddy → producción. En producción el plugin
-   se activa y WPCodeBox se desactiva **en el mismo deploy**.
+1. **Recorrido del paso 6 hecho en la copia (2026-11-10) con WPCodeBox apagado**: tienda, carrito
+   (Limpiar con nonce), checkout de visitante → pedido, correos en Mailpit, factura 80 mm con QR,
+   Informe de Envíos, y los 3 roles: idéntico con WPCodeBox encendido. WPCodeBox queda apagado en la copia.
+2. En **staging**: activar `inversionesjl22-site` y apagar WPCodeBox 2 + `wpcodebox_functionality_plugin`
+   a la vez (corre las migraciones 001–003), revisar staging; luego producción igual — César decide.
 3. Después: plugins con actualización pendiente (Woodmart 7.2.5 muy atrás) — César.
