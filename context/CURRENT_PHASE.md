@@ -18,9 +18,9 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 ## Blocked (actions for César or external)
 
 - Revisar y mergear #20.
-- **Staging sin secrets**: falta el usuario SSH del sitio de ensayo (GoDaddy, panel → SSH) y su
-  huella. `production` ya tiene los 6 secrets (de `.env.local`) y solo acepta `main`; sin revisor
-  obligatorio (el plan gratuito no lo permite en repo privado).
+- Entornos `staging` y `production` con sus 6 secrets DEPLOY_* (staging: `DEPLOY_PATH=html`,
+  supuesto; huella = la de producción, clúster us32). `production` solo acepta `main`, sin revisor
+  obligatorio (el plan gratuito no lo permite en repo privado). El 1.er deploy a staging nunca corrió.
 - **Informe de Envíos roto en producción** (probable): arreglado en `main`, llega con el deploy
   que apague WPCodeBox.
 
