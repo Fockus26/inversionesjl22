@@ -39,6 +39,9 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 1. **Recorrido del paso 6 hecho en la copia (2026-11-10) con WPCodeBox apagado**: tienda, carrito
    (Limpiar con nonce), checkout de visitante → pedido, correos en Mailpit, factura 80 mm con QR,
    Informe de Envíos, y los 3 roles: idéntico con WPCodeBox encendido. WPCodeBox queda apagado en la copia.
-2. En **staging**: activar `inversionesjl22-site` y apagar WPCodeBox 2 + `wpcodebox_functionality_plugin`
-   a la vez (corre las migraciones 001–003), revisar staging; luego producción igual — César decide.
+2. **Staging hecho (2026-11-10)**: plugin activo, WPCodeBox 2 + functionality apagados, migraciones
+   001–003 corridas (002 no quitó nada: staging no tenía ese cron; yith-activator borrado). Páginas
+   públicas 200 sin errores. Falta: César revisa wp-admin de staging con sus roles.
+   Luego **producción** (César): Run workflow → production, y el mismo cambio (activar plugin,
+   apagar WPCodeBox, migrate) — idealmente en hora de poco tráfico.
 3. Después: plugins con actualización pendiente (Woodmart 7.2.5 muy atrás) — César.
