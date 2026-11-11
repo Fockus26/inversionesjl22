@@ -15,7 +15,8 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 12–14, paso 5 (OG, a11y pago, hallazgos, deploy SSH) | — | en `main` (#16–#19) |
 | 15 limpieza: cron huérfano + yith-activator | — | en `main` (#20) |
 | 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | en `main` (#22), desplegado a staging y probado con los 3 roles |
-| 17 roles: reglas validadas en el servidor | `fix/roles-server-side` | PR en revisión (ya subido a staging a mano) |
+| 17 roles: reglas validadas en el servidor | — | en `main` (#23), staging OK |
+| **Producción** | `main` 3125c1b | **desplegado 2026-11-11 21:52Z** (run 43106759267): plugin activo, WPCodeBox 2 + functionality apagados, migraciones 001–003 corridas. Respaldo: `~/backups-claude/prod-pre-plugin-20261111-2150.sql.gz` + `active_plugins-pre.json` (servidor de producción) |
 
 ## Blocked (actions for César or external)
 
@@ -23,8 +24,8 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 - Entornos `staging` y `production` con sus 6 secrets DEPLOY_* (staging: `DEPLOY_PATH=html`,
   supuesto; huella = la de producción, clúster us32). `production` solo acepta `main`, sin revisor
   obligatorio (el plan gratuito no lo permite en repo privado). 1.er deploy a staging OK (run 42732238808): plugin subido, inactivo, migraciones saltadas.
-- **Informe de Envíos roto en producción** (probable): arreglado en `main`, llega con el deploy
-  que apague WPCodeBox.
+- César: purgar Cloudflare, revisar wp-admin de producción con los 3 roles e Informe de Envíos.
+  Reversa: `wp plugin activate wpcodebox2 wpcodebox_functionality_plugin && wp plugin deactivate inversionesjl22-site`.
 
 ## Notes of the copy (local only)
 
