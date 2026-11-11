@@ -293,95 +293,27 @@ function jl_update_customer_status() {
 }
 
 add_action(
-    'admin_footer',
+    'admin_enqueue_scripts',
     'jl_customer_status_preview_script'
 );
 
+// The preview's select saves on change (assets/js/customer-status.js). Only in the orders list,
+// where the preview opens; WPCodeBox printed it inline in every wp-admin footer. Its styles
+// are in assets/css/admin-form.css.
 function jl_customer_status_preview_script() {
-
-    ?>
-
-    <script>
-
-        jQuery(function ($) {
-
-            $(document).on(
-                'change',
-                '.jl-customer-status-select',
-                function () {
-
-                    const select = $(this);
-
-                    const orderId =
-                        select.data('order-id');
-
-                    const status =
-                        select.val();
-
-                    if (!orderId) {
-                        return;
-                    }
-
-                    select.prop(
-                        'disabled',
-                        true
-                    );
-
-                    $.ajax({
-
-                        url: ajaxurl,
-
-                        type: 'POST',
-
-                        data: {
-
-                            action:
-                                'jl_update_customer_status',
-
-                            order_id:
-                                orderId,
-
-                            status:
-                                status,
-
-                            nonce:
-                                '<?php echo esc_js(wp_create_nonce('jl_update_customer_status')); ?>'
-                        },
-
-                        success: function (response) {
-
-                            if (!response.success) {
-
-                                alert(
-                                    response.data?.message ||
-                                    'No se pudo actualizar el status.'
-                                );
-                            }
-                        },
-
-                        error: function () {
-
-                            alert(
-                                'Ocurrió un error al actualizar el status.'
-                            );
-                        },
-
-                        complete: function () {
-
-                            select.prop(
-                                'disabled',
-                                false
-                            );
-                        }
-                    });
-                }
-            );
-
-        });
-
-    </script>
-
-    <?php
+    if ('orders' !== inversionesjl22_site_admin_screen()) {
+        return;
+    }
+    wp_enqueue_script(
+        'inversionesjl22-customer-status',
+        INVERSIONESJL22_SITE_URL . 'assets/js/customer-status.js',
+        ['jquery'],
+        inversionesjl22_site_asset_version('assets/js/customer-status.js'),
+        true
+    );
+    wp_localize_script('inversionesjl22-customer-status', 'jlCustomerStatus', [
+        'nonce' => wp_create_nonce('jl_update_customer_status'),
+    ]);
 }
 
 
@@ -449,43 +381,4 @@ function jl_get_customer_status() {
         'status'  => $currentStatus,
         'options' => get_custom_user_statuses()
     ]);
-}
-
-
-/**
- * ============================================================
- * ESTILOS
- * ============================================================
- */
-
-add_action(
-    'admin_head',
-    'jl_customer_status_preview_styles'
-);
-
-function jl_customer_status_preview_styles() {
-
-    ?>
-
-    <style>
-
-        .jl-customer-status-preview {
-            margin-top: 20px;
-            padding: 15px 25px;
-            border-top: 1px solid #ddd;
-        }
-
-        .jl-customer-status-preview label {
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .jl-customer-status-preview select {
-            width: 100%;
-            max-width: 300px;
-        }
-
-    </style>
-
-    <?php
 }
