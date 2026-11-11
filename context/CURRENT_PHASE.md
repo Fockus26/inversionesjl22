@@ -17,7 +17,8 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | en `main` (#22), desplegado a staging y probado con los 3 roles |
 | 17 roles: reglas validadas en el servidor | — | en `main` (#23), staging OK |
 | 18 roles sin URE (menús por rol + migración 004) | — | en `main` (#24) |
-| 19 eficiencia: assets por pantalla, sin puente WPCodeBox | `perf/plugin-assets` | PR abierto; sigue: estilo de formularios (artifact de diseño) |
+| 19 eficiencia: assets por pantalla, sin puente WPCodeBox | — | en `main` (#25) |
+| 20 estilo de formularios: select, calendario y turno propios | `feat/admin-forms-style` | PR abierto |
 | **Producción** | `main` 3125c1b | **desplegado 2026-11-11 21:52Z** (run 43106759267): plugin activo, WPCodeBox 2 + functionality apagados, migraciones 001–003 corridas. Respaldo: `~/backups-claude/prod-pre-plugin-20261111-2150.sql.gz` + `active_plugins-pre.json` (servidor de producción) |
 
 ## Blocked (actions for César or external)
