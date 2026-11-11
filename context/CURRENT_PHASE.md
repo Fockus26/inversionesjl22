@@ -15,6 +15,7 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 12–14, paso 5 (OG, a11y pago, hallazgos, deploy SSH) | — | en `main` (#16–#19) |
 | 15 limpieza: cron huérfano + yith-activator | — | en `main` (#20) |
 | 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | en `main` (#22), desplegado a staging y probado con los 3 roles |
+| 17 roles: reglas validadas en el servidor | `fix/roles-server-side` | PR en revisión (ya subido a staging a mano) |
 
 ## Blocked (actions for César or external)
 
