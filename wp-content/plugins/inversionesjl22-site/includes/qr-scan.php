@@ -17,6 +17,11 @@ if ( ! is_admin() ) {
 	add_action(
 		'wp_enqueue_scripts',
 		static function () {
+			// Only the warehouse polls for scans (the footer below calls it for them alone);
+			// every other visitor downloaded it for nothing.
+			if ( ! is_user_logged_in() || ! current_user_can( 'storage_manager' ) ) {
+				return;
+			}
 			wp_enqueue_script(
 				'inversionesjl22-qr-scan',
 				INVERSIONESJL22_SITE_URL . 'assets/js/qr-scan.js',

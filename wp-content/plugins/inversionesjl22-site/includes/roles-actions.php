@@ -442,20 +442,32 @@ function filterBulkActionsPlugins() {
     // Si en el config está bloqueado wuoc_combine → inyectamos el JS
     if (in_array('wuoc_combine', $excluded_bulk)) : ?>
         <script>
-        jQuery(document).ready(function($) {
+        (function () {
             /**
-             * Elimina la acción "wuoc_combine" de los select de acciones en lote
-             * - Se ejecuta al cargar
-             * - Se repite cada 500ms porque el plugin la reinyecta con JS
+             * Elimina la acción "wuoc_combine" de los select de acciones en lote. El plugin la
+             * reinyecta con JS: antes se borraba cada 500 ms para siempre; ahora solo cuando el
+             * formulario cambia (MutationObserver).
              */
-            function removeWuocAction(){
-                $('select#bulk-action-selector-top option[value="wuoc_combine"]').remove();
-                $('select#bulk-action-selector-bottom option[value="wuoc_combine"]').remove();
+            function removeWuocAction() {
+                document.querySelectorAll('#bulk-action-selector-top option[value="wuoc_combine"], #bulk-action-selector-bottom option[value="wuoc_combine"]')
+                    .forEach(function (option) { option.remove(); });
             }
 
-            removeWuocAction();               // primera pasada
-            setInterval(removeWuocAction,500); // reintentos por AJAX
-        });
+            function watch() {
+                removeWuocAction();
+                // El formulario entero: el plugin puede añadir la opción o rehacer el select.
+                new MutationObserver(removeWuocAction).observe(
+                    document.getElementById('posts-filter') || document.body,
+                    { childList: true, subtree: true }
+                );
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', watch);
+            } else {
+                watch();
+            }
+        })();
         </script>
     <?php endif;
 }

@@ -128,3 +128,21 @@
         transition: none;
     }
 }
+
+/* Vista previa del pedido (lista): casilla "Status del Cliente". Antes en línea en el <head>
+   de todo wp-admin (includes/customer-status.php). */
+.jl-customer-status-preview {
+    margin-top: 20px;
+    padding: 15px 25px;
+    border-top: 1px solid #ddd;
+}
+
+.jl-customer-status-preview label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.jl-customer-status-preview select {
+    width: 100%;
+    max-width: 300px;
+}

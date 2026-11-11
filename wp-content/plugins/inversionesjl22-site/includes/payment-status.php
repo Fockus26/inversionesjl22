@@ -21,6 +21,9 @@ if ( ! is_admin() ) {
 add_action(
 	'admin_enqueue_scripts',
 	static function () {
+		if ( 'order' !== inversionesjl22_site_admin_screen() ) {
+			return;
+		}
 		wp_enqueue_script(
 			'inversionesjl22-payment-status',
 			INVERSIONESJL22_SITE_URL . 'assets/js/payment-status.js',

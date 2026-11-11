@@ -24,58 +24,56 @@ require_once INVERSIONESJL22_SITE_DIR . 'includes/acf-json.php';
 require_once INVERSIONESJL22_SITE_DIR . 'includes/migrations.php';
 
 /*
- * Features moved from WPCodeBox (context/plans/adoption.md). Until the deploy that deactivates
- * WPCodeBox, the same functions are still declared by its snippets, and declaring them twice is
- * a fatal error. So each module loads at the very end of plugins_loaded (after WPCodeBox has
- * run its snippets) and only if its marker function is not there yet: while the snippet is
- * active, WPCodeBox's copy runs; once it is deactivated, this one takes over.
+ * The features moved from WPCodeBox (context/plans/adoption.md), loaded at the end of
+ * plugins_loaded, in the order WPCodeBox loaded its snippets: hooks on the same priority run in
+ * that order, and some depend on it (the roles filters rebuild the actions order-statuses.php
+ * adds).
  *
- * file => a function the module (and its snippet) declares; or 'hook:<hook>:<file>' for a snippet
- * that declares none (only closures): skipped while <hook> has a callback from that file of
- * wpcodebox_functionality_plugin; or '' for a module that guards each of its functions itself
- * (helpers.php: two snippets, one function each).
- *
- * Listed in the order WPCodeBox loaded the snippets (wpcodebox_functionality_plugin/plugin.php):
- * hooks on the same priority run in that order, and some depend on it (the roles filters
- * rebuild the actions order-statuses.php adds).
+ * WPCodeBox is off on every site since 2026-11-11, so the per-module checks that let both run
+ * side by side are gone. One check stays: if its snippets come back (someone turns WPCodeBox on
+ * again, the old way back), their functions are already declared and loading these files would
+ * be a fatal error. Then none of them loads and the snippets do the work, as before the move.
  */
 add_action(
 	'plugins_loaded',
 	static function () {
+		if ( function_exists( 'paymentStatusUI' ) ) {
+			add_action(
+				'admin_notices',
+				static function () {
+					if ( current_user_can( 'activate_plugins' ) ) {
+						echo '<div class="notice notice-warning"><p>' . esc_html__( 'WPCodeBox está activo: Inversionesjl22 Site no carga sus módulos para no duplicarlos. Apaga WPCodeBox para usar los del plugin.', 'inversionesjl22-site' ) . '</p></div>';
+					}
+				}
+			);
+			return;
+		}
 		$modules = array(
-			'includes/clear-cart.php'                 => 'hook:woocommerce_cart_actions:snippets/boton_limpiar_carrito.php',
-			'includes/helpers.php'                    => '',
-			'includes/payment-status.php'             => 'paymentStatusUI',
-			'includes/change-shipping-method.php'     => 'fetchShippingMethods',
-			'includes/combined-orders.php'            => 'resolveOrderId',
-			'includes/order-statuses.php'             => 'createCustomStatus',
-			'includes/order-transition-notices.php'   => 'renderFeedbackStatusTransitionActions',
-			'includes/shipping-report/fetch.php'      => 'fetchShippingCompaniesByCountry',
-			'includes/roles-config.php'               => 'setUserPermissions',
-			'includes/shipping-report/init.php'       => 'shippingReport',
-			'includes/roles-actions.php'              => 'getStatusAjaxAction',
-			'includes/roles-access.php'               => 'authorizeOrderView',
-			'includes/roles-enforce.php'              => '',
-			'includes/roles-menu.php'                 => '',
-			'includes/shipping-report/pdf.php'        => 'pdfShippingReport',
-			'includes/customer-status.php'            => 'get_custom_user_statuses',
-			'includes/shipping-report/pdf-ui.php'     => 'pdfUIShippingReport',
-			'includes/shipping-report/ui.php'         => 'shippingReportUI',
-			'includes/order-transitions.php'          => 'orderStatusTransition',
-			'includes/qr-scan.php'                    => 'generateQrCode',
-			'includes/sku-generator.php'              => '',
-			'includes/og-image.php'                   => '',
+			'clear-cart',
+			'helpers',
+			'payment-status',
+			'change-shipping-method',
+			'combined-orders',
+			'order-statuses',
+			'order-transition-notices',
+			'shipping-report/fetch',
+			'roles-config',
+			'shipping-report/init',
+			'roles-actions',
+			'roles-access',
+			'roles-enforce',
+			'roles-menu',
+			'shipping-report/pdf',
+			'customer-status',
+			'shipping-report/pdf-ui',
+			'shipping-report/ui',
+			'order-transitions',
+			'qr-scan',
+			'sku-generator',
+			'og-image',
 		);
-		foreach ( $modules as $file => $marker ) {
-			if ( 0 === strpos( $marker, 'hook:' ) ) {
-				list( , $hook, $snippet ) = explode( ':', $marker, 3 );
-				$skip = inversionesjl22_site_from_wpcodebox( $hook, $snippet );
-			} else {
-				$skip = '' !== $marker && function_exists( $marker );
-			}
-			if ( ! $skip ) {
-				require_once INVERSIONESJL22_SITE_DIR . $file;
-			}
+		foreach ( $modules as $module ) {
+			require_once INVERSIONESJL22_SITE_DIR . 'includes/' . $module . '.php';
 		}
 	},
 	PHP_INT_MAX

@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 add_action(
 	'admin_enqueue_scripts',
 	static function () {
-		if ( false === strpos( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), 'shipping-report' ) ) {
+		if ( 'shipping-report' !== inversionesjl22_site_admin_screen() ) {
 			return;
 		}
 		wp_enqueue_script(
