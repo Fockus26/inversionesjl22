@@ -39,6 +39,12 @@ function orderStatusTransition($action, $status, $note) {
             wp_die(__('Pedido no encontrado', 'woocommerce'));
         }
 
+        // Las reglas del rol también en el servidor (roles-enforce.php), no solo en los botones
+        if (function_exists('inversionesjl22_site_role_can_move')
+            && !inversionesjl22_site_role_can_move($order, $status, ['quick_actions', 'order_preview_actions'])) {
+            wp_die(esc_html__('Tu rol no puede hacer este cambio de estado.', 'inversionesjl22-site'), '', ['response' => 403, 'back_link' => true]);
+        }
+
         // VALIDACIÓN: Si el método de envío requiere estado de pago, debe estar seleccionado
         $shippingMethods = getPickUpShippingMethods();
         $shippingItems = $order->get_items('shipping');

@@ -127,12 +127,18 @@ function bulkActionsCustomStatus($actions) {
     return $actions;
 }
 
+// Reglas del rol también en este lote (roles-enforce.php); sin el módulo de roles, como antes
+function inversionesjl22_site_bulk_allowed($order, $to) {
+    return !function_exists('inversionesjl22_site_role_can_move')
+        || inversionesjl22_site_role_can_move($order, $to, ['bulk_actions']);
+}
+
 add_filter('handle_bulk_actions-edit-shop_order', 'handleBulkActionsCustomStatus', 10, 3);
 function handleBulkActionsCustomStatus($redirectTo, $action, $postIds) {
     if ($action === 'mark_reserved') {
         foreach ($postIds as $postId) {
             $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'on-hold') {
+            if ($order && $order->get_status() === 'on-hold' && inversionesjl22_site_bulk_allowed($order, 'reserved')) {
                 $order->update_status('reserved', __('Marcado como reservado por acción en lote.', 'woocommerce'));
             }
         }
@@ -141,7 +147,7 @@ function handleBulkActionsCustomStatus($redirectTo, $action, $postIds) {
     if ($action === 'mark_processing') {
         foreach ($postIds as $postId) {
             $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'on-hold') {
+            if ($order && $order->get_status() === 'on-hold' && inversionesjl22_site_bulk_allowed($order, 'processing')) {
                 $order->update_status('processing', __('Marcado como procesando por acción en lote.', 'woocommerce'));
             }
         }
@@ -150,7 +156,7 @@ function handleBulkActionsCustomStatus($redirectTo, $action, $postIds) {
     if ($action === 'mark_impressed') {
         foreach ($postIds as $postId) {
             $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'processing') {
+            if ($order && $order->get_status() === 'processing' && inversionesjl22_site_bulk_allowed($order, 'impressed')) {
                 $order->update_status('impressed', __('Marcado como impreso por acción en lote.', 'woocommerce'));
             }
         }
