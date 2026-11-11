@@ -13,8 +13,8 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 1–9, 11 (24 snippets + SKU) | — | en `main` (#5 y #15, integración de la cadena #6–#14) |
 | 10 mu-plugin Turnstile | — | descartada: no hacía nada; César lo apagó en producción |
 | 12–14, paso 5 (OG, a11y pago, hallazgos, deploy SSH) | — | en `main` (#16–#19) |
-| 15 limpieza: cron huérfano + yith-activator | `chore/site-cleanup` | PR #20 en revisión (migraciones 002 y 003) |
-| 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | PR en revisión (ya subido a staging a mano) |
+| 15 limpieza: cron huérfano + yith-activator | — | en `main` (#20) |
+| 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | en `main` (#22), desplegado a staging y probado con los 3 roles |
 
 ## Blocked (actions for César or external)
 
