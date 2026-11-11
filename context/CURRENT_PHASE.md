@@ -14,6 +14,7 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 10 mu-plugin Turnstile | — | descartada: no hacía nada; César lo apagó en producción |
 | 12–14, paso 5 (OG, a11y pago, hallazgos, deploy SSH) | — | en `main` (#16–#19) |
 | 15 limpieza: cron huérfano + yith-activator | `chore/site-cleanup` | PR #20 en revisión (migraciones 002 y 003) |
+| 16 roles: vista previa y estados por URL | `fix/roles-preview-url-status` | PR en revisión (ya subido a staging a mano) |
 
 ## Blocked (actions for César or external)
 
@@ -42,6 +43,13 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 2. **Staging hecho (2026-11-10)**: plugin activo, WPCodeBox 2 + functionality apagados, migraciones
    001–003 corridas (002 no quitó nada: staging no tenía ese cron; yith-activator borrado). Páginas
    públicas 200 sin errores. Falta: César revisa wp-admin de staging con sus roles.
+   2026-11-11: staging tenía PDF Invoices 3.2.3 (clon viejo, datos hasta 23-01-2026): se subió la
+   5.16.6 del repo (respaldo de la 3.2.3 en `~/backups-claude/` del servidor de staging).
+   Staging: WP Mail SMTP inactivo + mu-plugin `staging-block-mail.php` (ningún correo sale).
+   Roles probados en staging con las 3 cuentas (2026-11-11). Hallazgos en código cerrado (también
+   en producción): vista previa sin filtro de rol (usa global $post, vacío en AJAX); estados
+   ocultos visibles por URL (`do-not-match` lo ignora WP_Query: storage ve en espera/papelera,
+   seo puede borrar de la papelera); URE Pro manda a storage al Escritorio tras cada acción rápida.
    Luego **producción** (César): Run workflow → production, y el mismo cambio (activar plugin,
    apagar WPCodeBox, migrate) — idealmente en hora de poco tráfico.
 3. Después: plugins con actualización pendiente (Woodmart 7.2.5 muy atrás) — César.
