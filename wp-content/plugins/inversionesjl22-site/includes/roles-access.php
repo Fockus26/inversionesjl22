@@ -3,6 +3,8 @@
  * Roles: who can open an order and which orders the list shows, per role.
  *
  * Moved as is from WPCodeBox › Roles › Init Globally (snippet 52). Rules: roles-config.php.
+ * Changes since: a status filter the role may not see returns no orders (it returned all of
+ * them, see below); a status with no rule (trash, pending…) is blocked without a PHP warning.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -26,7 +28,7 @@ function authorizeOrderView() {
 
     // Si el estado no está permitido o está excluido del contexto order_view ⇒ bloquear acceso
     $exclude = $ruleset['exclude_status_actions']['order_view'] ?? [];
-    if (!$ruleset[$status] || in_array($status, $exclude, true)) {
+    if (empty($ruleset[$status]) || in_array($status, $exclude, true)) {
         wp_safe_redirect(admin_url('edit.php?post_type=shop_order'));
         exit;
     }
@@ -79,8 +81,12 @@ function filterSearchOrderStatuses($query) {
         if (in_array($filter, $allowed, true)) {
             $query->set('post_status', [$filter]);
         } else {
-            // Estado no permitido → sin resultados
-            $query->set('post_status', ['do-not-match']);
+            // Estado no permitido → sin resultados. Antes: post_status ['do-not-match'], un
+            // estado sin registrar que WP_Query ignora, así que la lista salía sin filtro de
+            // estado (storage_manager veía pedidos en espera y de la papelera tecleando
+            // ?post_status=…, y seo_manager podía borrar definitivamente desde la papelera).
+            $query->set('post_status', $allowed);
+            $query->set('post__in', [0]);
         }
     }
 }

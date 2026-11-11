@@ -5,6 +5,8 @@
  *
  * Moved as is from WPCodeBox › Roles › Init (snippet 54), which only ran in wp-admin
  * (WPCodeBox condition "not frontend"): same here. Rules: roles-config.php.
+ * Changes since: the order preview filter no longer depends on the global $post (empty in its
+ * AJAX request) and skips statuses the role has off, like the quick actions do.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -204,8 +206,10 @@ function filterPDFActionsOrderStatuses($listing_actions, $order) {
 // Acciones en la vista previa de pedidos
 add_filter('woocommerce_admin_order_preview_actions', 'filterPreviewActionsOrderStatuses', 10, 2);
 function filterPreviewActionsOrderStatuses($actions, $order) {
-    global $post;
-    if (get_post_type($post) !== 'shop_order') return $actions;
+    // The preview is loaded by AJAX (woocommerce_get_order_details), where there is no global
+    // $post: checking it, as the snippet did, returned WooCommerce's own actions to every role
+    // (storage_manager could mark a processing order Completed). The order comes as an argument.
+    if (!$order instanceof WC_Order) return $actions;
     global $global_flow;
 
     $status = $order->get_status();
@@ -217,9 +221,6 @@ function filterPreviewActionsOrderStatuses($actions, $order) {
 
     // Limpiamos cualquier acción previa
     $actions = [];
-
-    // Exclusiones específicas para order preview
-    $excluded_preview = $ruleset['exclude_status_actions']['order_preview_actions'] ?? [];
 
     // Obtener flujo (por rol o global)
     $flow = $ruleset['flow'] ?? $global_flow;
@@ -250,7 +251,8 @@ function filterPreviewActionsOrderStatuses($actions, $order) {
 
     // ===== Construir acciones de vista previa =====
     foreach ($next_states as $next) {
-        if (in_array($next, $excluded_preview, true)) continue;
+        // Same check as the quick actions: also a status the role has off ('cancelled' => false).
+        if (!isStatusAllowedForAction($next, 'order_preview_actions', $ruleset)) continue;
 
         $action_key  = $action_key_map[$next] ?? $next;
         $ajax_action = getStatusAjaxAction($next);
@@ -265,7 +267,7 @@ function filterPreviewActionsOrderStatuses($actions, $order) {
     // ===== Acción especial: Cancelar =====
     if (
         in_array($status, ['on-hold', 'reserved', 'processing'], true)
-        && !in_array('cancelled', $excluded_preview, true)
+        && isStatusAllowedForAction('cancelled', 'order_preview_actions', $ruleset)
     ) {
         $actions['cancel'] = [
             'url'    => wp_nonce_url(admin_url("admin-ajax.php?action=orderToCancelled&order_id={$id}"), 'orderToCancelled'),
