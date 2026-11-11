@@ -55,6 +55,7 @@ add_action(
 			'includes/shipping-report/init.php'       => 'shippingReport',
 			'includes/roles-actions.php'              => 'getStatusAjaxAction',
 			'includes/roles-access.php'               => 'authorizeOrderView',
+			'includes/roles-enforce.php'              => '',
 			'includes/shipping-report/pdf.php'        => 'pdfShippingReport',
 			'includes/customer-status.php'            => 'get_custom_user_statuses',
 			'includes/shipping-report/pdf-ui.php'     => 'pdfUIShippingReport',
