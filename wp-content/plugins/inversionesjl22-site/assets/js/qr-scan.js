@@ -8,6 +8,7 @@
  * - La consulta no usa caché del navegador.
  * - 2026-11-11: pide los escaneos posteriores al último que vio (since) en vez de uno solo que la
  *   primera pantalla borraba; así el aviso sale en todas las pantallas de bodega.
+ * - 2026-11-12: el aviso es un snackbar abajo al centro, no una capa que tapa toda la pantalla.
  */
 function checkQrScanJs(ajaxUrl) {
     if (!ajaxUrl) {
@@ -75,49 +76,131 @@ function checkQrScanJs(ajaxUrl) {
     setInterval(poll, 3000);
 }
 
+/*
+ * The scan's result as a snackbar (2026-11-12, César, option B): a pill at the bottom, centred,
+ * over the page instead of covering the whole screen, filled with the order status's colour
+ * (the colours qr-scan.php sends, all light) and dark text #2b2a35 (7:1 or more on every one
+ * of them); a QR icon, and the message says what happened, so the colour is not the only cue.
+ * It stays 6 s, longer while the pointer is on it or it has the focus, and has a close button.
+ * Screen readers hear it from a live region that exists before the message arrives (a region
+ * created along with its text is often not announced).
+ */
+const QR_SNACKBAR_MS = 6000;
+const QR_SNACKBAR_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+    '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/>' +
+    '<path d="M7 17v.01M14 14h3M20 14v.01M14 14v3M14 20h3M17 17h3M20 17v3"/></svg>';
+
+function qrScanSnackbarSetup() {
+    if (document.getElementById('qr-scan-live')) {
+        return;
+    }
+    const style = document.createElement('style');
+    style.id = 'qr-scan-snackbar-style';
+    style.textContent =
+        '#qr-scan-notification{position:fixed;z-index:99999;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));' +
+        'box-sizing:border-box;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100vw - 32px);' +
+        'padding:8px 8px 8px 20px;font-family:inherit;font-size:18px;font-weight:600;line-height:1.35;color:#2b2a35;' +
+        'background:#ffb16e;border:1px solid rgba(43,42,53,.18);border-radius:999px;box-shadow:0 10px 30px rgba(43,42,53,.22);' +
+        'opacity:0;transform:translate(-50%,16px);transition:opacity .25s ease,transform .25s ease}' +
+        '#qr-scan-notification.is-visible{opacity:1;transform:translate(-50%,0)}' +
+        '#qr-scan-notification svg{flex:0 0 auto}' +
+        '#qr-scan-notification .qr-scan-text{flex:1 1 auto;min-width:0;padding:6px 0}' +
+        '#qr-scan-notification .qr-scan-close{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;margin:0;padding:0;' +
+        'font:inherit;font-size:24px;line-height:1;color:#2b2a35;background:rgba(43,42,53,.1);border:0;border-radius:50%;cursor:pointer}' +
+        '#qr-scan-notification .qr-scan-close:hover{background:rgba(43,42,53,.2)}' +
+        '#qr-scan-notification .qr-scan-close:focus-visible{outline:2px solid #2b2a35;outline-offset:2px}' +
+        '#qr-scan-live{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}' +
+        '@media (max-width:480px){#qr-scan-notification{border-radius:24px;padding-left:16px}}' +
+        '@media (prefers-reduced-motion:reduce){#qr-scan-notification{transition:none;transform:translate(-50%,0)}}';
+    document.head.appendChild(style);
+
+    const live = document.createElement('div');
+    live.id = 'qr-scan-live';
+    live.setAttribute('role', 'status');
+    document.body.appendChild(live);
+}
+
 function showQrScanNotification(message, color) {
-    const overlay = document.createElement('div');
-    overlay.id = 'qr-scan-notification';
+    qrScanSnackbarSetup();
 
-    Object.assign(overlay.style, {
-        position: 'fixed',
-        inset: '0',
-        background: color.replace('rgb', 'rgba').replace(')', ', 0.8)'),
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '99999',
-        opacity: '0',
-        transition: 'opacity .4s ease'
-    });
+    const snackbar = document.createElement('div');
+    snackbar.id = 'qr-scan-notification';
+    if (color) {
+        snackbar.style.background = color;
+    }
+    snackbar.insertAdjacentHTML('afterbegin', QR_SNACKBAR_ICON);
 
-    // Crear texto centrado
-    const text = document.createElement('div');
+    const text = document.createElement('span');
+    text.className = 'qr-scan-text';
     text.textContent = message;
 
-    Object.assign(text.style, {
-        fontSize: '48px',
-        fontWeight: '700',
-        color: '#000',
-        textAlign: 'center',
-        padding: '20px'
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'qr-scan-close';
+    close.setAttribute('aria-label', 'Cerrar aviso');
+    close.innerHTML = '<span aria-hidden="true">&times;</span>';
+
+    snackbar.appendChild(text);
+    snackbar.appendChild(close);
+    document.body.appendChild(snackbar);
+
+    const live = document.getElementById('qr-scan-live');
+    live.textContent = '';
+    setTimeout(function () {
+        live.textContent = message;
+    }, 100);
+
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            snackbar.classList.add('is-visible');
+        });
     });
 
-    overlay.appendChild(text);
-    document.body.appendChild(overlay);
+    let timer = 0;
+    let gone = false;
 
-    // Fade in
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-    }, 50);
+    function hide() {
+        if (gone) {
+            return;
+        }
+        gone = true;
+        clearTimeout(timer);
+        snackbar.classList.remove('is-visible');
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setTimeout(function () {
+            snackbar.remove();
+        }, reduced ? 0 : 300);
+    }
 
-    // Fade out después de 3.5s
-    setTimeout(() => {
-        overlay.style.opacity = '0';
+    function start() {
+        clearTimeout(timer);
+        timer = setTimeout(hide, QR_SNACKBAR_MS);
+    }
 
-        setTimeout(() => {
-            overlay.remove();
-        }, 400);
+    function pause() {
+        clearTimeout(timer);
+    }
 
-    }, 3500);
+    snackbar.addEventListener('mouseenter', pause);
+    snackbar.addEventListener('mouseleave', function () {
+        if (!snackbar.contains(document.activeElement)) {
+            start();
+        }
+    });
+    snackbar.addEventListener('focusin', pause);
+    snackbar.addEventListener('focusout', function (event) {
+        if (!snackbar.contains(event.relatedTarget)) {
+            start();
+        }
+    });
+    close.addEventListener('click', hide);
+    document.addEventListener('keydown', function onKey(event) {
+        if (gone) {
+            document.removeEventListener('keydown', onKey);
+        } else if (event.key === 'Escape') {
+            hide();
+        }
+    });
+
+    start();
 }
