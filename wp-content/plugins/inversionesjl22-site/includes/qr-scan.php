@@ -3,7 +3,10 @@
  * Warehouse QR: the QR on the 80 mm invoice (generateQrCode()) points to
  * ?action=qr_scan&order_id=N; scanning it as storage_manager moves an Impreso order to
  * Completado, and every storage_manager screen open on the site shows the result (checked every
- * 3 s, assets/js/qr-scan.js). Also the invoice filters that live in the same snippet: unit price
+ * 3 s, assets/js/qr-scan.js). Each scan is kept for two minutes with its time
+ * (inversionesjl22_site_qr_events()); every screen asks for the scans after the last one it saw.
+ * Before, one transient held the last scan and the first screen to ask deleted it: with the site
+ * open on several devices only one of them, at random, showed it. Also the invoice filters that live in the same snippet: unit price
  * with IVA, and "IDENTIFICACIÓN:" instead of "CÉDULA:" when the cédula is missing or short.
  *
  * Moved from WPCodeBox › PDF › Scan Qr (snippet 58) and Scan Qr_1 (snippet 62, the JS that
@@ -126,11 +129,7 @@ if ( !is_admin() ) {
             ];
             $message = $messages[$status];
 
-            set_transient('qr_scan_active', [
-                'scanned' => true,
-                'color'   => $color,
-                'message' => $message,
-            ], 60);
+            inversionesjl22_site_qr_add_event($message, $color);
         }
 
         wp_safe_redirect($doneUrl);
@@ -138,6 +137,37 @@ if ( !is_admin() ) {
     }
 }
 
+const INVERSIONESJL22_SITE_QR_EVENTS = 'inversionesjl22_site_qr_events';
+const INVERSIONESJL22_SITE_QR_KEEP    = 120; // seconds a scan stays visible to the screens
+
+/**
+ * The recent scans, oldest first: [ ['at' => float (server time), 'message', 'color'], … ].
+ */
+function inversionesjl22_site_qr_events(): array {
+    $events = get_transient(INVERSIONESJL22_SITE_QR_EVENTS);
+    if (!is_array($events)) {
+        return [];
+    }
+    $limit = microtime(true) - INVERSIONESJL22_SITE_QR_KEEP;
+    return array_values(array_filter($events, static function ($event) use ($limit) {
+        return isset($event['at']) && $event['at'] > $limit;
+    }));
+}
+
+function inversionesjl22_site_qr_add_event(string $message, string $color): void {
+    $events   = inversionesjl22_site_qr_events();
+    $events[] = ['at' => microtime(true), 'message' => $message, 'color' => $color];
+    set_transient(INVERSIONESJL22_SITE_QR_EVENTS, array_slice($events, -20), INVERSIONESJL22_SITE_QR_KEEP);
+}
+
+/*
+ * ?action=check_qr_scan&since=<server time of the last poll, or 0 on the first>: the scans
+ * after it, and the server's time for the next poll. Nothing is deleted: every screen gets them.
+ * A first poll (since=0) gets the scans of the last 20 s: the device that scanned lands on the
+ * home page after the scan and must still see it.
+ * Without "since" (the old script, until its page is reloaded) it answers "nothing": the old
+ * script would show the same scan again on every poll.
+ */
 add_action('wp_ajax_check_qr_scan', 'checkQrScanCallback');
 function checkQrScanCallback() {
     nocache_headers();
@@ -146,14 +176,26 @@ function checkQrScanCallback() {
         wp_send_json_error(['message' => 'No autorizado']);
     }
 
-    $data = get_transient('qr_scan_active');
-
-    if ($data && isset($data['scanned'])) {
-        delete_transient('qr_scan_active');
-        wp_send_json_success($data);
+    $now = microtime(true);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read only.
+    if (!isset($_GET['since'])) {
+        wp_send_json_success(['scanned' => false, 'now' => $now]);
+    }
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read only.
+    $since = (float) $_GET['since'];
+    if ($since <= 0) {
+        $since = $now - 20;
     }
 
-    wp_send_json_success(['scanned' => false]);
+    $events = array_values(array_filter(inversionesjl22_site_qr_events(), static function ($event) use ($since) {
+        return $event['at'] > $since;
+    }));
+
+    wp_send_json_success([
+        'scanned' => (bool) $events,
+        'events'  => $events,
+        'now'     => $now,
+    ]);
 }
 
 function generateQrCode($text = '', $size = 100) {
