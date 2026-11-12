@@ -24,7 +24,6 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 
 ## Blocked (actions for César or external)
 
-- Revisar y mergear #21 (`.env.example`: variables de staging).
 - Entornos `staging` y `production` con sus 6 secrets DEPLOY_* (staging: `DEPLOY_PATH=html`,
   supuesto; huella = la de producción, clúster us32). `production` solo acepta `main`, sin revisor
   obligatorio (el plan gratuito no lo permite en repo privado). 1.er deploy a staging OK (run 42732238808): plugin subido, inactivo, migraciones saltadas.
