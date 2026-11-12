@@ -10,7 +10,8 @@
  *
  * Allowlists, not blocklists (URE blocked 28 items for seo_manager): a plugin installed
  * tomorrow stays out of these roles' reach until it is added here. The lists are what each
- * role saw with URE on (.qa/menu-con-ure.json, 2026-11-11).
+ * role saw with URE on (.qa/menu-con-ure.json, 2026-11-11), minus Loco Translate for
+ * storage_manager (César, 2026-11-11).
  *
  * Keys: 'index.php', 'profile.php'… for a core screen; 'admin.php?page=<slug>' for a plugin
  * page; '<screen>.php?post_type=<type>' for edit.php, post.php and post-new.php.
@@ -32,7 +33,6 @@ function inversionesjl22_site_role_screens(): array {
 				'index.php',
 				'edit.php?post_type=shop_order',
 				'admin.php?page=shipping-report',
-				'admin.php?page=loco-config-user',
 			),
 			'screens'   => array( 'post.php?post_type=shop_order' ),
 			'admin_bar' => array( 'menu-toggle', 'site-name' ),
