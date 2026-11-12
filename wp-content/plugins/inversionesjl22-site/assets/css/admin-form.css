@@ -233,6 +233,47 @@ form.my-form > fieldset:last-of-type {
     cursor: not-allowed;
 }
 
+/* Cargando las opciones (depende de otro campo, p. ej. Empresa de envío ← País): el texto
+   «Cargando…» + un aro que gira en lugar de la flecha. Con movimiento reducido el aro queda
+   quieto; el texto ya lo dice. */
+.jl-select.is-loading .jl-select__button {
+    cursor: progress;
+}
+
+.jl-select.is-loading .jl-select__chevron {
+    display: none;
+}
+
+.jl-select.is-loading .jl-select__button::after {
+    content: "";
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid var(--jl-field-border);
+    border-top-color: var(--jl-secondary);
+    border-radius: 50%;
+    animation: jl-spin 0.8s linear infinite;
+}
+
+@keyframes jl-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.jl-visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 .jl-select__list {
     position: absolute;
     z-index: 100050; /* sobre el modal de la vista previa de WooCommerce */
@@ -449,76 +490,6 @@ form.my-form > fieldset:last-of-type {
     outline-offset: 2px;
 }
 
-/* ---------------------------------------------------------------- turno (píldoras) */
-
-.my-form .jl-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-content: start;
-}
-
-.my-form .jl-pills legend {
-    float: left;      /* deja la leyenda dentro del flujo flex del fieldset */
-    width: 100%;
-    margin-bottom: 6px;
-    padding: 0;
-}
-
-.jl-pill {
-    position: relative;
-    display: inline-flex;
-}
-
-.jl-pill input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-    margin: 0;
-}
-
-.my-form .jl-pill span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    padding: 0 18px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--jl-secondary);
-    background: var(--jl-surface);
-    border: 1.5px solid var(--jl-secondary);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.jl-pill span:hover {
-    background: var(--jl-surface-soft);
-}
-
-/* Elegido: pizarra + ✓ (no solo color). */
-.my-form .jl-pill input:checked + span {
-    color: #ffffff;
-    background: var(--jl-secondary);
-}
-
-.jl-pill input:checked + span::before {
-    content: "";
-    width: 10px;
-    height: 5px;
-    margin: -3px 2px 0 0;
-    border-left: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(-45deg);
-}
-
-.jl-pill input:focus-visible + span {
-    outline: 2px solid var(--jl-focus);
-    outline-offset: 2px;
-}
-
 /* ---------------------------------------------------------------- botones */
 
 .my-form .button.button-primary {
@@ -528,8 +499,8 @@ form.my-form > fieldset:last-of-type {
     font-size: 15px;
     font-weight: 700;
     line-height: 1;
-    color: var(--jl-on-primary);
-    background: var(--jl-primary);
+    color: #ffffff;
+    background: var(--jl-accent-text); /* terracota: con blanco 5.0:1 (el durazno solo da 1.9:1) */
     border: 0;
     border-radius: 999px;
     box-shadow: none;
@@ -543,11 +514,15 @@ form.my-form > fieldset:last-of-type {
 }
 
 .my-form .button.button-primary:focus {
-    color: var(--jl-on-primary);
-    background: var(--jl-primary);
+    color: #ffffff;
+    background: var(--jl-accent-text);
     box-shadow: none;
     outline: 2px solid var(--jl-ink);
     outline-offset: 2px;
+}
+
+.my-form .button.button-primary:hover:focus {
+    background: var(--jl-primary-hover);
 }
 
 .my-form .button.button-primary:active {
@@ -591,8 +566,10 @@ form.my-form > fieldset:last-of-type {
 
 @media (prefers-reduced-motion: reduce) {
     .my-form *,
+    .my-form *::after,
     .jl-customer-status-preview * {
         transition: none !important;
+        animation: none !important;
     }
 }
 

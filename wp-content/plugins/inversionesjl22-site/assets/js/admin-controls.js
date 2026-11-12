@@ -147,6 +147,12 @@
         combo.insertAdjacentHTML('beforeend', '<svg class="jl-select__chevron" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>');
         wrap.appendChild(combo);
         wrap.appendChild(listbox);
+        // Polite live region: "Cargando…" while the options load (the focus is usually still on
+        // the field that triggered it, so the combobox's own text would go unheard).
+        const status = document.createElement('span');
+        status.className = 'jl-visually-hidden';
+        status.setAttribute('role', 'status');
+        wrap.appendChild(status);
 
         const label = labelOf(native);
         if (label) {
@@ -201,10 +207,24 @@
                 el.setAttribute('aria-selected', j === i ? 'true' : 'false');
             });
             const text = i >= 0 && native.options[i] ? native.options[i].textContent.trim() : '';
-            valueText.textContent = text || '—';
+            // Options that depend on another field, on their way (aria-busy on the native select,
+            // set by the code that loads them): said in the field and to screen readers.
+            const busy = native.getAttribute('aria-busy') === 'true';
+            const loadingText = native.dataset.loadingText || 'Cargando…';
+            valueText.textContent = busy ? loadingText : (text || '—');
+            wrap.classList.toggle('is-loading', busy);
+            if (busy) {
+                combo.setAttribute('aria-busy', 'true');
+                close();
+            } else {
+                combo.removeAttribute('aria-busy');
+            }
+            if (status.textContent !== (busy ? loadingText : '')) {
+                status.textContent = busy ? loadingText : '';
+            }
             // The empty first option ("Selecciona…") reads as a placeholder.
-            wrap.classList.toggle('is-placeholder', i < 0 || native.value === '');
-            const disabled = native.disabled || native.options.length === 0;
+            wrap.classList.toggle('is-placeholder', busy || i < 0 || native.value === '');
+            const disabled = busy || native.disabled || native.options.length === 0;
             combo.setAttribute('aria-disabled', disabled ? 'true' : 'false');
             combo.setAttribute('tabindex', disabled ? '-1' : '0');
             if (native.jlRevalidate) {
@@ -361,7 +381,7 @@
         });
 
         // Changes made from outside: options filled by AJAX, disabled, a value set by code.
-        new MutationObserver(build).observe(native, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
+        new MutationObserver(build).observe(native, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'aria-busy'] });
         native.addEventListener('change', sync);
         combo.addEventListener('focus', sync);
         build();
@@ -638,42 +658,9 @@
 
     /* -------------------------------------------------------------------- init */
 
-    /** A required radio group (the shift pills): our message too, so the focus order holds. */
-    function enhancePills(group) {
-        if (group.dataset.jlEnhanced) {
-            return;
-        }
-        group.dataset.jlEnhanced = '1';
-        const radios = Array.from(group.querySelectorAll('input[type="radio"]'));
-        if (!radios.length || !radios[0].required) {
-            return;
-        }
-        const error = document.createElement('p');
-        error.className = 'jl-error';
-        error.id = id('error');
-        error.hidden = true;
-        group.appendChild(error);
-        group.setAttribute('aria-describedby', error.id);
-        radios.forEach(function (radio) {
-            radio.addEventListener('invalid', function (event) {
-                event.preventDefault();
-                error.textContent = 'Elige un horario.';
-                error.hidden = false;
-                const first = radio.form && radio.form.querySelector(FIELDS_INVALID);
-                if (first === radios[0] || first === radio) {
-                    radios[0].focus();
-                }
-            });
-            radio.addEventListener('change', function () {
-                error.hidden = true;
-            });
-        });
-    }
-
     function scan(root) {
         root.querySelectorAll(SELECTORS).forEach(enhanceSelect);
         root.querySelectorAll(DATES).forEach(enhanceDate);
-        root.querySelectorAll('.my-form .jl-pills').forEach(enhancePills);
     }
 
     function init() {
