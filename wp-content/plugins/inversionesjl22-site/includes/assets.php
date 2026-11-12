@@ -83,5 +83,13 @@ add_action(
 			return;
 		}
 		wp_enqueue_style( 'inversionesjl22-admin-form', INVERSIONESJL22_SITE_URL . 'assets/css/admin-form.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-form.css' ) );
+		// The forms' own select and date picker (on top of the native fields).
+		wp_enqueue_script(
+			'inversionesjl22-admin-controls',
+			INVERSIONESJL22_SITE_URL . 'assets/js/admin-controls.js',
+			array(),
+			inversionesjl22_site_asset_version( 'assets/js/admin-controls.js' ),
+			array( 'in_footer' => true )
+		);
 	}
 );

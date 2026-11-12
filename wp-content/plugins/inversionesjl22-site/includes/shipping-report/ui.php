@@ -97,15 +97,18 @@ function shippingReportUI() {
                     <label for="endDate">Fecha hasta:</label>
                     <input type="date" name="endDate" id="endDate" required>
                 </div>
-                <div>
-                    <label for="shift">Horario</label>
-                    <select name="shift" id="shift" required>
-                        <option value="">Selecciona un horario</option>
-                        <option value="morning">Matutino</option>
-                        <option value="evening">Vespertino</option>
-                        <option value="all_day">Todo el día</option>
-                    </select>
-                </div>
+                <fieldset class="jl-pills">
+                    <legend>Horario</legend>
+                    <?php
+                    // Same name and values as the select it replaces (init.php reads "shift").
+                    foreach (['morning' => 'Matutino', 'evening' => 'Vespertino', 'all_day' => 'Todo el día'] as $value => $text) :
+                    ?>
+                        <label class="jl-pill">
+                            <input type="radio" name="shift" value="<?php echo esc_attr($value); ?>" required>
+                            <span><?php echo esc_html($text); ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </fieldset>
             </fieldset>
 
             <button type="submit" class="button button-primary">Generar PDF</button>

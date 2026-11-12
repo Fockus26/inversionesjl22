@@ -1,42 +1,73 @@
 /**
- * Estilos de los formularios .my-form del admin: el "Informe de Envíos" y las casillas del
- * pedido (estado de pago, método de envío, status del cliente). Se cargan en todo wp-admin,
- * como lo hacía WPCodeBox › Form (snippet 65); movido tal cual, salvo este comentario, que
- * decía que solo se cargaban en shipping-report.
- * El color de acento sigue el esquema de color del admin de WordPress.
+ * Formularios del plugin en wp-admin: el "Informe de Envíos" (form.my-form), las casillas del
+ * pedido (.my-form: estado de pago, método de envío, status del cliente) y la casilla de la
+ * vista previa. Se cargan solo en esas pantallas (includes/assets.php).
+ *
+ * Colores y formas del sistema visual del sitio (artifact de diseño "Inversiones JL22 — Tienda
+ * de belleza", tablero Componentes y pantallas del panel). Cambio respecto al diseño: el borde de
+ * los campos (#ddd5cd, 1.4:1 sobre blanco) sube a --jl-field-border, que pasa 3:1 (WCAG 1.4.11).
+ * Select y fecha propios: assets/js/admin-controls.js (sobre los campos nativos).
  */
-.woocommerce_page_shipping-report {
-    --jl-accent: var(--wp-admin-theme-color, #2271b1);
-    --jl-accent-soft: rgba(34, 113, 177, 0.15);
-    --jl-border: #dcdcde;
-    --jl-text: #1d2327;
-    --jl-muted: #646970;
-    --jl-radius: 8px;
+
+.my-form,
+.jl-customer-status-preview {
+    --jl-primary: #ffb16e;        /* siempre con texto oscuro: con blanco no pasa contraste */
+    --jl-primary-hover: #4a4959;
+    --jl-on-primary: #2b2a35;
+    --jl-secondary: #4a4959;      /* con texto blanco, 8.7:1 */
+    --jl-ink: #2b2a35;
+    --jl-muted: #5c5b69;          /* 6.6:1 sobre blanco */
+    --jl-faint: #6b6a78;          /* 5.2:1 sobre blanco */
+    --jl-accent-text: #a4521a;    /* acento como texto sobre blanco, 5.0:1 */
+    --jl-error: #b4441c;          /* 5.5:1 sobre blanco */
+    --jl-surface: #ffffff;
+    --jl-surface-soft: #faf6f2;
+    --jl-peach: #fff1e3;
+    --jl-line: #ece4dc;           /* decorativo (bordes de tarjeta) */
+    --jl-field-border: #8c8494;   /* 3.5:1 sobre blanco */
+    --jl-focus: #4a4959;
+    --jl-radius-card: 18px;
+    --jl-radius-field: 12px;
+    --jl-field-height: 46px;
+    color: var(--jl-ink);
 }
 
-/* Tarjeta del formulario */
-.my-form {
+/* ---------------------------------------------------------------- tarjeta */
+
+/* El informe es una página propia: tarjeta como en el diseño. Las casillas del pedido viven
+   dentro de las columnas de WooCommerce: sin tarjeta, solo los campos. */
+form.my-form {
     display: grid;
-    gap: 20px;
-    padding: 24px;
-    background: #fff;
-    border: 1px solid var(--jl-border);
-    border-radius: var(--jl-radius);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    gap: 24px;
+    max-width: 960px;
+    padding: 28px;
+    background: var(--jl-surface);
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-card);
 }
 
-/* Cada grupo de campos */
+div.my-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+
 .my-form fieldset {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px 20px;
+    min-width: 0;
     margin: 0;
-    padding: 0 0 20px;
+    padding: 0;
     border: 0;
-    border-bottom: 1px solid #f0f0f1;
 }
 
-.my-form fieldset:last-of-type {
+form.my-form > fieldset {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--jl-line);
+}
+
+form.my-form > fieldset:last-of-type {
     padding-bottom: 0;
     border-bottom: 0;
 }
@@ -45,96 +76,490 @@
     display: grid;
     gap: 6px;
     align-content: start;
+    min-width: 0;
 }
 
-.my-form label {
-    font-size: 13px;
+.my-form label,
+.my-form legend,
+.jl-customer-status-preview label {
+    font-size: 14px;
     font-weight: 600;
-    color: var(--jl-text);
+    color: var(--jl-ink);
 }
 
-/* Campos */
-.my-form input,
-.my-form select {
+/* ---------------------------------------------------------------- campos */
+
+.my-form input[type="text"],
+.my-form input[type="number"],
+.my-form input[type="email"],
+.my-form input[type="search"],
+.my-form .jl-select__button,
+.my-form .jl-date__button,
+.jl-customer-status-preview .jl-select__button {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
     max-width: none;
-    min-height: 38px;
+    min-height: var(--jl-field-height);
     margin: 0;
-    padding: 6px 12px;
-    font-size: 14px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 15px;
     line-height: 1.4;
-    color: var(--jl-text);
-    background-color: #fff;
-    border: 1px solid #c3c4c7;
-    border-radius: 6px;
+    color: var(--jl-ink);
+    text-align: left;
+    background: var(--jl-surface);
+    border: 1px solid var(--jl-field-border);
+    border-radius: var(--jl-radius-field);
     box-shadow: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.my-form select {
-    padding-right: 32px;
+.my-form input[type="text"],
+.my-form input[type="number"],
+.my-form input[type="email"],
+.my-form input[type="search"] {
+    cursor: text;
+}
+
+.my-form input::placeholder {
+    color: var(--jl-faint);
+    opacity: 1;
 }
 
 .my-form input:hover,
-.my-form select:hover {
-    border-color: #8c8f94;
+.my-form .jl-select__button:hover,
+.my-form .jl-date__button:hover,
+.jl-customer-status-preview .jl-select__button:hover {
+    border-color: var(--jl-secondary);
 }
 
+/* Foco: anillo pizarra de 2 px, separado del borde (3:1 contra blanco y contra el campo). */
 .my-form input:focus,
-.my-form select:focus {
-    border-color: var(--jl-accent);
-    box-shadow: 0 0 0 3px var(--jl-accent-soft);
-    outline: 2px solid transparent;
+.my-form .jl-select__button:focus,
+.my-form .jl-date__button:focus,
+.jl-customer-status-preview .jl-select__button:focus {
+    border-color: var(--jl-secondary);
+    box-shadow: none;
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
 }
 
-/* Select de empresa vacío mientras se cargan las opciones por AJAX */
-.my-form select:disabled,
-.my-form select:empty {
-    color: var(--jl-muted);
-    background-color: #f6f7f7;
+.my-form [aria-invalid="true"],
+.jl-customer-status-preview [aria-invalid="true"] {
+    border-color: var(--jl-error);
+    border-width: 2px;
+}
+
+.jl-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--jl-error);
+}
+
+/* Error con icono, no solo color. */
+.jl-error::before {
+    content: "!";
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 18px;
+    height: 18px;
+    font-size: 12px;
+    color: #ffffff;
+    background: var(--jl-error);
+    border-radius: 50%;
+}
+
+.jl-error[hidden] {
+    display: none;
+}
+
+/* El campo nativo sigue en el formulario (lo que se envía) pero no se ve. */
+.jl-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* ---------------------------------------------------------------- select propio */
+
+.jl-select,
+.jl-date {
+    position: relative;
+    min-width: 0;
+}
+
+.jl-select__value,
+.jl-date__value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.is-placeholder .jl-select__value,
+.is-placeholder .jl-date__value {
+    color: var(--jl-faint);
+}
+
+.jl-select__chevron,
+.jl-date__icon {
+    flex: 0 0 auto;
+    color: var(--jl-secondary);
+    transition: transform 0.15s ease;
+}
+
+.jl-select.is-open .jl-select__chevron {
+    transform: rotate(180deg);
+}
+
+.jl-select__button[aria-disabled="true"] {
+    color: var(--jl-faint);
+    background: var(--jl-surface-soft);
     cursor: not-allowed;
 }
 
-/* Botón */
-.my-form .button.button-primary {
-    justify-self: start;
+.jl-select__list {
+    position: absolute;
+    z-index: 100050; /* sobre el modal de la vista previa de WooCommerce */
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 280px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    background: var(--jl-surface);
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-field);
+    box-shadow: 0 12px 32px rgba(43, 42, 53, 0.16);
+}
+
+.jl-select__list[hidden] {
+    display: none;
+}
+
+.jl-select__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     min-height: 40px;
-    padding: 0 24px;
+    padding: 0 12px 0 32px;
+    font-size: 15px;
+    color: var(--jl-ink);
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+.jl-select__option:hover,
+.jl-select__option.is-active {
+    background: var(--jl-surface-soft);
+}
+
+/* Opción con el foco del teclado: borde además del fondo. */
+.jl-select__option.is-active {
+    outline: 2px solid var(--jl-focus);
+    outline-offset: -2px;
+}
+
+/* Elegida: fondo durazno + marca ✓ (no solo color). */
+.jl-select__option[aria-selected="true"] {
+    font-weight: 600;
+    background: var(--jl-peach);
+}
+
+.jl-select__option[aria-selected="true"]::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 10px;
+    height: 5px;
+    margin-top: -4px;
+    border-left: 2px solid var(--jl-ink);
+    border-bottom: 2px solid var(--jl-ink);
+    transform: rotate(-45deg);
+}
+
+.jl-select__option[aria-disabled="true"] {
+    color: var(--jl-faint);
+    cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- calendario propio */
+
+.jl-date__dialog {
+    position: absolute;
+    z-index: 100050;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    padding: 16px;
+    background: var(--jl-surface);
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-card);
+    box-shadow: 0 12px 32px rgba(43, 42, 53, 0.16);
+    box-sizing: border-box;
+}
+
+.jl-date__dialog[hidden] {
+    display: none;
+}
+
+.jl-date__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.jl-date__title {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--jl-ink);
+}
+
+.jl-date__nav {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: var(--jl-secondary);
+    background: transparent;
+    border: 1px solid var(--jl-line);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.jl-date__nav:hover {
+    background: var(--jl-surface-soft);
+}
+
+.jl-date__grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.jl-date__grid th {
+    padding: 6px 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--jl-muted);
+    text-align: center;
+}
+
+.jl-date__grid td {
+    padding: 2px;
+    text-align: center;
+}
+
+.jl-date__day {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    min-height: 36px;
+    padding: 0;
+    font: inherit;
+    font-size: 14px;
+    color: var(--jl-ink);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.jl-date__day:hover {
+    background: var(--jl-peach);
+}
+
+.jl-date__day.is-outside {
+    color: var(--jl-faint);
+}
+
+/* Hoy: aro en el color de acento + negrita. */
+.jl-date__day[aria-current="date"] {
+    font-weight: 700;
+    border-color: var(--jl-accent-text);
+}
+
+/* Elegido: pizarra con texto blanco. */
+.jl-date__day[aria-pressed="true"] {
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--jl-secondary);
+    border-color: var(--jl-secondary);
+}
+
+.jl-date__day:disabled {
+    color: var(--jl-faint);
+    text-decoration: line-through;
+    background: transparent;
+    cursor: not-allowed;
+}
+
+.jl-date__footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.jl-date__link {
+    min-height: 40px;
+    padding: 0 12px;
+    font: inherit;
     font-size: 14px;
     font-weight: 600;
-    border-radius: 6px;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    color: var(--jl-accent-text);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.jl-date__link:hover {
+    background: var(--jl-surface-soft);
+}
+
+.jl-date__nav:focus-visible,
+.jl-date__day:focus-visible,
+.jl-date__link:focus-visible,
+.jl-date__day:focus {
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- turno (píldoras) */
+
+.my-form .jl-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: start;
+}
+
+.my-form .jl-pills legend {
+    float: left;      /* deja la leyenda dentro del flujo flex del fieldset */
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 0;
+}
+
+.jl-pill {
+    position: relative;
+    display: inline-flex;
+}
+
+.jl-pill input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+}
+
+.my-form .jl-pill span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--jl-secondary);
+    background: var(--jl-surface);
+    border: 1.5px solid var(--jl-secondary);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.jl-pill span:hover {
+    background: var(--jl-surface-soft);
+}
+
+/* Elegido: pizarra + ✓ (no solo color). */
+.my-form .jl-pill input:checked + span {
+    color: #ffffff;
+    background: var(--jl-secondary);
+}
+
+.jl-pill input:checked + span::before {
+    content: "";
+    width: 10px;
+    height: 5px;
+    margin: -3px 2px 0 0;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+}
+
+.jl-pill input:focus-visible + span {
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- botones */
+
+.my-form .button.button-primary {
+    justify-self: start;
+    min-height: 48px;
+    padding: 0 28px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--jl-on-primary);
+    background: var(--jl-primary);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: none;
+    text-shadow: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.my-form .button.button-primary:hover {
+    color: #ffffff;
+    background: var(--jl-primary-hover);
+}
+
+.my-form .button.button-primary:focus {
+    color: var(--jl-on-primary);
+    background: var(--jl-primary);
+    box-shadow: none;
+    outline: 2px solid var(--jl-ink);
+    outline-offset: 2px;
 }
 
 .my-form .button.button-primary:active {
     transform: translateY(1px);
 }
 
-/* Pantallas pequeñas: un campo por fila y botón a todo el ancho */
-@media (max-width: 600px) {
-    .my-form {
-        padding: 16px;
-    }
+/* ---------------------------------------------------------------- vista previa */
 
-    .my-form .button.button-primary {
-        justify-self: stretch;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .my-form input,
-    .my-form select,
-    .my-form .button.button-primary {
-        transition: none;
-    }
-}
-
-/* Vista previa del pedido (lista): casilla "Status del Cliente". Antes en línea en el <head>
-   de todo wp-admin (includes/customer-status.php). */
 .jl-customer-status-preview {
     margin-top: 20px;
     padding: 15px 25px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--jl-line);
 }
 
 .jl-customer-status-preview label {
@@ -142,7 +567,49 @@
     margin-bottom: 8px;
 }
 
-.jl-customer-status-preview select {
-    width: 100%;
+.jl-customer-status-preview .jl-select {
     max-width: 300px;
+}
+
+/* ---------------------------------------------------------------- pantallas pequeñas */
+
+@media (max-width: 600px) {
+    form.my-form {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .my-form .button.button-primary {
+        justify-self: stretch;
+    }
+
+    .jl-date__dialog {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .my-form *,
+    .jl-customer-status-preview * {
+        transition: none !important;
+    }
+}
+
+/* Varios campos en un mismo bloque (Estado de pago › Moneda + Monto): payment-status.js lo
+   muestra con display:block, así que el gap del grid no aplica; separación por margen. */
+.my-form fieldset > div > label:not(:first-child) {
+    display: block;
+    margin-top: 12px;
+}
+
+.my-form fieldset > div > label + * {
+    margin-top: 6px;
+}
+
+/* Sin espacio debajo (p. ej. al pie del modal de la vista previa): se abre hacia arriba. */
+.jl-select.is-up .jl-select__list,
+.jl-date.is-up .jl-date__dialog {
+    top: auto;
+    bottom: calc(100% + 6px);
 }
