@@ -25,6 +25,13 @@ jQuery(function ($) {
             success: function (response) {
                 if (!response.success) {
                     alert((response.data && response.data.message) || 'No se pudo actualizar el status.');
+                    return;
+                }
+                // WooCommerce keeps each preview's data for the page's life (wc-orders.js,
+                // data('orderData')): update it, or reopening shows the old status.
+                const cached = $('.order-preview[data-order-id="' + orderId + '"]').data('orderData');
+                if (cached) {
+                    cached.jl_customer_status = response.data.status;
                 }
             },
             error: function () {

@@ -189,11 +189,17 @@ function jl_render_customer_status_preview() {
         data-customer-status-preview
     >
 
-        <label>
+        <label for="jl-customer-status-{{ data.data.id }}">
             <strong>Status del Cliente</strong>
         </label>
 
+        <?php
+        // A Backbone template (wc-orders.js): data = the order details, with the status that
+        // jl_add_customer_status_to_preview() adds. Before, no option was marked and the
+        // preview always showed "Estándar".
+        ?>
         <select
+            id="jl-customer-status-{{ data.data.id }}"
             class="jl-customer-status-select"
             data-order-id="{{data.data.id}}"
         >
@@ -201,6 +207,7 @@ function jl_render_customer_status_preview() {
 
                 <option
                     value="<?php echo esc_attr($value); ?>"
+                    <# if ( '<?php echo esc_js($value); ?>' === data.jl_customer_status ) { #>selected<# } #>
                 >
                     <?php echo esc_html($label); ?>
                 </option>
