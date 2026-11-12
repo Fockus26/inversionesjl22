@@ -6,12 +6,29 @@
  *   en cualquier pantalla del sitio abierta con storage_manager cuando se escanea un pedido desde otro equipo.
  *   La versión anterior consultaba una sola vez al cargar la página.
  * - La consulta no usa caché del navegador.
+ * - 2026-11-11: pide los escaneos posteriores al último que vio (since) en vez de uno solo que la
+ *   primera pantalla borraba; así el aviso sale en todas las pantallas de bodega.
  */
 function checkQrScanJs(ajaxUrl) {
     if (!ajaxUrl) {
         return;
     }
 
+    // Server time of the last poll: the next one asks for the scans after it. Kept per tab, so
+    // a reload (or the redirect that follows a scan) neither repeats nor misses one.
+    const KEY = 'jlQrScanSince';
+    let since = 0;
+    try {
+        since = parseFloat(sessionStorage.getItem(KEY)) || 0;
+    } catch (e) {
+        since = 0;
+    }
+    // The device that scanned lands on ?qr_scan_done=<server time of the scan>: from there, so
+    // it sees its own scan however long the page took to load.
+    const scannedAt = parseFloat(new URLSearchParams(location.search).get('qr_scan_done'));
+    if (scannedAt && (!since || since > scannedAt)) {
+        since = scannedAt - 1;
+    }
     let busy = false;
 
     async function poll() {
@@ -22,29 +39,33 @@ function checkQrScanJs(ajaxUrl) {
         busy = true;
 
         try {
-            const response = await fetch(`${ajaxUrl}?action=check_qr_scan&_=${Date.now()}`, {
+            const response = await fetch(`${ajaxUrl}?action=check_qr_scan&since=${since}&_=${Date.now()}`, {
                 cache: 'no-store',
                 credentials: 'same-origin',
             });
 
-            const rawText = await response.text();
-
-            let result;
-
-            try {
-                result = JSON.parse(rawText);
-            } catch (jsonError) {
-                console.error('❌ Error parseando JSON:', jsonError);
+            const result = JSON.parse(await response.text());
+            if (!result.success || !result.data) {
                 return;
             }
 
-            if (!result.success || !result.data || !result.data.scanned) {
-                return;
+            if (result.data.now) {
+                since = result.data.now;
+                try {
+                    sessionStorage.setItem(KEY, String(since));
+                } catch (e) {
+                    // Private mode: this tab just keeps it in memory.
+                }
             }
 
-            showQrScanNotification(result.data.message, result.data.color);
+            const events = result.data.events || [];
+            if (events.length) {
+                // Several scans in 3 s: the last one is what the screen needs to show.
+                const last = events[events.length - 1];
+                showQrScanNotification(last.message, last.color);
+            }
         } catch (e) {
-            console.error('💥 Error en fetch o ejecución:', e);
+            console.error('Error consultando escaneos QR:', e);
         } finally {
             busy = false;
         }
