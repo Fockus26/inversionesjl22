@@ -21,6 +21,9 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 20–21 estilo de formularios + status en vista previa | — | en `main` (#26, #27) |
 | 22 roles: sin Loco para storage, sin YITH POS (migración 005) | — | en `main` (#28) |
 | 23 QR: aviso en todas las pantallas de bodega | — | en `main` (#29) |
+| 24 iconos de acciones rápidas (Reservar…) | `fix/iconos-acciones-rapidas` | PR #30 (CSS vivía en el tema hijo inactivo) |
+| 25 informe: horario select, "Cargando…", botón terracota | `feat/informe-envios-ajustes` | PR #31 |
+| 26 QR: aviso como snackbar | `feat/qr-aviso-snackbar` | PR #32 |
 
 **Fase 2 (personalizar el plugin, #24–#29): solo en staging.** César decidió (2026-11-11) no llevarla a
 producción todavía: se termina la fase siguiente y él consulta con el cliente si instala el plugin
