@@ -95,8 +95,8 @@
 }
 
 .jl-button--primary {
-    background: var(--jl-primary);
-    color: var(--jl-on-primary);
+    background: var(--jl-accent-text); /* terracota: con blanco 5.5:1 (el durazno solo da 1.8:1). decisions/D001 */
+    color: #ffffff;
 }
 
 .jl-button--primary:hover {
