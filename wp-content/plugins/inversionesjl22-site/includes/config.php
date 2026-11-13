@@ -40,6 +40,9 @@ const INVERSIONESJL22_SITE_CONFIG_OPTION = 'inversionesjl22_site_config';
  *                   (opening the order), order_view_actions (its status selector), qr_actions.
  *     flow          transitions the role has on top of the global flow.
  *     menu, screens, admin_bar   the wp-admin screens it reaches (see roles-menu.php).
+ *     qr_scan       whether scanning the invoice's QR completes a printed order and the role's
+ *                   screens show the scans (qr-scan.php). A saved role without it: only
+ *                   storage_manager, as before it was a setting.
  */
 function inversionesjl22_site_default_config(): array {
 	return array(
@@ -125,6 +128,7 @@ function inversionesjl22_site_default_config(): array {
 				// Not post-new.php: it gave a 403 with URE too (its "New" link in the bar was dead).
 				'screens'   => array( 'post.php?post_type=shop_order' ),
 				'admin_bar' => array( 'menu-toggle', 'wp-logo', 'site-name', 'woocommerce-site-visibility-badge' ),
+				'qr_scan'   => false,
 			),
 			'storage_manager' => array(
 				'statuses'  => array(
@@ -151,6 +155,7 @@ function inversionesjl22_site_default_config(): array {
 				),
 				'screens'   => array( 'post.php?post_type=shop_order' ),
 				'admin_bar' => array( 'menu-toggle', 'site-name' ),
+				'qr_scan'   => true,
 			),
 		),
 	);
@@ -187,6 +192,35 @@ function inversionesjl22_site_config(): array {
 		}
 	}
 	return $config;
+}
+
+/**
+ * Whether a role of the configuration scans the invoice's QR. A role saved before this was a
+ * setting has no 'qr_scan': then only storage_manager, the role it was written for.
+ */
+function inversionesjl22_site_role_scans_qr( string $role ): bool {
+	$rules = inversionesjl22_site_config()['roles'][ $role ] ?? null;
+	if ( ! is_array( $rules ) || 'administrator' === $role ) {
+		return false;
+	}
+	return array_key_exists( 'qr_scan', $rules ) ? (bool) $rules['qr_scan'] : 'storage_manager' === $role;
+}
+
+/**
+ * Whether the current user scans the QR: one of their roles has it. Nobody without a session,
+ * and not an administrator as such (they never had it: the check was the storage_manager role,
+ * which an administrator does not hold unless also given that role).
+ */
+function inversionesjl22_site_user_can_scan_qr(): bool {
+	if ( ! is_user_logged_in() ) {
+		return false;
+	}
+	foreach ( (array) wp_get_current_user()->roles as $role ) {
+		if ( inversionesjl22_site_role_scans_qr( (string) $role ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**

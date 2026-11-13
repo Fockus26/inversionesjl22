@@ -1,9 +1,11 @@
 <?php
 /**
  * Warehouse QR: the QR on the 80 mm invoice (generateQrCode()) points to
- * ?action=qr_scan&order_id=N; scanning it as storage_manager moves an Impreso order to
- * Completado, and every storage_manager screen open on the site shows the result (checked every
- * 3 s, assets/js/qr-scan.js). Each scan is kept for two minutes with its time
+ * ?action=qr_scan&order_id=N; scanning it with a role that has the QR (WooCommerce › Roles y
+ * permisos, inversionesjl22_site_user_can_scan_qr(); by default storage_manager) moves an Impreso
+ * order to Completado, and every screen of those roles open on the site shows the result (checked
+ * every 3 s, assets/js/qr-scan.js). The move also needs the role's own rules: it sees Impreso and
+ * Completado and its flow goes from one to the other (inversionesjl22_site_qr_can_complete()). Each scan is kept for two minutes with its time
  * (inversionesjl22_site_qr_events()); every screen asks for the scans after the last one it saw.
  * Before, one transient held the last scan and the first screen to ask deleted it: with the site
  * open on several devices only one of them, at random, showed it. Also the invoice filters that live in the same snippet: unit price
@@ -20,9 +22,9 @@ if ( ! is_admin() ) {
 	add_action(
 		'wp_enqueue_scripts',
 		static function () {
-			// Only the warehouse polls for scans (the footer below calls it for them alone);
-			// every other visitor downloaded it for nothing.
-			if ( ! is_user_logged_in() || ! current_user_can( 'storage_manager' ) ) {
+			// Only the roles with the QR poll for scans (the footer below calls it for them
+			// alone); every other visitor downloaded it for nothing.
+			if ( ! inversionesjl22_site_user_can_scan_qr() ) {
 				return;
 			}
 			wp_enqueue_script(
@@ -50,7 +52,7 @@ if ( ! is_admin() ) {
 
 if ( !is_admin() ) {
     add_action('wp_footer', function () {
-        if (!current_user_can('storage_manager')) {
+        if (!inversionesjl22_site_user_can_scan_qr()) {
             return;
         }
         ?>
@@ -88,7 +90,7 @@ if ( !is_admin() ) {
         // URL única para que la portada no salga de caché y muestre la transición
         $doneUrl = add_query_arg('qr_scan_done', time(), home_url('/'));
 
-        if (!current_user_can('storage_manager')) {
+        if (!inversionesjl22_site_user_can_scan_qr()) {
             wp_safe_redirect($doneUrl);
             exit;
         }
@@ -102,6 +104,14 @@ if ( !is_admin() ) {
         }
 
         $status = $order->get_status();
+
+        // A role with the QR whose rules do not let it complete the order: nothing changes, and
+        // the notice says so. (The other statuses keep their notices, as they always had.)
+        if ($status === 'impressed' && !inversionesjl22_site_qr_can_complete(getUserPermissions())) {
+            inversionesjl22_site_qr_add_event('Tu rol no puede completar esta orden', 'rgb(229, 229, 229)');
+            wp_safe_redirect($doneUrl);
+            exit;
+        }
 
         if ($status === 'impressed') {
             $order->update_status('completed', 'Actualizado vía QR desde estado impreso');
@@ -135,6 +145,25 @@ if ( !is_admin() ) {
         wp_safe_redirect($doneUrl);
         exit;
     }
+}
+
+/**
+ * Whether the scanner's rules let the QR move an Impreso order to Completado: the role sees both
+ * statuses and its flow (the global one plus its own steps) has that step. Without rules (an
+ * administrator who also holds a role with the QR) the scan does it, as it always did.
+ * storage_manager's defaults pass. The per-context exclusions do not apply: 'qr_actions' is the
+ * PDF invoice button in the orders list (roles-actions.php), not the scan.
+ *
+ * @param array|null $ruleset getUserPermissions().
+ */
+function inversionesjl22_site_qr_can_complete($ruleset): bool {
+    if ($ruleset === null) {
+        return true;
+    }
+    if (empty($ruleset['impressed']) || empty($ruleset['completed'])) {
+        return false;
+    }
+    return in_array('impressed', (array) ($ruleset['flow']['completed'] ?? []), true);
 }
 
 const INVERSIONESJL22_SITE_QR_EVENTS = 'inversionesjl22_site_qr_events';
@@ -172,7 +201,7 @@ add_action('wp_ajax_check_qr_scan', 'checkQrScanCallback');
 function checkQrScanCallback() {
     nocache_headers();
 
-    if (!current_user_can('storage_manager')) {
+    if (!inversionesjl22_site_user_can_scan_qr()) {
         wp_send_json_error(['message' => 'No autorizado']);
     }
 
