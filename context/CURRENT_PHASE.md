@@ -17,7 +17,7 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·3b QR asignable por rol | — | en `main` (#38) |
 | F3·5 Documentos (PDF): papel 80/58 mm (+ tipografía/grosor, que quedó fuera de #39: va en F3·6) | — | en `main` (#39) |
 | F3·6 PDF propios (Dompdf + informe; factura + entradas + migración 007) | `feat/pdf-propio` → `feat/factura-propia` | PR #40 y #41 en cadena; 007 espera la respuesta de César (adjunto en correos, Mi cuenta) |
-| F3·7 identidad y 1.0.0 | — | pendiente |
+| F3·7 identidad y 1.0.0 | `chore/identidad-1-0-0` | PR #43 (sobre `feat/pdf-propio`: fusionar #42 antes) |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
 a producción hasta que él se lo muestre al cliente (César, 2026-11-13).
