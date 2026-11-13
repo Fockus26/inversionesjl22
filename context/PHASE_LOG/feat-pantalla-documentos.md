@@ -23,7 +23,8 @@ radios en fieldset, guardar / restaurar solo esta sección, sin JS).
 - El ajuste `paper_size` de PDF Invoices queda sin efecto mientras el plugin propio esté activo.
 - 58 mm = 162 pt (medida que ya tenía la tabla del plugin vendorizado).
 
-**Siguientes candidatos (no añadidos):** «Tipografía» y «Grosor de la tipografía» (`jl_template_font`,
-`jl_template_font_weight` en los ajustes de PDF Invoices) encajarían en esta pantalla.
+**Tipografía y grosor (César lo pidió después de abrir el PR):** `documents.font` / `font_weight`, listas
+cerradas en config.php, bloque `JL22` en `custom/inversionesjl-pdf.php`, migración 006 que copia lo
+guardado en PDF Invoices. Prueba: `.qa/documentos.js` 39/39.
 
 **Prueba:** `.qa/documentos.js`; rasterizar PDFs: `.qa/pdf-raster.js` (pdf.js desde cdnjs).
