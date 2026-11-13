@@ -23,7 +23,7 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 23 QR: aviso en todas las pantallas de bodega | — | en `main` (#29) |
 | 24–26 iconos, informe de envíos, QR snackbar | — | en `main` (#30–#32) |
 | F3·1, 2a, 2b: motor, pantalla Estados y flujo, color e icono | — | en `main` (#33–#35) |
-| **F3·2c acciones según el flujo** (+ estado sin regla no es del rol) | `feat/acciones-admin-por-flujo` | PR # |
+| **F3·2c acciones según el flujo** (+ estado sin regla no es del rol) | `feat/acciones-admin-por-flujo` | PR #36 |
 
 **Fase 2 (personalizar el plugin, #24–#29): solo en staging.** César decidió (2026-11-11) no llevarla a
 producción todavía: se termina la fase siguiente y él consulta con el cliente si instala el plugin
