@@ -21,15 +21,19 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 20–21 estilo de formularios + status en vista previa | — | en `main` (#26, #27) |
 | 22 roles: sin Loco para storage, sin YITH POS (migración 005) | — | en `main` (#28) |
 | 23 QR: aviso en todas las pantallas de bodega | — | en `main` (#29) |
-| 24 iconos de acciones rápidas (Reservar…) | `fix/iconos-acciones-rapidas` | PR #30 (CSS vivía en el tema hijo inactivo) |
-| 25 informe: horario select, "Cargando…", botón terracota | `feat/informe-envios-ajustes` | PR #31 |
-| 26 QR: aviso como snackbar | `feat/qr-aviso-snackbar` | PR #32 |
+| 24–26 iconos, informe de envíos, QR snackbar | — | en `main` (#30–#32) |
+| **F3·1 motor de configuración** (estados, flujo, roles en `config.php`) | `feat/config-estados-roles` | PR #33 |
 
 **Fase 2 (personalizar el plugin, #24–#29): solo en staging.** César decidió (2026-11-11) no llevarla a
 producción todavía: se termina la fase siguiente y él consulta con el cliente si instala el plugin
 nuevo. Producción sigue en `3125c1b` (#23). Al desplegar: migraciones 004 (desactiva URE) y 005
 (Loco/YITH POS) corren en ese deploy; luego purgar Cloudflare.
 | **Producción** | `main` 3125c1b | **desplegado 2026-11-11 21:52Z** (run 43106759267): plugin activo, WPCodeBox 2 + functionality apagados, migraciones 001–003 corridas. Respaldo: `~/backups-claude/prod-pre-plugin-20261111-2150.sql.gz` + `active_plugins-pre.json` (servidor de producción) |
+
+**Fase 3 (plugin configurable, desde 2026-11-12):** 1 motor · 2 pantalla Estados y flujo (+ acciones
+del admin por flujo, color, icono) · 3 pantalla Roles y permisos · 4 crear roles · 5 Documentos (PDF) ·
+6 reemplazar PDF Invoices (decidir: ¿usa numeración, adjunto en correo, Mi cuenta?) · 7 identidad y 1.0.0.
+Editor del flujo: César aún no elige (A lista + chips, B matriz, C nodos).
 
 ## Blocked (actions for César or external)
 
