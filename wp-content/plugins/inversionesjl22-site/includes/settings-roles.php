@@ -734,7 +734,8 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 				?>
 				<div class="jl-options">
 					<?php
-					$option( 'index.php', $options['index.php']['label'] ?? __( 'Escritorio', 'inversionesjl22-site' ), true );
+					// By the menu's name (Escritorio), not its first entry's (Inicio).
+					$option( 'index.php', $options['index.php']['group'] ?? __( 'Escritorio', 'inversionesjl22-site' ), true );
 					foreach ( $saved as $key ) {
 						if ( 'index.php' === $key ) {
 							continue;
