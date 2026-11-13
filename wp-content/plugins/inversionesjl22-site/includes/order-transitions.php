@@ -78,44 +78,18 @@ function orderStatusTransition($action, $status, $note) {
     });
 }
 
-// ⏸️ En espera
-orderStatusTransition(
-    'orderToOnHold',
-    'on-hold',
-    __('Pedido marcado como en espera manualmente.', 'woocommerce')
-);
-
-// 📅 Reservado
-orderStatusTransition(
-    'orderToReserved',
-    'reserved',
-    __('Pedido marcado como reservado manualmente.', 'woocommerce')
-);
-
-// 🔄 Procesando
-orderStatusTransition(
-    'orderToProcessing',
-    'processing',
-    __('Pedido marcado como procesando manualmente.', 'woocommerce')
-);
-
-// 🖨️ Impreso
-orderStatusTransition(
-    'orderToImpressed',
-    'impressed',
-    __('Pedido marcado como impreso manualmente.', 'woocommerce')
-);
-
-// ✅ Completado
-orderStatusTransition(
-    'orderToCompleted',
-    'completed',
-    __('Pedido marcado como completado manualmente.', 'woocommerce')
-);
-
-// ❌ Cancelado
-orderStatusTransition(
-    'orderToCancelled',
-    'cancelled',
-    __('Pedido cancelado manualmente.', 'woocommerce')
-);
+// One action per status of the configuration (config.php): orderToOnHold, orderToReserved,
+// orderToProcessing, orderToImpressed, orderToCompleted, orderToCancelled.
+foreach ( inversionesjl22_site_config()['statuses'] as $inversionesjl22_site_slug => $inversionesjl22_site_status ) {
+	orderStatusTransition(
+		inversionesjl22_site_status_ajax_action( $inversionesjl22_site_slug ),
+		$inversionesjl22_site_slug,
+		$inversionesjl22_site_status['note'] ?? sprintf(
+			'Pedido marcado como %s manualmente.',
+			function_exists( 'mb_strtolower' )
+				? mb_strtolower( $inversionesjl22_site_status['label'] ?? $inversionesjl22_site_slug )
+				: strtolower( $inversionesjl22_site_status['label'] ?? $inversionesjl22_site_slug )
+		)
+	);
+}
+unset( $inversionesjl22_site_slug, $inversionesjl22_site_status );

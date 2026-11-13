@@ -3,26 +3,20 @@
  * Order permissions per role: which statuses storage_manager and seo_manager see and which
  * transitions they can make, from where (quick, bulk, preview, order view, QR).
  *
- * Moved as is from WPCodeBox › Roles › Config (snippet 56). Edit the rulesets below to change a
- * role's permissions; the rest of the roles feature reads them through getUserPermissions().
+ * From WPCodeBox › Roles › Config (snippet 56), where the rulesets were written by hand. They
+ * now come from the configuration (config.php); this file gives them to the rest of the roles
+ * feature in the shape it has always read, through getUserPermissions() and $global_flow:
  *
- * WPCodeBox ran this inside a closure, so $global_flow never became a real global (the rulesets
- * carry their own 'flow', which is what is used). Declared global here so it is one on purpose.
+ *   [ '<status>' => bool, …, 'exclude_status_actions' => [ context => [ status, … ] ],
+ *     'flow' => [ destination => [ origin, … ] ] ]
  */
 
 defined( 'ABSPATH' ) || exit;
 
 global $global_flow, $userPermissions;
 
-$global_flow = [
-    'reserved'   => 'on-hold',
-    'processing' => ['reserved', 'on-hold'],
-    'impressed'  => 'processing',
-    'completed'  => 'impressed',
-    'cancelled'  => ['on-hold', 'reserved', 'processing'],
-];
-
-$userPermissions = [];
+$global_flow     = inversionesjl22_site_flow();
+$userPermissions = array();
 
 function setUserPermissions($username, $ruleset) {
     global $userPermissions;
@@ -40,46 +34,16 @@ function getUserPermissions() {
     return null;
 }
 
-setUserPermissions('seo_manager', [
-  'on-hold' => true,
-  'reserved' => true,
-  'processing' => true,
-  'impressed' => true,
-  'completed' => true,
-  'cancelled' => true,
-  
-  // Exclusiones por tipo de acción
-  'exclude_status_actions' => [
-    'quick_actions' => ['impressed', 'completed', 'cancelled'],
-    'bulk_actions' => ['impressed', 'completed'],
-    'order_preview_actions' => ['impressed', 'completed', 'cancelled'],
-    'order_view' => ['cancelled'],
-    'order_view_actions' => ['impressed', 'cancelled'],
-    'qr_actions' => ['impressed', 'completed', 'cancelled']
-  ],
-
-  // Además del flujo global, puede devolver pedidos de procesando a en espera
-  'flow' => array_merge($global_flow, [
-    'on-hold' => 'processing',
-  ]),
-]);
-
-setUserPermissions('storage_manager', [
-  'on-hold'     => false,
-  'reserved'    => false,   
-  'processing'  => true,   
-  'impressed'   => true,    
-  'completed'   => true,   
-  'cancelled'   => false,   
-  
-  'exclude_status_actions' => [
-    'quick_actions' => ['completed'],
-    'bulk_actions' => ['completed', 'wuoc_combine'],
-    'order_preview_actions' => ['completed'],
-    'order_view' => ['impressed'],
-    'order_view_actions' => ['impressed'],
-    'qr_actions' => ['completed']
-  ],
-
-  'flow' => $global_flow,
-]);
+foreach ( inversionesjl22_site_config()['roles'] as $inversionesjl22_site_role => $inversionesjl22_site_rules ) {
+	setUserPermissions(
+		$inversionesjl22_site_role,
+		array_merge(
+			array_map( 'boolval', (array) ( $inversionesjl22_site_rules['statuses'] ?? array() ) ),
+			array(
+				'exclude_status_actions' => (array) ( $inversionesjl22_site_rules['exclude'] ?? array() ),
+				'flow'                   => inversionesjl22_site_flow( $inversionesjl22_site_role ),
+			)
+		)
+	);
+}
+unset( $inversionesjl22_site_role, $inversionesjl22_site_rules );
