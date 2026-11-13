@@ -1,6 +1,6 @@
 /**
- * Pantallas de configuración del plugin en wp-admin (WooCommerce › Estados y flujo). Se cargan
- * solo en ellas (includes/settings-statuses.php).
+ * Pantallas de configuración del plugin en wp-admin (WooCommerce › Estados y flujo, Roles y
+ * permisos). Se cargan solo en ellas (includes/settings-statuses.php, settings-roles.php).
  *
  * Colores y formas del sistema visual del sitio (artifact de diseño "Inversiones JL22 — Tienda de
  * belleza", tableros Componentes, AdminEnvios y AdminEstadosA). Los mismos valores que
@@ -642,6 +642,336 @@
     margin-top: 1px;
 }
 
+/* ---------------------------------------------------------------- pestañas y selector de rol */
+
+.jl-tabs,
+.jl-rolebar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px;
+}
+
+.jl-rolebar {
+    margin-bottom: 10px;
+    padding: 12px;
+    border: 1px solid var(--jl-line);
+    border-radius: 14px;
+    background: var(--jl-surface);
+}
+
+.jl-rolebar__label {
+    padding: 0 6px;
+    color: var(--jl-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.jl-rolebar__note {
+    margin-left: auto;
+    color: var(--jl-muted);
+    font-size: 13px;
+}
+
+.jl-settings a.jl-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--jl-field-border);
+    border-radius: 999px;
+    background: var(--jl-surface);
+    color: var(--jl-ink);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.jl-settings a.jl-tab--add {
+    border-style: dashed;
+    color: var(--jl-secondary);
+}
+
+.jl-settings a.jl-tab:hover {
+    border-color: var(--jl-secondary);
+    text-decoration: underline;
+}
+
+/* La actual: fondo oscuro y, para no depender solo del color, subrayado grueso bajo el texto. */
+.jl-settings a.jl-tab[aria-current] {
+    border: 1px solid var(--jl-secondary);
+    background: var(--jl-secondary);
+    color: #ffffff;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+}
+
+.jl-settings .jl-settings__hint a {
+    color: var(--jl-ink);
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- matriz de permisos */
+
+.jl-role {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* La tabla no cabe en un móvil: se desplaza dentro de su caja, no la página. */
+.jl-matrix-box {
+    overflow-x: auto;
+    border: 1px solid var(--jl-line);
+    border-radius: 16px;
+    background: var(--jl-surface);
+}
+
+.jl-matrix {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.jl-matrix thead tr {
+    background: var(--jl-surface-soft);
+}
+
+.jl-matrix th,
+.jl-matrix td {
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.jl-matrix thead th {
+    padding: 10px 6px;
+    color: var(--jl-ink);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.jl-matrix .jl-matrix__groups th {
+    color: var(--jl-muted);
+}
+
+.jl-matrix .jl-matrix__status {
+    padding: 10px 14px;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.jl-matrix thead .jl-matrix__status {
+    font-weight: 700;
+}
+
+.jl-matrix .jl-matrix__edge {
+    border-left: 1px solid var(--jl-line);
+}
+
+.jl-matrix tbody tr {
+    border-top: 1px solid var(--jl-line);
+}
+
+.jl-matrix tbody tr.is-off {
+    background: var(--jl-surface-soft);
+}
+
+.jl-matrix__box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.jl-settings .jl-matrix input[type="checkbox"],
+.jl-settings .jl-option input[type="checkbox"] {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    min-width: 0;
+    margin: 0;
+    border: 1px solid var(--jl-field-border);
+    border-radius: 5px;
+    box-shadow: none;
+    accent-color: var(--jl-secondary);
+}
+
+.jl-settings .jl-matrix input[type="checkbox"]:checked::before,
+.jl-settings .jl-option input[type="checkbox"]:checked::before {
+    width: 26px;
+    height: 26px;
+    margin: -3px;
+}
+
+.jl-settings .jl-matrix input[type="checkbox"]:focus,
+.jl-settings .jl-option input[type="checkbox"]:focus {
+    border-color: var(--jl-focus);
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------------- tarjetas del rol */
+
+.jl-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: start;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.jl-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 22px;
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-card);
+    background: var(--jl-surface);
+}
+
+.jl-card--narrow {
+    max-width: 560px;
+    margin-top: 20px;
+}
+
+.jl-card h2 {
+    margin: 0;
+    color: var(--jl-ink);
+    font-size: 17px;
+}
+
+.jl-card__empty {
+    margin: 0;
+    font-size: 14px;
+}
+
+.jl-settings .jl-field select {
+    width: 100%;
+    max-width: none;
+    height: var(--jl-field-height);
+    min-height: 0;
+    margin: 0;
+    padding: 0 32px 0 12px;
+    border: 1px solid var(--jl-field-border);
+    border-radius: var(--jl-radius-field);
+    background-color: var(--jl-surface);
+    color: var(--jl-ink);
+    font-size: 14px;
+    line-height: 1.2;
+    box-shadow: none;
+}
+
+.jl-settings .jl-field select:focus {
+    border-color: var(--jl-focus);
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+.jl-steps,
+.jl-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jl-steps li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin: 0;
+}
+
+.jl-steps__path {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--jl-muted);
+}
+
+.jl-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.jl-step-add {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.jl-step-add legend {
+    margin-bottom: 8px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.jl-step-add .jl-field__help {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.jl-card > .jl-field__help {
+    margin: 0;
+}
+
+.jl-more summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--jl-accent-text);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.jl-more summary::before {
+    content: "+";
+    width: 16px;
+}
+
+.jl-more[open] summary::before {
+    content: "\2212";
+}
+
+.jl-more__group {
+    min-width: 0;
+    margin: 8px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.jl-more__group legend {
+    padding: 0;
+    color: var(--jl-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 @media (max-width: 782px) {
     .jl-settings__aside {
         max-width: none;
@@ -655,12 +985,19 @@
     .jl-link-button {
         margin-left: 0;
     }
+
+    .jl-rolebar__note {
+        flex-basis: 100%;
+        margin-left: 0;
+        padding: 0 6px;
+    }
 }
 
 @media (prefers-reduced-motion: no-preference) {
     .jl-button,
     .jl-icon-button,
-    .jl-chip {
+    .jl-chip,
+    .jl-tab {
         transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 }
