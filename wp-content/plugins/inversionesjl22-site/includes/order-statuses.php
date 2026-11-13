@@ -7,7 +7,7 @@
  * From WPCodeBox › Order › Custom Status (snippet 49). The roles module filters the actions added
  * here, so it loads after this one (order of the loader in the main file).
  *
- * Which statuses, their names, their place in the lists and which one keeps the order editable
+ * Which statuses, their names, their order in the lists and which one keeps the order editable
  * come from the configuration (config.php). The administrator's quick, bulk and preview actions
  * below are still written status by status.
  */
@@ -41,39 +41,45 @@ function addProductsInReservedStatus($is_editable, $order) {
     return $is_editable;
 }
 
-// Places each of the shop's statuses right after the one its 'after' names, in $list (keyed by
-// wc-<slug>); $items are the entries to place, by wc-<slug>. One without its 'after' in the list
-// goes at the end.
-function inversionesjl22_site_place_custom_statuses($list, $items) {
-    $custom = inversionesjl22_site_custom_statuses();
-    $list   = array_diff_key($list, $items);
+// Puts the shop's statuses in the configuration's order inside $list (keyed by wc-<slug>), where
+// the first of them was; the entries of other statuses (pending, refunded, trash…) stay where
+// they are. $items are the shop's entries, by wc-<slug>: one missing from $items is left out.
+function inversionesjl22_site_place_statuses($list, $items) {
+    $managed = [];
+    foreach (array_keys(inversionesjl22_site_config()['statuses']) as $slug) {
+        $managed['wc-' . $slug] = true;
+    }
     $sorted = [];
-    // After $key, the statuses that follow it, and after each of those the ones that follow it
-    $place = function ($key) use (&$place, &$sorted, $custom, $items) {
-        foreach ($custom as $slug => $status) {
-            $own = 'wc-' . $slug;
-            if (!isset($sorted[$own]) && 'wc-' . ($status['after'] ?? '') === $key) {
+    $placed = false;
+    foreach ($list as $key => $value) {
+        if (!isset($managed[$key])) {
+            $sorted[$key] = $value;
+            continue;
+        }
+        if (!$placed) {
+            $placed = true;
+            foreach (array_keys($managed) as $own) {
                 if (isset($items[$own])) {
                     $sorted[$own] = $items[$own];
                 }
-                $place($own);
             }
         }
-    };
-    foreach ($list as $key => $value) {
-        $sorted[$key] = $value;
-        $place($key);
     }
-    return $sorted + $items;
+    return $placed ? $sorted : $sorted + array_intersect_key($items, $managed);
 }
 
 add_filter('wc_order_statuses', 'sortCustomStatus');
 function sortCustomStatus($statuses) {
     $items = [];
-    foreach (inversionesjl22_site_custom_statuses() as $slug => $status) {
-        $items['wc-' . $slug] = $status['label'];
+    foreach (inversionesjl22_site_config()['statuses'] as $slug => $status) {
+        $key = 'wc-' . $slug;
+        if (!empty($status['label'])) {
+            $items[$key] = $status['label'];        // the shop's own, or one of WooCommerce's renamed
+        } elseif (isset($statuses[$key])) {
+            $items[$key] = $statuses[$key];
+        }
     }
-    return inversionesjl22_site_place_custom_statuses($statuses, $items);
+    return inversionesjl22_site_place_statuses($statuses, $items);
 }
 
 add_filter('woocommerce_admin_order_actions', 'quickActionsCustomStatus', 10, 2);
@@ -232,12 +238,18 @@ function viewsCustomStatus($views) {
     $current = isset($_GET['post_status']) ? $_GET['post_status'] : '';
     $count = wp_count_posts('shop_order');
 
-    // One tab per status of the shop that has orders, after the status it follows
+    // The shop's own statuses and the renamed ones get their tab here, when they have orders;
+    // the rest keep WordPress' tab. All of them in the configuration's order.
     $tabs = [];
-    foreach (inversionesjl22_site_custom_statuses() as $slug => $status) {
+    foreach (inversionesjl22_site_config()['statuses'] as $slug => $status) {
         $key      = 'wc-' . $slug;
         $quantity = isset($count->{$key}) ? $count->{$key} : 0;
-        unset($views[$key]);
+        if (empty($status['label'])) {
+            if (isset($views[$key])) {
+                $tabs[$key] = $views[$key];
+            }
+            continue;
+        }
         if ($quantity > 0) {
             $tabs[$key] = sprintf(
                 '<li class="%s"><a href="%s" class="%s">%s <span class="count">(%s)</span></a></li>',
@@ -249,5 +261,5 @@ function viewsCustomStatus($views) {
             );
         }
     }
-    return inversionesjl22_site_place_custom_statuses($views, $tabs);
+    return inversionesjl22_site_place_statuses($views, $tabs);
 }

@@ -53,7 +53,8 @@ function orderStatusTransition($action, $status, $note) {
             $firstItem = reset($shippingItems);
             $currentMethod = $firstItem->get_method_title();
         }
-        $requiresPayment = !in_array($status, ['on-hold', 'cancelled'], true);
+        // Which statuses ask for it: the configuration (config.php); before, every one but on-hold and cancelled
+        $requiresPayment = !empty(inversionesjl22_site_config()['statuses'][$status]['requires_payment']);
         if ($requiresPayment && in_array($currentMethod, $shippingMethods)) {
           $paymentStatus = get_post_meta($orderId, '_payment-status', true);
           if (empty($paymentStatus)) {
