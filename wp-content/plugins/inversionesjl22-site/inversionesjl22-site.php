@@ -8,6 +8,8 @@
  * Requires Plugins:  woocommerce
  * WC requires at least: 11.2
  * WC tested up to:   11.2
+ * Author:            Cesar Leon
+ * Author URI:        https://github.com/Fockus26
  * Text Domain:       inversionesjl22-site
  */
 
