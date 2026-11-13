@@ -1,0 +1,22 @@
+/*
+ * The invoice button in the orders list and the "Crear PDF" box (includes/invoice-pdf.php), with
+ * the look PDF Invoices gave its own: WooCommerce's action button with the invoice icon
+ * (assets/images/invoice.svg, set inline with the plugin's URL).
+ */
+.type-shop_order .column-wc_actions a.button.jl22-invoice,
+.type-shop_order .column-wc_actions a.button.jl22-invoice:hover,
+.woocommerce_page_wc-orders .column-wc_actions a.button.jl22-invoice,
+.woocommerce_page_wc-orders .column-wc_actions a.button.jl22-invoice:hover {
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 16px 16px;
+	text-align: center;
+}
+
+ul.jl22-invoice-actions {
+	margin: 0;
+}
+
+ul.jl22-invoice-actions > li {
+	margin: 6px 0 0;
+}

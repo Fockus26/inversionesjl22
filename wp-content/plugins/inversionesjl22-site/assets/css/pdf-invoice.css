@@ -1,0 +1,310 @@
+/*
+ * La factura en PDF (templates/pdf/invoice.php). El mismo archivo que templates/Factura80mm/style.css
+ * de PDF Invoices; los ajustes de 58 mm, tipografía y grosor los añade includes/invoice-pdf.php.
+ */
+/* ===========================================
+   Configuración Base para Impresión Térmica 
+   =========================================== */
+@page {
+  size: 80mm auto; /* Ancho fijo de 80mm, altura automática */
+  margin: 2mm 2mm 5mm 2mm; /* Márgenes: Top Right Bottom Left */
+}
+
+body {
+  width: 76mm !important; /* 80mm menos márgenes laterales */
+  margin: 0 auto; /* Centrar horizontalmente */
+  font-family: "Source Code Pro", "Consolas", "Lucida Console", monospace;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums; 
+  font-size: 9pt; /* Tamaño de fuente pequeño para impresión */
+  line-height: 1.1; /* Altura de línea compacta */
+  color: #000; /* Texto negro */
+  background: #fff; /* Fondo blanco */
+}
+
+/* ================
+   Utilidades 
+   ================ */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.bold {
+  font-weight: bold;
+}
+.mt-1 {
+  margin-top: 1mm;
+}
+.mb-1 {
+  margin-bottom: 1mm;
+}
+.pb-1 {
+  padding-bottom: 1mm;
+}
+.border-bottom {
+  border-bottom: 0.5px solid #ccc;
+}
+
+/* ================
+   Estructura Principal 
+   ================ */
+.document-header {
+  margin-bottom: 3mm; /* Separación inferior */
+  padding-bottom: 2mm; /* Relleno inferior */
+  border-bottom: 1px solid #000; /* Línea negra divisoria */
+}
+
+.qr-code-container {
+  margin: 0 auto 10mm; /* Centrado horizontal y margen inferior */
+  border: 0.5mm solid #ddd; /* Borde gris claro */
+  padding: 3mm; /* Espacio interno */
+  display: inline-block; /* Para ajustar tamaño al contenido */
+}
+
+.qr-code-container img {
+  max-width: 60mm; /* Máximo ancho para QR */
+  height: auto; /* Mantener proporción */
+}
+
+.document-title {
+  font-size: 10pt; /* Más grande para títulos */
+  text-transform: uppercase; /* Texto en mayúsculas */
+}
+
+.client-info-table {
+  width: 100%; /* Ancho completo */
+  margin: 2mm 0; /* Márgenes verticales */
+}
+
+/* Espacio entre cliente y productos */
+.customer-product-gap {
+  height: 4mm;
+}
+
+/* Contenedor de tabla centrado */
+.table-container {
+  display: flex;
+  justify-content: center; /* Centrar horizontalmente */
+  margin: 2mm 0;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse; /* Quitar espacios entre celdas */
+}
+
+.items-table th {
+  padding: 1mm 0;
+  border-bottom: 1px solid #000; /* Línea negra debajo de encabezados */
+}
+
+.items-table td {
+  padding: 0.5mm 0;
+  vertical-align: top;
+}
+
+.product-separator td {
+  padding: 0;
+  line-height: 0;
+}
+
+.product-row td {
+  padding: 2mm 0;
+}
+
+.product-name {
+  width: 65%; /* Espacio asignado para nombre del producto */
+  word-break: break-word; /* Romper palabras largas para evitar desbordes */
+  font-size: 7.5pt; /* Tamaño pequeño para texto */
+}
+
+.product-qty {
+  width: 15%;
+  text-align: center; /* Centrar cantidad */
+  padding: 0 2mm;
+}
+
+.product-price {
+  width: 20%; /* Espacio para precio */
+  text-align: center;
+}
+
+.product-title {
+  margin-bottom: 1.5mm;
+  display: block;
+}
+
+.product-sku {
+  font-size: 8pt;
+  color: #000; /* Gris oscuro para diferenciar SKU */
+  margin-bottom: 2mm;
+  display: block;
+}
+
+/* Estilos para el total */
+.order-total {
+  margin-top: 3mm;
+}
+
+.total-row {
+  margin-top: 1mm;
+}
+
+.total-label {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.total-value {
+  margin-left: 2mm;
+}
+
+.shipping-section {
+  margin-top: 3mm;
+  padding-top: 2mm;
+  border-top: 1px dashed #000; /* Línea punteada arriba */
+}
+
+/* ================
+   Detalles de Variaciones 
+   ================ */
+.variation-attributes {
+  font-size: 7pt;
+  line-height: 1.1;
+  margin: 1.5mm 0 0 1mm; /* Margen superior y a la izquierda */
+}
+
+.variation-attribute {
+  display: block;
+}
+
+.attribute {
+  font-size: 7pt;
+  line-height: 1.3;
+  margin-bottom: 0.5mm;
+}
+
+/* ================
+   Media Queries para Impresión 
+   ================ */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact; /* Forzar colores exactos en Chrome */
+    print-color-adjust: exact; /* Forzar colores exactos en otros navegadores */
+  }
+
+  .no-print {
+    display: none !important; /* Ocultar elementos con clase no imprimible */
+  }
+}
+
+/* ======================
+   Sección de Envío 
+   ====================== */
+.delivery-section {
+  margin-top: 5mm;
+  page-break-inside: avoid; /* Evitar corte de sección en páginas diferentes */
+}
+
+.delivery-spacer {
+  margin: 3mm 0;
+}
+
+.delivery-cut-message {
+  font-size: 8pt;
+  border-top: 1px dashed #000; /* Línea punteada arriba */
+  padding-top: 2mm;
+}
+
+.delivery-header {
+  text-transform: uppercase;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 1mm;
+}
+
+.delivery-info-table {
+  width: 100%;
+  margin: 2mm 0;
+  font-size: 7.5pt;
+}
+
+.delivery-info-table td {
+  padding: 0.5mm 0;
+  vertical-align: top;
+  line-height: 1.2;
+}
+
+.delivery-info-table td:first-child {
+  width: 35%;
+  font-weight: bold;
+}
+
+.delivery-footer {
+  margin-top: 3mm;
+  padding-top: 2mm;
+  border-top: 1px dashed #000;
+  font-size: 8pt;
+}
+
+/* Evita que un producto se corte entre páginas */
+.product-row {
+  page-break-inside: avoid;
+}
+
+/* Control de secciones por página */
+.customer-info-section,
+.product-list-section {
+  page-break-after: auto;
+}
+
+.shipping-section {
+  page-break-before: always;
+  page-break-inside: avoid;
+}
+
+/* ================================
+   Estilos personalizados informe PDF
+   ================================ */
+
+/* Fila de cada pedido con separación visual */
+.shipping-note-row td {
+  padding: 4mm 2mm;
+  vertical-align: middle;
+  text-align: center;
+  border-bottom: 0.5px dashed #ccc;
+}
+
+/* Celda del número de pedido */
+.shipping-order {
+  width: 20%;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: bold;
+  border-right: 0.5px solid #ddd;
+}
+
+.shipping-cost {
+  width: 40%;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: bold;
+  border-right: 0.5px solid #ddd;
+}
+
+/* Celda para la nota */
+.shipping-note {
+  width: 40%;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 2mm;
+}
+
+.heading {
+  font-size:1.5em;
+  font-weight:bold;
+  margin-bottom:6px;
+  text-align:center;
+  text-decoration:underline;
+}

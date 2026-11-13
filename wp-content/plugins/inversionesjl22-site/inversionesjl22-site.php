@@ -74,6 +74,7 @@ add_action(
 			'shipping-report/ui',
 			'order-transitions',
 			'qr-scan',
+			'invoice-pdf',
 			'sku-generator',
 			'og-image',
 		);
