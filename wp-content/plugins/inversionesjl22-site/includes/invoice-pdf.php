@@ -376,6 +376,10 @@ function inversionesjl22_site_invoice_endpoint(): void {
 
 	// The name PDF Invoices gave it: invoice-<number>.pdf, or invoice-<date>.pdf for several.
 	$name = 1 === count( $ids ) ? ltrim( (string) wc_get_order( $ids[0] )->get_order_number(), '#' ) : gmdate( 'Y-m-d' );
+	// Whatever another plugin printed into an open buffer (a stray space) would go before %PDF-.
+	while ( ob_get_level() > 0 ) {
+		ob_end_clean();
+	}
 	header( 'Content-Type: application/pdf' );
 	header( 'Content-Disposition: inline; filename="' . rawurlencode( sanitize_file_name( 'invoice-' . $name . '.pdf' ) ) . '"' );
 	header( 'Content-Length: ' . strlen( $pdf ) );
