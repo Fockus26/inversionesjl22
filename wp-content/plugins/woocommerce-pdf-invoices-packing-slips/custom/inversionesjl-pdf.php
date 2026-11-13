@@ -206,6 +206,14 @@ add_action( 'wpo_wcpdf_custom_styles', function () {
     $font_key = $settings['jl_template_font'] ?? '';
     $weight   = $settings['jl_template_font_weight'] ?? '';
 
+    // JL22: la tipografía y el grosor salen de WooCommerce > Documentos (plugin inversionesjl22-site),
+    // no de estos ajustes. Si el plugin propio no está, rigen los ajustes.
+    if ( function_exists( 'inversionesjl22_site_document_text' ) ) {
+        $text     = inversionesjl22_site_document_text();
+        $font_key = $text['font'];
+        $weight   = $text['font_weight'];
+    }
+
     if ( isset( $fonts[ $font_key ] ) ) {
         $font = $fonts[ $font_key ];
         if ( ! empty( $font['font_face'] ) ) {

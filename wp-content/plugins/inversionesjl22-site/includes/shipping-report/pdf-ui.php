@@ -4,9 +4,10 @@
  * shift; admin-post.php?action=shipping_report finds the completed orders and streams an 80 mm
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
- * This file: the report's HTML (with the PDF plugin's custom/shipping-report.css). From Shipping
+ * This file: the report's HTML (with assets/css/pdf-shipping-report.css). From Shipping
  * Report › PDF UI (snippet 51). Only change: its own ob_start() before the HTML; it returned
  * ob_get_clean() of whatever buffer PHP had open (output_buffering), an empty PDF without one.
+ * The CSS was the PDF plugin's custom/shipping-report.css: the same file, now in this plugin.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -17,7 +18,7 @@ function pdfUIShippingReport($args) {
     $date = formatDateRange($startDate, $endDate);
     $totalOrders = count($orders);
 
-    $cssFile = WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/custom/shipping-report.css';
+    $cssFile = INVERSIONESJL22_SITE_DIR . 'assets/css/pdf-shipping-report.css';
     $css = file_exists($cssFile) ? file_get_contents($cssFile) : '';
     // The CSS is written for 80 mm; its @page takes the configured paper (WooCommerce › Documentos).
     $css = str_replace('size: 80mm auto', 'size: ' . inversionesjl22_site_document_paper()['mm'] . 'mm auto', $css);

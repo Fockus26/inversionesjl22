@@ -1,0 +1,26 @@
+{
+    "open sans": {
+        "normal": "OpenSans-Normal",
+        "bold": "OpenSans-Bold",
+        "italic": "OpenSans-Normal",
+        "bold_italic": "OpenSans-Bold"
+    },
+    "roboto slab": {
+        "normal": "RobotoSlab-Normal",
+        "bold": "RobotoSlab-Bold",
+        "italic": "RobotoSlab-Normal",
+        "bold_italic": "RobotoSlab-Bold"
+    },
+    "segoe": {
+        "normal": "Segoe-Normal",
+        "bold": "Segoe-Bold",
+        "italic": "Segoe-Normal",
+        "bold_italic": "Segoe-Bold"
+    },
+    "currencies": {
+        "normal": "currencies",
+        "bold": "currencies",
+        "italic": "currencies",
+        "bold_italic": "currencies"
+    }
+}

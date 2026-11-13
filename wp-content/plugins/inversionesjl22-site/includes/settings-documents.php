@@ -52,6 +52,29 @@ function inversionesjl22_site_documents_from_form( string $input ): string {
 }
 
 /**
+ * The typeface and weight a form sent, each a key of its list or '' (the template's own); null
+ * when one is neither, or missing.
+ *
+ * @param mixed $font
+ * @param mixed $weight
+ * @return array{font: string, font_weight: string}|null
+ */
+function inversionesjl22_site_documents_text_from_form( $font, $weight ): ?array {
+	if ( ! is_scalar( $font ) || ! is_scalar( $weight ) ) {
+		return null;
+	}
+	$font   = sanitize_key( (string) $font );
+	$weight = sanitize_key( (string) $weight );
+	if ( ( '' !== $font && ! isset( inversionesjl22_site_document_fonts()[ $font ] ) ) || ( '' !== $weight && ! isset( inversionesjl22_site_document_weights()[ $weight ] ) ) ) {
+		return null;
+	}
+	return array(
+		'font'        => $font,
+		'font_weight' => $weight,
+	);
+}
+
+/**
  * Leaves a message for the screen's next load, for this user.
  *
  * @param string[] $messages
@@ -78,9 +101,9 @@ function inversionesjl22_site_documents_guard( string $action ): void {
 /**
  * Saves the configuration with the paper size, keeping the one it replaces.
  */
-function inversionesjl22_site_documents_save( string $size ): void {
-	$config                           = inversionesjl22_site_config();
-	$config['documents']['paper_size'] = $size;
+function inversionesjl22_site_documents_save( array $documents ): void {
+	$config              = inversionesjl22_site_config();
+	$config['documents'] = $documents;
 	update_option( 'inversionesjl22_site_config_previous', get_option( INVERSIONESJL22_SITE_CONFIG_OPTION ), false );
 	update_option( INVERSIONESJL22_SITE_CONFIG_OPTION, $config );
 }
@@ -97,7 +120,14 @@ add_action(
 			inversionesjl22_site_documents_redirect();
 		}
 
-		inversionesjl22_site_documents_save( $size );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce checked above; compared against the lists in the function.
+		$text = inversionesjl22_site_documents_text_from_form( isset( $_POST['font'] ) ? wp_unslash( $_POST['font'] ) : null, isset( $_POST['font_weight'] ) ? wp_unslash( $_POST['font_weight'] ) : null );
+		if ( null === $text ) {
+			inversionesjl22_site_documents_notice( 'error', array( __( 'No se guardó nada: elige la tipografía y el grosor de las listas.', 'inversionesjl22-site' ) ) );
+			inversionesjl22_site_documents_redirect();
+		}
+
+		inversionesjl22_site_documents_save( array( 'paper_size' => $size ) + $text );
 		/* translators: %s: paper size, e.g. 58 mm */
 		inversionesjl22_site_documents_notice( 'success', array( sprintf( __( 'Tamaño del papel guardado: %s.', 'inversionesjl22-site' ), inversionesjl22_site_document_papers()[ $size ]['label'] ) ) );
 		inversionesjl22_site_documents_redirect();
@@ -111,9 +141,9 @@ add_action(
 
 		// Only this section goes back; with no saved configuration there is nothing to restore.
 		if ( is_array( get_option( INVERSIONESJL22_SITE_CONFIG_OPTION ) ) ) {
-			inversionesjl22_site_documents_save( (string) inversionesjl22_site_default_config()['documents']['paper_size'] );
+			inversionesjl22_site_documents_save( inversionesjl22_site_default_config()['documents'] );
 		}
-		inversionesjl22_site_documents_notice( 'success', array( __( 'Documentos restaurados a los valores iniciales: papel de 80 mm.', 'inversionesjl22-site' ) ) );
+		inversionesjl22_site_documents_notice( 'success', array( __( 'Documentos restaurados a los valores iniciales: papel de 80 mm y la tipografía de la plantilla.', 'inversionesjl22-site' ) ) );
 		inversionesjl22_site_documents_redirect();
 	}
 );
@@ -123,6 +153,7 @@ function inversionesjl22_site_documents_screen(): void {
 		return;
 	}
 	$current = inversionesjl22_site_document_paper()['key'];
+	$text    = inversionesjl22_site_document_text();
 	$default = (string) inversionesjl22_site_default_config()['documents']['paper_size'];
 	$post    = admin_url( 'admin-post.php' );
 	$notice  = get_transient( 'inversionesjl22_site_documents_notice_' . get_current_user_id() );
@@ -177,6 +208,30 @@ function inversionesjl22_site_documents_screen(): void {
 									<?php echo $key === $default ? esc_html__( '(por defecto)', 'inversionesjl22-site' ) : ''; ?>
 									<span class="jl-field__help" id="jl-paper-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $details[ $key ] ?? '' ); ?></span>
 								</span>
+							</label>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</fieldset>
+			<p class="jl-field">
+				<label for="jl-documents-font"><?php esc_html_e( 'Tipografía de la factura', 'inversionesjl22-site' ); ?></label>
+				<select id="jl-documents-font" name="font" aria-describedby="jl-documents-font-help">
+					<option value="" <?php selected( $text['font'], '' ); ?>><?php esc_html_e( 'Según la plantilla', 'inversionesjl22-site' ); ?></option>
+					<?php foreach ( inversionesjl22_site_document_fonts() as $key => $label ) : ?>
+						<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $text['font'], $key ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<span class="jl-field__help" id="jl-documents-font-help"><?php esc_html_e( 'Reemplaza la letra de la factura. «Según la plantilla» deja la que ya trae.', 'inversionesjl22-site' ); ?></span>
+			</p>
+			<fieldset class="jl-choice">
+				<legend><?php esc_html_e( 'Grosor de la tipografía', 'inversionesjl22-site' ); ?></legend>
+				<p class="jl-field__help" id="jl-documents-weight-help"><?php esc_html_e( 'Del texto general de la factura; los títulos en negrita de la plantilla se mantienen.', 'inversionesjl22-site' ); ?></p>
+				<ul class="jl-options">
+					<?php foreach ( array( '' => __( 'Según la plantilla', 'inversionesjl22-site' ) ) + inversionesjl22_site_document_weights() as $key => $label ) : ?>
+						<li>
+							<label class="jl-option">
+								<input type="radio" name="font_weight" value="<?php echo esc_attr( $key ); ?>" aria-describedby="jl-documents-weight-help" <?php checked( $text['font_weight'], $key ); ?>>
+								<span><?php echo esc_html( $label ); ?></span>
 							</label>
 						</li>
 					<?php endforeach; ?>

@@ -72,6 +72,9 @@ wp-content/plugins/*/vendor/
 # Cachés de métricas que Dompdf escribe al generar un PDF (*.ufm.json, *.afm.json): no son del plugin.
 wp-content/plugins/woocommerce-pdf-invoices-packing-slips/vendor/strauss/dompdf/dompdf/lib/fonts/*.json
 !wp-content/plugins/woocommerce-pdf-invoices-packing-slips/vendor/strauss/dompdf/dompdf/lib/fonts/installed-fonts.dist.json
+# El Dompdf propio del plugin del sitio (includes/pdf.php, vendor/autoload.php) va en git: el host
+# no tiene paso de build. Sus cachés de métricas se escriben en uploads/, nunca aquí.
+!wp-content/plugins/inversionesjl22-site/vendor/
 
 # PR screenshots (web-agent-kit)
 .pr-shots/

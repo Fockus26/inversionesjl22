@@ -43,12 +43,19 @@ const INVERSIONESJL22_SITE_CONFIG_OPTION = 'inversionesjl22_site_config';
  *     qr_scan       whether scanning the invoice's QR completes a printed order and the role's
  *                   screens show the scans (qr-scan.php). A saved role without it: only
  *                   storage_manager, as before it was a setting.
+ * - documents: paper_size, a key of inversionesjl22_site_document_papers(): the width of the
+ *   PDFs (the invoice and the shipping report), read through inversionesjl22_site_document_paper().
+ *   font, a key of inversionesjl22_site_document_fonts(), and font_weight, a key of
+ *   inversionesjl22_site_document_weights(): the invoice's text; '' = what the template says.
+ *   Read through inversionesjl22_site_document_text().
  */
 function inversionesjl22_site_default_config(): array {
 	return array(
 		'version'   => 1,
 		'documents' => array(
-			'paper_size' => '80mm',
+			'paper_size'  => '80mm',
+			'font'        => '',
+			'font_weight' => '',
 		),
 		'statuses'  => array(
 			'processing' => array(
@@ -198,6 +205,12 @@ function inversionesjl22_site_config(): array {
 			if ( isset( inversionesjl22_site_document_papers()[ $paper ] ) ) {
 				$config['documents']['paper_size'] = $paper;
 			}
+			foreach ( array( 'font' => inversionesjl22_site_document_fonts(), 'font_weight' => inversionesjl22_site_document_weights() ) as $key => $allowed ) {
+				$value = is_array( $saved['documents'] ?? null ) ? (string) ( $saved['documents'][ $key ] ?? '' ) : '';
+				if ( isset( $allowed[ $value ] ) ) {
+					$config['documents'][ $key ] = $value;
+				}
+			}
 		}
 	}
 	return $config;
@@ -223,6 +236,52 @@ function inversionesjl22_site_document_papers(): array {
 			'mm'       => 58,
 			'width_pt' => 162.0,
 		),
+	);
+}
+
+/**
+ * The typefaces the invoice can take, key => name. The keys are those of jl_wcpdf_fonts() in the
+ * PDF plugin's custom/inversionesjl-pdf.php, which holds each one's CSS family: the ones Dompdf
+ * and that plugin already have. '' (the template's own) is not in the list.
+ *
+ * @return array<string, string>
+ */
+function inversionesjl22_site_document_fonts(): array {
+	return array(
+		'dejavu-sans-mono' => 'DejaVu Sans Mono',
+		'dejavu-sans'      => 'DejaVu Sans',
+		'dejavu-serif'     => 'DejaVu Serif',
+		'open-sans'        => 'Open Sans',
+		'roboto-slab'      => 'Roboto Slab',
+		'segoe'            => 'Segoe',
+		'helvetica'        => 'Helvetica',
+		'times'            => 'Times',
+		'courier'          => 'Courier',
+	);
+}
+
+/**
+ * The font weights the invoice can take, key => name. Dompdf only draws normal and bold.
+ *
+ * @return array<string, string>
+ */
+function inversionesjl22_site_document_weights(): array {
+	return array(
+		'normal' => __( 'Normal', 'inversionesjl22-site' ),
+		'bold'   => __( 'Negrita', 'inversionesjl22-site' ),
+	);
+}
+
+/**
+ * The invoice's typeface and weight: keys of the lists above, '' for the template's own.
+ *
+ * @return array{font: string, font_weight: string}
+ */
+function inversionesjl22_site_document_text(): array {
+	$documents = inversionesjl22_site_config()['documents'];
+	return array(
+		'font'        => (string) $documents['font'],
+		'font_weight' => (string) $documents['font_weight'],
 	);
 }
 

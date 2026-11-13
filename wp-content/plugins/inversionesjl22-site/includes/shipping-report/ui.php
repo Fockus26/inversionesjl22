@@ -7,7 +7,8 @@
  * This file: the submenu page with the form, and its JS (assets/js/shipping-report.js, from
  * snippet 50, which WPCodeBox printed in the <head> of the admin pages whose URL contains
  * "shipping-report": enqueued in the same place). From Shipping Report › UI (snippet 53). Only
- * change: the form carries a nonce (checked in init.php).
+ * change: the form carries a nonce (checked in init.php). The form's styles
+ * (assets/css/shipping-report-admin.css) came from the PDF plugin's custom/ folder.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -18,6 +19,15 @@ add_action(
 		if ( 'shipping-report' !== inversionesjl22_site_admin_screen() ) {
 			return;
 		}
+		// Same handle PDF Invoices' custom/inversionesjl-pdf.php enqueued the copy it had with, and
+		// before it (priority 5): while that plugin is active its call finds the handle taken and
+		// the styles load once, from here.
+		wp_enqueue_style(
+			'jl-shipping-report-admin',
+			INVERSIONESJL22_SITE_URL . 'assets/css/shipping-report-admin.css',
+			array(),
+			inversionesjl22_site_asset_version( 'assets/css/shipping-report-admin.css' )
+		);
 		wp_enqueue_script(
 			'inversionesjl22-shipping-report',
 			INVERSIONESJL22_SITE_URL . 'assets/js/shipping-report.js',
@@ -25,7 +35,8 @@ add_action(
 			inversionesjl22_site_asset_version( 'assets/js/shipping-report.js' ),
 			false
 		);
-	}
+	},
+	5
 );
 
 // Agrega submenú en WooCommerce para el informe
