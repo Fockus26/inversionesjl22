@@ -83,9 +83,12 @@ add_action(
 		if ( '' === $screen ) {
 			return;
 		}
-		// The quick actions' icons (Reservar, Impreso…), only in the orders list.
-		if ( 'orders' === $screen ) {
-			wp_enqueue_style( 'inversionesjl22-admin-orders', INVERSIONESJL22_SITE_URL . 'assets/css/admin-orders.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-orders.css' ) );
+		// The statuses' colours and their quick actions' icons, only in the orders list. Built
+		// from the configuration (config.php), so there is no file: a handle with no source.
+		if ( 'orders' === $screen && function_exists( 'inversionesjl22_site_status_css' ) ) {
+			wp_register_style( 'inversionesjl22-admin-orders', false, array(), INVERSIONESJL22_SITE_VERSION );
+			wp_enqueue_style( 'inversionesjl22-admin-orders' );
+			wp_add_inline_style( 'inversionesjl22-admin-orders', inversionesjl22_site_status_css() );
 		}
 		wp_enqueue_style( 'inversionesjl22-admin-form', INVERSIONESJL22_SITE_URL . 'assets/css/admin-form.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-form.css' ) );
 		// The forms' own select and date picker (on top of the native fields).

@@ -1,8 +1,8 @@
 <?php
 /**
  * WooCommerce › Estados y flujo: the screen that edits the order statuses of the configuration
- * (config.php): their order, their names, what their buttons say, which statuses each one can
- * move to, and the shop's own statuses (create, delete).
+ * (config.php): their order, their names, colours and icons, what their buttons say, which
+ * statuses each one can move to, and the shop's own statuses (create, delete).
  *
  * Only administrators (manage_options). The form posts to admin-post.php; nothing is saved when
  * something in it is not valid. The configuration it replaces is kept in
@@ -41,6 +41,11 @@ add_action(
 			return;
 		}
 		wp_enqueue_style( 'inversionesjl22-admin-settings', INVERSIONESJL22_SITE_URL . 'assets/css/admin-settings.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-settings.css' ) );
+		$tones = '';
+		foreach ( inversionesjl22_site_status_palette() as $key => $tone ) {
+			$tones .= sprintf( '.jl-settings .jl-tone--%1$s{background:%2$s;color:%3$s;border-color:%4$s}', sanitize_html_class( $key ), $tone['bg'], $tone['fg'], $tone['border'] );
+		}
+		wp_add_inline_style( 'inversionesjl22-admin-settings', $tones );
 		wp_enqueue_script(
 			'inversionesjl22-settings-statuses',
 			INVERSIONESJL22_SITE_URL . 'assets/js/settings-statuses.js',
@@ -68,6 +73,21 @@ add_action(
 function inversionesjl22_site_status_order_count( string $slug ): int {
 	$counts = wp_count_posts( 'shop_order' );
 	return (int) ( $counts->{ 'wc-' . $slug } ?? 0 );
+}
+
+/**
+ * A status as the screen shows it: its name on its colour, with its icon. Escaped HTML.
+ */
+function inversionesjl22_site_status_pill( string $slug ): string {
+	$status = inversionesjl22_site_config()['statuses'][ $slug ] ?? array();
+	$color  = (string) ( $status['color'] ?? '' );
+	$icon   = (string) ( $status['icon'] ?? '' );
+	return sprintf(
+		'<span class="jl-pill%1$s">%2$s%3$s</span>',
+		isset( inversionesjl22_site_status_palette()[ $color ] ) ? ' jl-tone--' . esc_attr( sanitize_html_class( $color ) ) : '',
+		isset( inversionesjl22_site_status_icons()[ $icon ] ) ? '<span class="dashicons dashicons-' . esc_attr( sanitize_html_class( $icon ) ) . '" aria-hidden="true"></span>' : '',
+		esc_html( inversionesjl22_site_status_label( $slug ) )
+	);
 }
 
 /**
@@ -165,6 +185,20 @@ function inversionesjl22_site_statuses_from_form( array $input, string $new, arr
 				$status[ $flag ] = true;
 			} else {
 				unset( $status[ $flag ] );
+			}
+		}
+
+		// Colour and icon: a key of their lists, or none (WooCommerce's own).
+		$choices = array(
+			'color' => inversionesjl22_site_status_palette(),
+			'icon'  => inversionesjl22_site_status_icons(),
+		);
+		foreach ( $choices as $field => $allowed ) {
+			$value = isset( $fields[ $field ] ) && is_scalar( $fields[ $field ] ) ? sanitize_text_field( (string) $fields[ $field ] ) : '';
+			if ( isset( $allowed[ $value ] ) ) {
+				$status[ $field ] = $value;
+			} else {
+				unset( $status[ $field ] );
 			}
 		}
 
@@ -339,9 +373,11 @@ function inversionesjl22_site_statuses_screen(): void {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$config = inversionesjl22_site_config();
-	$next   = inversionesjl22_site_flow_destinations();
-	$kinds  = array(
+	$config  = inversionesjl22_site_config();
+	$next    = inversionesjl22_site_flow_destinations();
+	$palette = inversionesjl22_site_status_palette();
+	$icons   = inversionesjl22_site_status_icons();
+	$kinds   = array(
 		'entry'    => __( 'Entrada', 'inversionesjl22-site' ),
 		'required' => __( 'Obligatorio', 'inversionesjl22-site' ),
 		'optional' => __( 'Opcional', 'inversionesjl22-site' ),
@@ -409,7 +445,7 @@ function inversionesjl22_site_statuses_screen(): void {
 										<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
 									</button>
 								</span>
-								<span class="jl-pill"><?php echo esc_html( $name ); ?></span>
+								<?php echo inversionesjl22_site_status_pill( (string) $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the function. ?>
 								<span class="jl-tag"><?php echo esc_html( $core ? __( 'WooCommerce', 'inversionesjl22-site' ) : __( 'Propio', 'inversionesjl22-site' ) ); ?></span>
 								<span class="jl-status__kind"><?php echo esc_html( $kinds[ inversionesjl22_site_status_kind( $slug ) ] ); ?></span>
 								<button type="button" class="jl-link-button" data-jl-toggle aria-expanded="true" aria-controls="<?php echo esc_attr( $id ); ?>">
@@ -448,6 +484,36 @@ function inversionesjl22_site_statuses_screen(): void {
 									<label for="<?php echo esc_attr( $id ); ?>-action"><?php esc_html_e( 'Texto del botón', 'inversionesjl22-site' ); ?></label>
 									<input type="text" id="<?php echo esc_attr( $id ); ?>-action" name="<?php echo esc_attr( $field ); ?>[action_label]" value="<?php echo esc_attr( $status['action_label'] ?? $name ); ?>" maxlength="40" required>
 								</p>
+								<fieldset class="jl-choice">
+									<legend><?php esc_html_e( 'Color', 'inversionesjl22-site' ); ?></legend>
+									<div class="jl-choice__options">
+										<label class="jl-swatch">
+											<input type="radio" name="<?php echo esc_attr( $field ); ?>[color]" value="" <?php checked( ! isset( $palette[ $status['color'] ?? '' ] ) ); ?>>
+											<span class="jl-swatch__face"><?php esc_html_e( 'El de WooCommerce', 'inversionesjl22-site' ); ?></span>
+										</label>
+										<?php foreach ( $palette as $key => $tone ) : ?>
+											<label class="jl-swatch">
+												<input type="radio" name="<?php echo esc_attr( $field ); ?>[color]" value="<?php echo esc_attr( $key ); ?>" <?php checked( ( $status['color'] ?? '' ) === $key ); ?>>
+												<span class="jl-swatch__face jl-tone--<?php echo esc_attr( sanitize_html_class( $key ) ); ?>"><?php echo esc_html( $tone['label'] ); ?></span>
+											</label>
+										<?php endforeach; ?>
+									</div>
+								</fieldset>
+								<fieldset class="jl-choice">
+									<legend><?php esc_html_e( 'Icono del botón', 'inversionesjl22-site' ); ?></legend>
+									<div class="jl-choice__options">
+										<label class="jl-swatch">
+											<input type="radio" name="<?php echo esc_attr( $field ); ?>[icon]" value="" <?php checked( ! isset( $icons[ $status['icon'] ?? '' ] ) ); ?>>
+											<span class="jl-swatch__face"><?php echo esc_html( $core ? __( 'El de WooCommerce', 'inversionesjl22-site' ) : __( 'Ninguno', 'inversionesjl22-site' ) ); ?></span>
+										</label>
+										<?php foreach ( $icons as $key => $icon ) : ?>
+											<label class="jl-swatch jl-swatch--icon" title="<?php echo esc_attr( $icon['label'] ); ?>">
+												<input type="radio" name="<?php echo esc_attr( $field ); ?>[icon]" value="<?php echo esc_attr( $key ); ?>" <?php checked( ( $status['icon'] ?? '' ) === $key ); ?>>
+												<span class="jl-swatch__face"><span class="dashicons dashicons-<?php echo esc_attr( sanitize_html_class( $key ) ); ?>" aria-hidden="true"></span><span class="screen-reader-text"><?php echo esc_html( $icon['label'] ); ?></span></span>
+											</label>
+										<?php endforeach; ?>
+									</div>
+								</fieldset>
 								<p class="jl-check">
 									<label><input type="checkbox" name="<?php echo esc_attr( $field ); ?>[editable]" value="1" <?php checked( ! empty( $status['editable'] ) ); ?>> <?php esc_html_e( 'Se pueden cambiar los productos del pedido', 'inversionesjl22-site' ); ?></label>
 								</p>
@@ -492,7 +558,7 @@ function inversionesjl22_site_statuses_screen(): void {
 					<?php foreach ( inversionesjl22_site_statuses_in_flow_order() as $slug ) : ?>
 						<li>
 							<span class="jl-flow__step">
-								<span class="jl-pill"><?php echo esc_html( inversionesjl22_site_status_label( $slug ) ); ?></span>
+								<?php echo inversionesjl22_site_status_pill( (string) $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the function. ?>
 								<span class="jl-status__kind"><?php echo esc_html( $kinds[ inversionesjl22_site_status_kind( $slug ) ] ); ?></span>
 							</span>
 							<?php if ( $next[ $slug ] ) : ?>
