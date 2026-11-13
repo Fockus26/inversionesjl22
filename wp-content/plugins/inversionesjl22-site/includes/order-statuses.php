@@ -8,8 +8,8 @@
  * here, so it loads after this one (order of the loader in the main file).
  *
  * Which statuses, their names, their order in the lists and which one keeps the order editable
- * come from the configuration (config.php). The administrator's quick, bulk and preview actions
- * below are still written status by status.
+ * come from the configuration (config.php), and so do the quick, bulk and preview actions: one
+ * per status the flow lets an order move to.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -82,76 +82,53 @@ function sortCustomStatus($statuses) {
     return inversionesjl22_site_place_statuses($statuses, $items);
 }
 
+// The link that moves an order to a status (order-transitions.php), as the order list's quick
+// actions and the order preview take it. $class is the button's CSS class: WooCommerce draws the
+// icon of its own actions from it, and the configured icon hangs from it (config.php).
+function inversionesjl22_site_status_action($order, $to, $class) {
+    $ajax = inversionesjl22_site_status_ajax_action($to);
+    return [
+        'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=' . $ajax . '&order_id=' . $order->get_id()), $ajax),
+        'name'   => inversionesjl22_site_status_action_labels()[$to] ?? ucfirst($to),
+        'action' => $class,
+    ];
+}
+
+// Quick actions of the orders list: one per status the flow lets the order move to (config.php).
+// The administrator gets these on top of WooCommerce's own; the roles module then rebuilds the
+// list for the restricted roles (roles-actions.php).
 add_filter('woocommerce_admin_order_actions', 'quickActionsCustomStatus', 10, 2);
 function quickActionsCustomStatus($actions, $order) {
-    $order_id = $order->get_id();
-    $status = $order->get_status();
-
-    if ($status === 'on-hold') {
-        $actions['reserved'] = [
-            'url'       => wp_nonce_url(admin_url('admin-ajax.php?action=orderToReserved&order_id=' . $order_id), 'orderToReserved'),
-            'name'      => __('Reservado', 'woocommerce'),
-            'action'    => 'reserved'
-        ];
-        $actions['processing'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToProcessing&order_id=' . $order_id), 'orderToProcessing'),
-            'name'   => __('Procesando', 'woocommerce'),
-            'action' => 'processing'
-        ];
+    if (!$order instanceof WC_Order) {
+        return $actions;
     }
-    if ($status === 'reserved') {
-        $actions['processing'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToProcessing&order_id=' . $order_id), 'orderToProcessing'),
-            'name'   => __('Procesando', 'woocommerce'),
-            'action' => 'processing'
-        ];
-    }
-    if ($status === 'processing') {
-        $actions['impressed'] = [
-            'url'       => wp_nonce_url(admin_url('admin-ajax.php?action=orderToImpressed&order_id=' . $order_id), 'orderToImpressed'),
-            'name'      => __('Impreso', 'woocommerce'),
-            'action'    => 'impressed'
-        ];
-    }
-    if ($status === 'impressed') {
-        $actions['complete'] = [ 
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToCompleted&order_id=' . $order_id), 'orderToCompleted'),
-            'name'   => __('Completado', 'woocommerce'),
-            'action' => 'complete' 
-        ];
+    $next = inversionesjl22_site_flow_destinations()[$order->get_status()] ?? [];
+    foreach ($next as $to) {
+        $class           = inversionesjl22_site_status_action_class($to);
+        $actions[$class] = inversionesjl22_site_status_action($order, $to, $class);
     }
     return $actions;
 }
 
+// "Cambiar estado a …" in the bulk actions: for the administrator, every status the flow leads
+// to; for the other roles, the ones the current tab's status leads to (the roles module then
+// keeps the ones the role may use).
 add_filter('bulk_actions-edit-shop_order', 'bulkActionsCustomStatus');
 function bulkActionsCustomStatus($actions) {
-    $status = $_GET['post_status'] ?? '';  
-  
+    $flow = inversionesjl22_site_flow();
     if (current_user_can('administrator')) {
-        $actions['mark_reserved']   = __('Cambiar estado a reservado', 'woocommerce');
-        $actions['mark_processing'] = __('Cambiar estado a procesando', 'woocommerce');
-        $actions['mark_impressed']  = __('Cambiar estado a impreso', 'woocommerce');
-        $actions['mark_completed']  = __('Cambiar estado a completado', 'woocommerce');
-        return $actions;
+        $targets = array_keys($flow);
+    } else {
+        $status  = isset($_GET['post_status']) ? sanitize_key(wp_unslash($_GET['post_status'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read only, to choose the list.
+        $status  = 0 === strpos($status, 'wc-') ? substr($status, 3) : $status;
+        $targets = inversionesjl22_site_flow_destinations()[$status] ?? [];
     }
 
-    if ($status === 'wc-on-hold') {
-        $actions['mark_reserved'] = __('Cambiar estado a reservado', 'woocommerce');
-        $actions['mark_processing'] = __('Cambiar estado a procesando', 'woocommerce'); 
+    $lower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
+    foreach ($targets as $to) {
+        /* translators: %s: status name, in lower case */
+        $actions['mark_' . $to] = sprintf(__('Cambiar estado a %s', 'inversionesjl22-site'), $lower(inversionesjl22_site_status_label($to)));
     }
-
-    if ($status === 'wc-reserved') {
-        $actions['mark_processing'] = __('Cambiar estado a procesando', 'woocommerce');
-    }
-
-    if ($status === 'wc-processing') {
-        $actions['mark_impressed'] = __('Cambiar estado a impreso', 'woocommerce');
-    }
-
-    if ($status === 'wc-impressed') {
-        $actions['mark_completed'] = __('Cambiar estado a completado', 'woocommerce');
-    }
-
     return $actions;
 }
 
@@ -161,74 +138,48 @@ function inversionesjl22_site_bulk_allowed($order, $to) {
         || inversionesjl22_site_role_can_move($order, $to, ['bulk_actions']);
 }
 
+// The bulk change itself, for the orders the flow lets move to that status. WooCommerce runs its
+// own handler for mark_<status> first and moves every selected order the role may move
+// (roles-enforce.php filters them); this one covers the rest of the cases and keeps the count
+// in the URL.
 add_filter('handle_bulk_actions-edit-shop_order', 'handleBulkActionsCustomStatus', 10, 3);
 function handleBulkActionsCustomStatus($redirectTo, $action, $postIds) {
-    if ($action === 'mark_reserved') {
-        foreach ($postIds as $postId) {
-            $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'on-hold' && inversionesjl22_site_bulk_allowed($order, 'reserved')) {
-                $order->update_status('reserved', __('Marcado como reservado por acción en lote.', 'woocommerce'));
-            }
-        }
-        return add_query_arg('bulk_reserved', count($postIds), $redirectTo);
+    if (0 !== strpos((string) $action, 'mark_')) {
+        return $redirectTo;
     }
-    if ($action === 'mark_processing') {
-        foreach ($postIds as $postId) {
-            $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'on-hold' && inversionesjl22_site_bulk_allowed($order, 'processing')) {
-                $order->update_status('processing', __('Marcado como procesando por acción en lote.', 'woocommerce'));
-            }
-        }
-        return add_query_arg('bulk_processing', count($postIds), $redirectTo);
+    $to      = substr($action, 5);
+    $origins = inversionesjl22_site_flow()[$to] ?? null;
+    if (null === $origins || !isset(inversionesjl22_site_config()['statuses'][$to])) {
+        return $redirectTo;
     }
-    if ($action === 'mark_impressed') {
-        foreach ($postIds as $postId) {
-            $order = wc_get_order($postId);
-            if ($order && $order->get_status() === 'processing' && inversionesjl22_site_bulk_allowed($order, 'impressed')) {
-                $order->update_status('impressed', __('Marcado como impreso por acción en lote.', 'woocommerce'));
-            }
+
+    $lower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
+    foreach ((array) $postIds as $postId) {
+        $order = wc_get_order($postId);
+        if ($order && in_array($order->get_status(), $origins, true) && inversionesjl22_site_bulk_allowed($order, $to)) {
+            /* translators: %s: status name, in lower case */
+            $order->update_status($to, sprintf(__('Marcado como %s por acción en lote.', 'inversionesjl22-site'), $lower(inversionesjl22_site_status_label($to))));
         }
-        return add_query_arg('bulk_impressed', count($postIds), $redirectTo);
     }
-    return $redirectTo;
+    return add_query_arg('bulk_' . $to, count((array) $postIds), $redirectTo);
 }
 
+// The order preview: a button per status the flow lets the order move to, unless WooCommerce's
+// own "Cambiar estado" group already offers it (Procesando and Completado, for some statuses).
 add_filter('woocommerce_admin_order_preview_actions', 'previewActionsCustomStatus', 10, 2);
 function previewActionsCustomStatus($actions, $order) {
-    $status = $order->get_status();
-
-    if ($status === 'on-hold') {
-        $actions['reserved'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToReserved&order_id=' . $order->get_id()), 'orderToReserved'),
-            'name'   => __('Reservado', 'woocommerce'),
-            'action' => ''
-        ];
+    if (!$order instanceof WC_Order) {
+        return $actions;
     }
-
-    if ($status === 'reserved') {
-        $actions['processing'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToProcessing&order_id=' . $order->get_id()), 'orderToProcessing'),
-            'name'   => __('Procesando', 'woocommerce'),
-            'action' => ''
-        ];
+    $own  = $actions['status']['actions'] ?? [];
+    $next = inversionesjl22_site_flow_destinations()[$order->get_status()] ?? [];
+    foreach ($next as $to) {
+        $class = inversionesjl22_site_status_action_class($to);
+        if (isset($own[$class]) || isset($own[$to])) {
+            continue;
+        }
+        $actions[$class] = inversionesjl22_site_status_action($order, $to, $class);
     }
-
-    if ($status === 'processing') {
-        $actions['impressed'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToImpressed&order_id=' . $order->get_id()), 'orderToImpressed'),
-            'name'   => __('Impreso', 'woocommerce'),
-            'action' => ''
-        ];
-    }
-
-    if ($status === 'impressed') {
-        $actions['completed'] = [
-            'url'    => wp_nonce_url(admin_url('admin-ajax.php?action=orderToCompleted&order_id=' . $order->get_id()), 'orderToCompleted'),
-            'name'   => __('Completado', 'woocommerce'),
-            'action' => ''
-        ];
-    }
-
     return $actions;
 }
 
@@ -252,8 +203,8 @@ function viewsCustomStatus($views) {
         }
         if ($quantity > 0) {
             $tabs[$key] = sprintf(
-                '<li class="%s"><a href="%s" class="%s">%s <span class="count">(%s)</span></a></li>',
-                esc_attr($key),
+                // Only the link: WordPress wraps each view in its own <li class="wc-…">
+                '<a href="%s" class="%s">%s <span class="count">(%s)</span></a>',
                 esc_url(admin_url('edit.php?post_status=' . $key . '&post_type=shop_order')),
                 esc_attr($current === $key ? 'current' : ''),
                 esc_html($status['label']),

@@ -38,8 +38,10 @@ function isStatusAllowed($status, $ruleset) {
 }
 
 function isStatusAllowedForAction($status, $actionType, $ruleset) {
-    // 1. regla general
-    if (isset($ruleset[$status]) && $ruleset[$status] === false) {
+    // 1. regla general: el rol tiene que tener el estado encendido. Uno sin regla (un estado
+    //    creado en Estados y flujo al que aún no se le dio permiso) no es suyo: antes solo se
+    //    rechazaba el que estaba en false, y el nuevo pasaba como permitido.
+    if (empty($ruleset[$status])) {
         return false;
     }
 
@@ -101,16 +103,12 @@ function filterQuickActionsOrderStatuses($actions, $order) {
 
     $ruleset = getUserPermissions();
     if ($ruleset === null) return $actions; // admin o sin restricciones
-    unset(
-        $actions['on-hold'],
-        $actions['reserved'],
-        $actions['processing'],
-        $actions['impressed'],
-        $actions['complete'],
-        $actions['completed'],
-        $actions['cancelled'],
-        $actions['invoice']
-    );
+    // Every status action that came this far (WooCommerce's and order-statuses.php's, which adds
+    // one per destination of the flow, Cancelar included) goes: the role's own are built below.
+    foreach (array_keys(inversionesjl22_site_config()['statuses']) as $slug) {
+        unset($actions[$slug], $actions[inversionesjl22_site_status_action_class($slug)]);
+    }
+    unset($actions['invoice']);
 
     $flow = $ruleset['flow'] ?? $global_flow;
 
