@@ -4,7 +4,8 @@
  * status tabs, PDF button).
  *
  * Moved as is from WPCodeBox › Roles › Init (snippet 54), which only ran in wp-admin
- * (WPCodeBox condition "not frontend"): same here. Rules: roles-config.php.
+ * (WPCodeBox condition "not frontend"): same here. Rules: roles-config.php, which reads them
+ * from the configuration (config.php), as the button labels and the AJAX actions here do.
  * Changes since: the order preview filter no longer depends on the global $post (empty in its
  * AJAX request) and skips statuses the role has off, like the quick actions do.
  */
@@ -17,15 +18,7 @@ if ( ! is_admin() ) {
 
 // Acción AJAX (Status Transition) que mueve el pedido a cada estado
 function getStatusAjaxAction($status) {
-    $map = [
-        'on-hold'    => 'orderToOnHold',
-        'reserved'   => 'orderToReserved',
-        'processing' => 'orderToProcessing',
-        'impressed'  => 'orderToImpressed',
-        'completed'  => 'orderToCompleted',
-        'cancelled'  => 'orderToCancelled',
-    ];
-    return $map[$status] ?? '';
+    return inversionesjl22_site_status_ajax_action((string) $status);
 }
 
 function isStatusAllowed($status, $ruleset) {
@@ -121,14 +114,7 @@ function filterQuickActionsOrderStatuses($actions, $order) {
 
     $flow = $ruleset['flow'] ?? $global_flow;
 
-    $labels = [
-        'on-hold'    => __('En espera', 'woocommerce'),
-        'reserved'   => __('Reservar', 'woocommerce'),
-        'processing' => __('Procesar', 'woocommerce'),
-        'impressed'  => __('Impreso', 'woocommerce'),
-        'completed'  => __('Completar', 'woocommerce'),
-        'cancelled'  => __('Cancelar', 'woocommerce'),
-    ];
+    $labels = inversionesjl22_site_status_action_labels();
 
     $action_key_map = [
         'completed' => 'complete',
@@ -226,14 +212,7 @@ function filterPreviewActionsOrderStatuses($actions, $order) {
     $flow = $ruleset['flow'] ?? $global_flow;
 
     // === Labels de acciones ===
-    $labels = [
-        'on-hold'    => __('En espera', 'woocommerce'),
-        'reserved'   => __('Reservar', 'woocommerce'),
-        'processing' => __('Procesar', 'woocommerce'),
-        'impressed'  => __('Impreso', 'woocommerce'),
-        'completed'  => __('Completar', 'woocommerce'),
-        'cancelled'  => __('Cancelar', 'woocommerce'),
-    ];
+    $labels = inversionesjl22_site_status_action_labels();
 
     // Mapeo de claves para mantener estilos en Woo
     $action_key_map = [

@@ -11,7 +11,8 @@
  * Allowlists, not blocklists (URE blocked 28 items for seo_manager): a plugin installed
  * tomorrow stays out of these roles' reach until it is added here. The lists are what each
  * role saw with URE on (.qa/menu-con-ure.json, 2026-11-11), minus Loco Translate for
- * storage_manager (César, 2026-11-11).
+ * storage_manager (César, 2026-11-11). They live in the configuration (config.php), with the
+ * rest of each role's rules.
  *
  * Keys: 'index.php', 'profile.php'… for a core screen; 'admin.php?page=<slug>' for a plugin
  * page; '<screen>.php?post_type=<type>' for edit.php, post.php and post-new.php.
@@ -27,30 +28,15 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, array{menu: string[], screens: string[], admin_bar: string[]}>
  */
 function inversionesjl22_site_role_screens(): array {
-	return array(
-		'storage_manager' => array(
-			'menu'      => array(
-				'index.php',
-				'edit.php?post_type=shop_order',
-				'admin.php?page=shipping-report',
-			),
-			'screens'   => array( 'post.php?post_type=shop_order' ),
-			'admin_bar' => array( 'menu-toggle', 'site-name' ),
-		),
-		'seo_manager'     => array(
-			'menu'      => array(
-				'index.php',
-				'admin.php?page=asnp-easy-sale-badge',
-				'admin.php?page=wc-admin',
-				'edit.php?post_type=shop_order',
-				'admin.php?page=shipping-report',
-				'admin.php?page=mercadopago-settings',
-			),
-			// Not post-new.php: it gave a 403 with URE too (its "New" link in the bar was dead).
-			'screens'   => array( 'post.php?post_type=shop_order' ),
-			'admin_bar' => array( 'menu-toggle', 'wp-logo', 'site-name', 'woocommerce-site-visibility-badge' ),
-		),
-	);
+	$screens = array();
+	foreach ( inversionesjl22_site_config()['roles'] as $role => $rules ) {
+		$screens[ $role ] = array(
+			'menu'      => array_values( (array) ( $rules['menu'] ?? array() ) ),
+			'screens'   => array_values( (array) ( $rules['screens'] ?? array() ) ),
+			'admin_bar' => array_values( (array) ( $rules['admin_bar'] ?? array() ) ),
+		);
+	}
+	return $screens;
 }
 
 /**

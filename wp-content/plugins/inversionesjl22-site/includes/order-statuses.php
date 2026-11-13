@@ -4,54 +4,76 @@
  * registration, their place in the status list and tabs, editing a reserved order, and their
  * quick, bulk and preview actions.
  *
- * Moved as is from WPCodeBox › Order › Custom Status (snippet 49). The roles module filters the
- * actions added here, so it loads after this one (order of the loader in the main file).
+ * From WPCodeBox › Order › Custom Status (snippet 49). The roles module filters the actions added
+ * here, so it loads after this one (order of the loader in the main file).
+ *
+ * Which statuses, their names, their place in the lists and which one keeps the order editable
+ * come from the configuration (config.php). The administrator's quick, bulk and preview actions
+ * below are still written status by status.
  */
 
 defined( 'ABSPATH' ) || exit;
 
 add_action('init', 'createCustomStatus');
 function createCustomStatus() {
-    register_post_status('wc-impressed', [
-      'label'                     => 'Impreso',
-      'public'                    => true,
-      'exclude_from_search'       => false,
-      'show_in_admin_all_list'    => true,
-      'show_in_admin_status_list' => true,
-      'label_count'               => _n_noop('Impreso (%s)', 'Impreso (%s)'),
-    ]);
-    register_post_status('wc-reserved', [
-      'label'                     => 'Reservado',
-      'public'                    => true,
-      'exclude_from_search'       => false,
-      'show_in_admin_all_list'    => true,
-      'show_in_admin_status_list' => true,
-      'label_count'               => _n_noop('Reservado (%s)', 'Reservado (%s)'),
-    ]);
+    // The shop's own statuses, from the configuration (config.php)
+    foreach (inversionesjl22_site_custom_statuses() as $slug => $status) {
+        $count = $status['label'] . ' (%s)';
+        register_post_status('wc-' . $slug, [
+          'label'                     => $status['label'],
+          'public'                    => true,
+          'exclude_from_search'       => false,
+          'show_in_admin_all_list'    => true,
+          'show_in_admin_status_list' => true,
+          // The array _n_noop() builds; called with a variable it would hide the text from the translation tools
+          'label_count'               => ['singular' => $count, 'plural' => $count, 'context' => null, 'domain' => null],
+        ]);
+    }
 }
 
 add_filter( 'wc_order_is_editable', 'addProductsInReservedStatus', 10, 2 );
 function addProductsInReservedStatus($is_editable, $order) {
-    if ( $order->get_status() === 'reserved') {
+    $statuses = inversionesjl22_site_config()['statuses'];
+    if ( ! empty( $statuses[ $order->get_status() ]['editable'] ) ) {
         $is_editable = true;
     }
-    
+
     return $is_editable;
+}
+
+// Places each of the shop's statuses right after the one its 'after' names, in $list (keyed by
+// wc-<slug>); $items are the entries to place, by wc-<slug>. One without its 'after' in the list
+// goes at the end.
+function inversionesjl22_site_place_custom_statuses($list, $items) {
+    $custom = inversionesjl22_site_custom_statuses();
+    $list   = array_diff_key($list, $items);
+    $sorted = [];
+    // After $key, the statuses that follow it, and after each of those the ones that follow it
+    $place = function ($key) use (&$place, &$sorted, $custom, $items) {
+        foreach ($custom as $slug => $status) {
+            $own = 'wc-' . $slug;
+            if (!isset($sorted[$own]) && 'wc-' . ($status['after'] ?? '') === $key) {
+                if (isset($items[$own])) {
+                    $sorted[$own] = $items[$own];
+                }
+                $place($own);
+            }
+        }
+    };
+    foreach ($list as $key => $value) {
+        $sorted[$key] = $value;
+        $place($key);
+    }
+    return $sorted + $items;
 }
 
 add_filter('wc_order_statuses', 'sortCustomStatus');
 function sortCustomStatus($statuses) {
-    $sortStatuses = [];
-    foreach ($statuses as $key => $label) {
-        $sortStatuses[$key] = $label;
-        if ($key === 'wc-on-hold') {
-            $sortStatuses['wc-reserved'] = 'Reservado';
-        }
-        if ($key === 'wc-processing') {
-            $sortStatuses['wc-impressed'] = 'Impreso';
-        }
+    $items = [];
+    foreach (inversionesjl22_site_custom_statuses() as $slug => $status) {
+        $items['wc-' . $slug] = $status['label'];
     }
-    return $sortStatuses;
+    return inversionesjl22_site_place_custom_statuses($statuses, $items);
 }
 
 add_filter('woocommerce_admin_order_actions', 'quickActionsCustomStatus', 10, 2);
@@ -209,41 +231,23 @@ function viewsCustomStatus($views) {
     global $wp_query;
     $current = isset($_GET['post_status']) ? $_GET['post_status'] : '';
     $count = wp_count_posts('shop_order');
-    $impressedCount = isset($count->{'wc-impressed'}) ? $count->{'wc-impressed'} : 0;
-    $reservedCount  = isset($count->{'wc-reserved'}) ? $count->{'wc-reserved'} : 0;
 
-    if ($reservedCount > 0) {
-        $class = $current === 'wc-reserved' ? 'current' : '';
-        $url = admin_url('edit.php?post_status=wc-reserved&post_type=shop_order');
-        $views['wc-reserved'] = sprintf(
-            '<li class="wc-reserved"><a href="%s" class="%s">%s <span class="count">(%s)</span></a></li>',
-            esc_url($url),
-            esc_attr($class),
-            __('Reservado', 'woocommerce'),
-            intval($reservedCount)
-        );
-    }
-    if ($impressedCount > 0) {
-        $class = $current === 'wc-impressed' ? 'current' : '';
-        $url = admin_url('edit.php?post_status=wc-impressed&post_type=shop_order');
-        $views['wc-impressed'] = sprintf(
-            '<li class="wc-impressed"><a href="%s" class="%s">%s <span class="count">(%s)</span></a></li>',
-            esc_url($url),
-            esc_attr($class),
-            __('Impreso', 'woocommerce'),
-            intval($impressedCount)
-        );
-    }
-
-    $newViews = [];
-    foreach ($views as $key => $html) {
-        $newViews[$key] = $html;
-        if ($key === 'wc-on-hold' && isset($views['wc-reserved'])) {
-            $newViews['wc-reserved'] = $views['wc-reserved'];
-        }
-        if ($key === 'wc-processing' && isset($views['wc-impressed'])) {
-            $newViews['wc-impressed'] = $views['wc-impressed'];
+    // One tab per status of the shop that has orders, after the status it follows
+    $tabs = [];
+    foreach (inversionesjl22_site_custom_statuses() as $slug => $status) {
+        $key      = 'wc-' . $slug;
+        $quantity = isset($count->{$key}) ? $count->{$key} : 0;
+        unset($views[$key]);
+        if ($quantity > 0) {
+            $tabs[$key] = sprintf(
+                '<li class="%s"><a href="%s" class="%s">%s <span class="count">(%s)</span></a></li>',
+                esc_attr($key),
+                esc_url(admin_url('edit.php?post_status=' . $key . '&post_type=shop_order')),
+                esc_attr($current === $key ? 'current' : ''),
+                esc_html($status['label']),
+                intval($quantity)
+            );
         }
     }
-    return $newViews;
+    return inversionesjl22_site_place_custom_statuses($views, $tabs);
 }

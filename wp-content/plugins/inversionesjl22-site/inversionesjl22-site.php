@@ -49,6 +49,7 @@ add_action(
 			return;
 		}
 		$modules = array(
+			'config',
 			'clear-cart',
 			'helpers',
 			'payment-status',
