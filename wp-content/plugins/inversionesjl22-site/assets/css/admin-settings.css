@@ -514,6 +514,94 @@
     box-shadow: none;
 }
 
+/* ------------------------------------------- color e icono: radios con forma de muestra */
+
+.jl-pill .dashicons {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+.jl-choice {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.jl-choice legend {
+    margin-bottom: 8px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.jl-choice__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.jl-swatch {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+/* El radio sigue ahí para el teclado (flechas) y los lectores de pantalla. */
+.jl-settings .jl-swatch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+}
+
+.jl-swatch__face {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--jl-field-border);
+    border-radius: 999px;
+    background: var(--jl-surface);
+    color: var(--jl-ink);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.jl-swatch--icon .jl-swatch__face {
+    padding: 0;
+    border-radius: 12px;
+}
+
+/* Elegido: aro oscuro y marca (o icono invertido), no solo otro color. */
+.jl-swatch input:checked + .jl-swatch__face {
+    outline: 2px solid var(--jl-ink);
+    outline-offset: 2px;
+    font-weight: 700;
+}
+
+.jl-swatch:not(.jl-swatch--icon) input:checked + .jl-swatch__face::before {
+    content: "\2713";
+    margin-right: 6px;
+}
+
+.jl-settings .jl-swatch--icon input:checked + .jl-swatch__face {
+    border-color: var(--jl-secondary);
+    background: var(--jl-secondary);
+    color: #ffffff;
+}
+
+.jl-swatch input:focus-visible + .jl-swatch__face {
+    outline: 3px solid var(--jl-focus);
+    outline-offset: 3px;
+}
+
 /* ---------------------------------------------------------------- vista del flujo */
 
 .jl-flow {
