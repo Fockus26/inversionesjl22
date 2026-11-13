@@ -15,8 +15,8 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·1 motor, 2a pantalla Estados y flujo, 2b color e icono | — | en `main` (#33–#35) |
 | F3·2c acciones según el flujo, F3·3 Roles y permisos (+4 crear roles) | — | en `main` (#36, #37) |
 | F3·3b QR asignable por rol | — | en `main` (#38) |
-| F3·5 Documentos (PDF): tamaño de papel 80/58 mm | `feat/pantalla-documentos` | PR #39 |
-| F3·6 reemplazar PDF Invoices | — | pendiente; César decide: ¿numeración, adjunto en correo, Mi cuenta? |
+| F3·5 Documentos (PDF): papel 80/58 mm (+ tipografía/grosor, que quedó fuera de #39: va en F3·6) | — | en `main` (#39) |
+| F3·6 PDF propios (Dompdf + informe; factura + entradas + migración 007) | `feat/pdf-propio` → `feat/factura-propia` | PR #40 y #41 en cadena; 007 espera la respuesta de César (adjunto en correos, Mi cuenta) |
 | F3·7 identidad y 1.0.0 | — | pendiente |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
@@ -32,9 +32,9 @@ blanco sobre terracota (D001).
 
 ## Blocked (actions for César or external)
 
-- Revisar y fusionar #39 (Documentos); revisar staging con las cuentas de bodega y SEO.
+- Revisar staging con las cuentas de bodega y SEO.
+- F3·6: ¿se mantienen el adjunto de la factura en correos (en uso: «Nuevo pedido» de cada pedido) y el botón de Mi cuenta? Sin respuesta no se despliega la 007.
 - Informe de envíos (`shipping-report/`): sigue con roles fijos (pendiente, sin unidad aún).
-- Decisión de la unidad 6 (qué se usa hoy de PDF Invoices).
 - Producción: mostrar al cliente antes. Reversa del plugin:
   `wp plugin activate wpcodebox2 wpcodebox_functionality_plugin && wp plugin deactivate inversionesjl22-site`.
 - Plugins con actualización pendiente (Woodmart 7.2.5 muy atrás).
@@ -52,4 +52,4 @@ blanco sobre terracota (D001).
 
 ## Next
 
-1. Revisar #39; luego la unidad 6 (decisión de César) o la 7.
+1. Revisar los dos PR de F3·6; luego borrar PDF Invoices vendorizado (unidad siguiente) o la 7.
