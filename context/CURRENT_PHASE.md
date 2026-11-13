@@ -24,6 +24,7 @@ guía: kit `reference/tech/wordpress-adopt.md` · plan: `plans/adoption.md`
 | 24–26 iconos, informe de envíos, QR snackbar | — | en `main` (#30–#32) |
 | F3·1, 2a, 2b: motor, pantalla Estados y flujo, color e icono | — | en `main` (#33–#35) |
 | **F3·2c acciones según el flujo** (+ estado sin regla no es del rol) | `feat/acciones-admin-por-flujo` | PR #36 |
+| **F3·3 pantalla Roles y permisos** (matriz por rol, crear/eliminar rol) | `feat/pantalla-roles-permisos` (sobre la de #36) | PR #37 (fusionar #36 antes) |
 
 **Fase 2 (personalizar el plugin, #24–#29): solo en staging.** César decidió (2026-11-11) no llevarla a
 producción todavía: se termina la fase siguiente y él consulta con el cliente si instala el plugin
@@ -34,7 +35,7 @@ nuevo. Producción sigue en `3125c1b` (#23). Al desplegar: migraciones 004 (desa
 **Fase 3 (plugin configurable, desde 2026-11-12):** 1 motor · 2 pantalla Estados y flujo (+ acciones
 del admin por flujo, color, icono) · 3 pantalla Roles y permisos · 4 crear roles · 5 Documentos (PDF) ·
 6 reemplazar PDF Invoices (decidir: ¿usa numeración, adjunto en correo, Mi cuenta?) · 7 identidad y 1.0.0.
-Editor del flujo: A (César, 2026-11-12). Siguiente: unidad 3, pantalla Roles y permisos. Botón primario: blanco sobre terracota (D001).
+Editor del flujo: A (César, 2026-11-12). Siguiente: unidad 5, Documentos (la 4, crear roles, entró en la 3). Botón primario: blanco sobre terracota (D001).
 
 ## Blocked (actions for César or external)
 
