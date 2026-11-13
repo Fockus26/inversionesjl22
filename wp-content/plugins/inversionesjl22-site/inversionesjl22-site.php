@@ -65,6 +65,7 @@ add_action(
 			'roles-enforce',
 			'roles-menu',
 			'settings-statuses',
+			'settings-roles',
 			'shipping-report/pdf',
 			'customer-status',
 			'shipping-report/pdf-ui',

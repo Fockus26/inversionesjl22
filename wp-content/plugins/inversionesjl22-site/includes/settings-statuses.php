@@ -40,12 +40,7 @@ add_action(
 		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_STATUSES_PAGE !== $hook ) {
 			return;
 		}
-		wp_enqueue_style( 'inversionesjl22-admin-settings', INVERSIONESJL22_SITE_URL . 'assets/css/admin-settings.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-settings.css' ) );
-		$tones = '';
-		foreach ( inversionesjl22_site_status_palette() as $key => $tone ) {
-			$tones .= sprintf( '.jl-settings .jl-tone--%1$s{background:%2$s;color:%3$s;border-color:%4$s}', sanitize_html_class( $key ), $tone['bg'], $tone['fg'], $tone['border'] );
-		}
-		wp_add_inline_style( 'inversionesjl22-admin-settings', $tones );
+		inversionesjl22_site_settings_enqueue_style();
 		wp_enqueue_script(
 			'inversionesjl22-settings-statuses',
 			INVERSIONESJL22_SITE_URL . 'assets/js/settings-statuses.js',
@@ -66,6 +61,40 @@ add_action(
 		);
 	}
 );
+
+/**
+ * The settings screens' stylesheet, with the statuses' colours (the palette of config.php).
+ */
+function inversionesjl22_site_settings_enqueue_style(): void {
+	wp_enqueue_style( 'inversionesjl22-admin-settings', INVERSIONESJL22_SITE_URL . 'assets/css/admin-settings.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-settings.css' ) );
+	$tones = '';
+	foreach ( inversionesjl22_site_status_palette() as $key => $tone ) {
+		$tones .= sprintf( '.jl-settings .jl-tone--%1$s{background:%2$s;color:%3$s;border-color:%4$s}', sanitize_html_class( $key ), $tone['bg'], $tone['fg'], $tone['border'] );
+	}
+	wp_add_inline_style( 'inversionesjl22-admin-settings', $tones );
+}
+
+/**
+ * The tabs between the plugin's settings screens (settings-roles.php is the other one).
+ *
+ * @param string $current The page slug of the screen that prints them.
+ */
+function inversionesjl22_site_settings_tabs( string $current ): void {
+	$tabs = array(
+		INVERSIONESJL22_SITE_STATUSES_PAGE => __( 'Estados y flujo', 'inversionesjl22-site' ),
+		INVERSIONESJL22_SITE_ROLES_PAGE    => __( 'Roles y permisos', 'inversionesjl22-site' ),
+	);
+	echo '<nav class="jl-tabs" aria-label="' . esc_attr__( 'Secciones de configuración', 'inversionesjl22-site' ) . '">';
+	foreach ( $tabs as $page => $label ) {
+		printf(
+			'<a class="jl-tab" href="%1$s"%2$s>%3$s</a>',
+			esc_url( admin_url( 'admin.php?page=' . $page ) ),
+			$page === $current ? ' aria-current="page"' : '',
+			esc_html( $label )
+		);
+	}
+	echo '</nav>';
+}
 
 /**
  * How many orders are in a status.
@@ -404,6 +433,8 @@ function inversionesjl22_site_statuses_screen(): void {
 
 		<?php // .wp-header-end: where wp-admin moves the other plugins' notices. ?>
 		<hr class="wp-header-end">
+
+		<?php inversionesjl22_site_settings_tabs( INVERSIONESJL22_SITE_STATUSES_PAGE ); ?>
 
 		<?php if ( is_array( $notice ) && ! empty( $notice['messages'] ) ) : ?>
 			<div class="jl-notice jl-notice--<?php echo esc_attr( 'error' === $notice['type'] ? 'error' : 'success' ); ?>" role="<?php echo esc_attr( 'error' === $notice['type'] ? 'alert' : 'status' ); ?>">

@@ -331,7 +331,10 @@ function inversionesjl22_site_flow( string $role = '' ): array {
 	$config = inversionesjl22_site_config();
 	$flow   = $config['flow'];
 	if ( '' !== $role && ! empty( $config['roles'][ $role ]['flow'] ) ) {
-		$flow = array_merge( $flow, $config['roles'][ $role ]['flow'] );
+		// Added to the global origins of each destination, not instead of them.
+		foreach ( (array) $config['roles'][ $role ]['flow'] as $to => $origins ) {
+			$flow[ $to ] = array_unique( array_merge( (array) ( $flow[ $to ] ?? array() ), (array) $origins ) );
+		}
 	}
 	return array_map(
 		static function ( $origins ) {
