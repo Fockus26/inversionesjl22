@@ -1,0 +1,578 @@
+/**
+ * Pantallas de configuración del plugin en wp-admin (WooCommerce › Estados y flujo). Se cargan
+ * solo en ellas (includes/settings-statuses.php).
+ *
+ * Colores y formas del sistema visual del sitio (artifact de diseño "Inversiones JL22 — Tienda de
+ * belleza", tableros Componentes, AdminEnvios y AdminEstadosA). Los mismos valores que
+ * admin-form.css; el borde de los campos es --jl-field-border, que pasa 3:1 (WCAG 1.4.11).
+ */
+
+.jl-settings {
+    --jl-primary: #ffb16e;        /* siempre con texto oscuro */
+    --jl-on-primary: #2b2a35;
+    --jl-secondary: #4a4959;      /* con texto blanco, 8.7:1 */
+    --jl-ink: #2b2a35;
+    --jl-muted: #5c5b69;          /* 6.6:1 sobre blanco, 6.0:1 sobre --jl-surface-soft */
+    --jl-accent-text: #a4521a;    /* 5.0:1 sobre blanco */
+    --jl-error: #b4441c;          /* 5.5:1 sobre blanco */
+    --jl-success: #24432f;
+    --jl-surface: #ffffff;
+    --jl-surface-soft: #faf6f2;
+    --jl-peach: #fff1e3;
+    --jl-line: #ece4dc;           /* decorativo (bordes de tarjeta) */
+    --jl-field-border: #8c8494;   /* 3.5:1 sobre blanco */
+    --jl-focus: #4a4959;
+    --jl-radius-card: 18px;
+    --jl-radius-field: 12px;
+    --jl-field-height: 46px;
+    max-width: 1180px;
+    color: var(--jl-ink);
+    font-size: 14px;
+}
+
+.jl-settings *,
+.jl-settings *::before,
+.jl-settings *::after {
+    box-sizing: border-box;
+}
+
+.jl-settings :focus-visible {
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------------- cabecera */
+
+.jl-settings__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin: 12px 0 20px;
+}
+
+.jl-settings .jl-settings__title {
+    margin: 0;
+    padding: 0;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--jl-ink);
+}
+
+.jl-settings__lead {
+    margin: 6px 0 0;
+    color: var(--jl-muted);
+}
+
+.jl-settings__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.jl-settings__hint {
+    margin: 0;
+    color: var(--jl-muted);
+    font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- botones */
+
+.jl-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.jl-button--primary {
+    background: var(--jl-accent-text); /* terracota: con blanco 5.5:1 (el durazno solo da 1.8:1). decisions/D001 */
+    color: #ffffff;
+}
+
+.jl-button--primary:hover {
+    background: var(--jl-secondary);
+    color: #ffffff;
+}
+
+.jl-button--outline {
+    border-color: var(--jl-secondary);
+    background: var(--jl-surface);
+    color: var(--jl-secondary);
+}
+
+.jl-button--outline:hover {
+    background: var(--jl-secondary);
+    color: #ffffff;
+}
+
+.jl-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--jl-field-border);
+    border-radius: 12px;
+    background: var(--jl-surface);
+    color: var(--jl-secondary);
+    cursor: pointer;
+}
+
+.jl-icon-button:hover:not(:disabled) {
+    background: var(--jl-secondary);
+    color: #ffffff;
+}
+
+.jl-icon-button:disabled {
+    border-color: var(--jl-line);
+    color: #6b6a78;
+    cursor: default;
+    opacity: 0.55;
+}
+
+.jl-link-button {
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--jl-accent-text);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.jl-link-button:hover {
+    text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------- avisos */
+
+.jl-notice {
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border: 1.5px solid var(--jl-success);
+    border-radius: 12px;
+    background: #e6efe9;
+    color: var(--jl-success);
+    font-weight: 500;
+}
+
+.jl-notice--error {
+    border-color: var(--jl-error);
+    background: var(--jl-peach);
+    color: #7a2c10;
+}
+
+.jl-notice p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.jl-notice p + p {
+    margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------- disposición */
+
+.jl-settings__layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.jl-settings__main {
+    display: flex;
+    flex: 999 1 520px;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.jl-settings__aside {
+    display: flex;
+    flex: 1 1 280px;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 360px;
+    padding: 22px;
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-card);
+    background: var(--jl-surface);
+}
+
+.jl-settings__aside h2 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--jl-ink);
+}
+
+.jl-settings__note {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--jl-surface-soft);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.jl-settings__submit {
+    margin: 4px 0 0;
+}
+
+/* ---------------------------------------------------------------- estado */
+
+.jl-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jl-status {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 16px 18px;
+    border: 1.5px solid var(--jl-line);
+    border-radius: var(--jl-radius-card);
+    background: var(--jl-surface);
+}
+
+.jl-status.is-open {
+    border-color: var(--jl-primary);
+}
+
+.jl-status.is-dragging {
+    opacity: 0.5;
+}
+
+.jl-status.is-drop-target {
+    border-color: var(--jl-secondary);
+    border-style: dashed;
+}
+
+.jl-status__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.jl-status__handle {
+    display: none;                /* arrastrar es un atajo de ratón; lo activa el JS */
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 44px;
+    color: var(--jl-muted);
+    cursor: grab;
+}
+
+.jl-settings.has-js .jl-status__handle {
+    display: inline-flex;
+}
+
+.jl-status__moves {
+    display: none;                /* sin JS no se puede reordenar */
+    gap: 6px;
+}
+
+.jl-settings.has-js .jl-status__moves {
+    display: inline-flex;
+}
+
+.jl-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--jl-secondary);
+    border-radius: 999px;
+    background: var(--jl-surface);
+    color: var(--jl-ink);
+    font-weight: 700;
+}
+
+.jl-tag {
+    padding: 4px 10px;
+    border: 1px solid var(--jl-line);
+    border-radius: 999px;
+    background: var(--jl-surface-soft);
+    color: var(--jl-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.jl-status__kind {
+    color: var(--jl-muted);
+    font-size: 13px;
+}
+
+/* -------------------------------------------- "puede pasar a": casillas con forma de chip */
+
+.jl-status__next {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.jl-status__next legend {
+    float: left;                  /* en línea con los chips */
+    margin: 0 10px 0 0;
+    padding: 0;
+    color: var(--jl-muted);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 36px;
+}
+
+.jl-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.jl-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px dashed var(--jl-field-border);
+    border-radius: 999px;
+    background: var(--jl-surface);
+    color: var(--jl-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* La casilla sigue ahí para el teclado y los lectores de pantalla; el chip la dibuja. */
+.jl-settings .jl-chip input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+}
+
+.jl-chip span::before {
+    content: "+";
+    display: inline-block;
+    width: 14px;
+    margin-right: 4px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.jl-chip:has(input:checked) {
+    border: 1px solid var(--jl-secondary);
+    background: var(--jl-secondary);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.jl-chip:has(input:checked) span::before {
+    content: "\2713";             /* ✓: el estado no depende solo del color */
+}
+
+.jl-chip:has(input:focus-visible) {
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+}
+
+/* Con JS, los destinos sin marcar se guardan tras "+ Añadir". */
+.jl-settings.has-js .jl-status__next:not(.is-adding) .jl-chip:not(:has(input:checked)) {
+    display: none;
+}
+
+.jl-chip-add {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px dashed var(--jl-field-border);
+    border-radius: 999px;
+    background: var(--jl-surface);
+    color: var(--jl-secondary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.jl-status__final {
+    color: var(--jl-muted);
+    font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- panel de edición */
+
+.jl-status__panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px 16px;
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--jl-surface-soft);
+}
+
+.jl-status__panel[hidden] {
+    display: none;
+}
+
+.jl-settings .jl-field,
+.jl-settings .jl-check {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    font-size: 14px;
+}
+
+.jl-settings .jl-check--wide {
+    grid-column: 1 / -1;
+}
+
+.jl-field label {
+    font-weight: 500;
+}
+
+.jl-settings .jl-field input[type="text"] {
+    width: 100%;
+    max-width: none;
+    height: var(--jl-field-height);
+    min-height: 0;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid var(--jl-field-border);
+    border-radius: var(--jl-radius-field);
+    background: var(--jl-surface);
+    color: var(--jl-ink);
+    font-size: 14px;
+    box-shadow: none;
+}
+
+.jl-settings .jl-field input[type="text"]:focus {
+    border-color: var(--jl-focus);
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+.jl-field__help {
+    color: var(--jl-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.jl-check label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+}
+
+.jl-settings .jl-check input[type="checkbox"] {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: 1px solid var(--jl-field-border);
+    border-radius: 5px;
+    box-shadow: none;
+    accent-color: var(--jl-secondary);
+}
+
+.jl-settings .jl-check input[type="checkbox"]:checked::before {
+    width: 24px;
+    height: 24px;
+    margin: -3px;
+}
+
+.jl-settings .jl-check input[type="checkbox"]:focus {
+    border-color: var(--jl-focus);
+    outline: 2px solid var(--jl-focus);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------------- vista del flujo */
+
+.jl-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jl-flow li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+
+.jl-flow__step {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.jl-flow__next {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding-left: 14px;
+    color: var(--jl-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.jl-flow__next svg {
+    flex: none;
+    margin-top: 1px;
+}
+
+@media (max-width: 782px) {
+    .jl-settings__aside {
+        max-width: none;
+    }
+
+    .jl-status__next legend {
+        float: none;
+        margin-bottom: 4px;
+    }
+
+    .jl-link-button {
+        margin-left: 0;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .jl-button,
+    .jl-icon-button,
+    .jl-chip {
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+}

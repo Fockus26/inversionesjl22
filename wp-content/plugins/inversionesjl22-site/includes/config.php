@@ -6,8 +6,8 @@
  * roles-menu.php).
  *
  * The array comes from the option inversionesjl22_site_config; while nobody has saved one, it is
- * inversionesjl22_site_default_config(), the rules the site had in code. Nothing writes the
- * option yet: the settings screens will. Deleting it is "back to the defaults".
+ * inversionesjl22_site_default_config(), the rules the site had in code. The settings screens
+ * write it (settings-statuses.php). Deleting it is "back to the defaults".
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -17,13 +17,17 @@ const INVERSIONESJL22_SITE_CONFIG_OPTION = 'inversionesjl22_site_config';
 /**
  * The rules as they were written in code before this file.
  *
- * - statuses: the statuses the shop works with, by slug (without wc-).
- *     action_label  what its button says ("Reservar").
- *     core          true: WooCommerce's own, not registered here.
- *     label, after  only for the shop's own: its name and the status it follows in the lists.
- *     editable      the order's items can be changed while in it.
- *     note          the order note of a manual change; by default "Pedido marcado como <label>
- *                   manualmente."
+ * - statuses: the statuses the shop works with, by slug (without wc-), in the order the status
+ *   lists and tabs show them (WooCommerce's other statuses keep their places around them).
+ *     action_label      what its button says ("Reservar").
+ *     core              true: WooCommerce's own, not registered here.
+ *     label             its name. Required for the shop's own; for WooCommerce's, only to
+ *                       rename it.
+ *     editable          the order's items can be changed while in it.
+ *     requires_payment  an order picked up or paid on delivery needs its payment status
+ *                       (Pagado / Por cobrar) before it is moved here.
+ *     note              the order note of a manual change; by default "Pedido marcado como
+ *                       <label> manualmente."
  * - flow: destination => the statuses an order can come from.
  * - roles: per restricted role (administrators are never restricted).
  *     statuses      slug => whether the role sees orders in it.
@@ -37,33 +41,35 @@ function inversionesjl22_site_default_config(): array {
 	return array(
 		'version'  => 1,
 		'statuses' => array(
+			'processing' => array(
+				'action_label'     => 'Procesar',
+				'core'             => true,
+				'requires_payment' => true,
+				'note'             => 'Pedido marcado como procesando manualmente.',
+			),
+			'impressed'  => array(
+				'label'            => 'Impreso',
+				'action_label'     => 'Impreso',
+				'core'             => false,
+				'requires_payment' => true,
+			),
 			'on-hold'    => array(
 				'action_label' => 'En espera',
 				'core'         => true,
 				'note'         => 'Pedido marcado como en espera manualmente.',
 			),
 			'reserved'   => array(
-				'label'        => 'Reservado',
-				'action_label' => 'Reservar',
-				'core'         => false,
-				'after'        => 'on-hold',
-				'editable'     => true,
-			),
-			'processing' => array(
-				'action_label' => 'Procesar',
-				'core'         => true,
-				'note'         => 'Pedido marcado como procesando manualmente.',
-			),
-			'impressed'  => array(
-				'label'        => 'Impreso',
-				'action_label' => 'Impreso',
-				'core'         => false,
-				'after'        => 'processing',
+				'label'            => 'Reservado',
+				'action_label'     => 'Reservar',
+				'core'             => false,
+				'editable'         => true,
+				'requires_payment' => true,
 			),
 			'completed'  => array(
-				'action_label' => 'Completar',
-				'core'         => true,
-				'note'         => 'Pedido marcado como completado manualmente.',
+				'action_label'     => 'Completar',
+				'core'             => true,
+				'requires_payment' => true,
+				'note'             => 'Pedido marcado como completado manualmente.',
 			),
 			'cancelled'  => array(
 				'action_label' => 'Cancelar',
@@ -185,6 +191,105 @@ function inversionesjl22_site_custom_statuses(): array {
 			return empty( $status['core'] ) && ! empty( $status['label'] );
 		}
 	);
+}
+
+/**
+ * WooCommerce's own order statuses the shop does not work with, and the other post statuses a
+ * new status must not be named after.
+ *
+ * @return string[] slugs without wc-
+ */
+function inversionesjl22_site_reserved_status_slugs(): array {
+	return array( 'pending', 'refunded', 'failed', 'checkout-draft', 'draft', 'trash', 'auto-draft', 'publish', 'private', 'inherit', 'future', 'any', 'all' );
+}
+
+/**
+ * WooCommerce's name for one of its statuses the shop works with, whatever the shop calls it.
+ */
+function inversionesjl22_site_core_status_label( string $slug ): string {
+	// Not wc_get_order_status_name(): it runs the filter that renames them.
+	$core = array(
+		'on-hold'    => _x( 'On hold', 'Order status', 'woocommerce' ),
+		'processing' => _x( 'Processing', 'Order status', 'woocommerce' ),
+		'completed'  => _x( 'Completed', 'Order status', 'woocommerce' ),
+		'cancelled'  => _x( 'Cancelled', 'Order status', 'woocommerce' ),
+	);
+	return $core[ $slug ] ?? ucfirst( $slug );
+}
+
+/**
+ * The name of a status: its own, or WooCommerce's for one of its statuses that was not renamed.
+ */
+function inversionesjl22_site_status_label( string $slug ): string {
+	$status = inversionesjl22_site_config()['statuses'][ $slug ] ?? array();
+	return empty( $status['label'] ) ? inversionesjl22_site_core_status_label( $slug ) : (string) $status['label'];
+}
+
+/**
+ * Where each status can go, the flow read from the origin's side: origin => destinations, both
+ * in the statuses' order.
+ *
+ * @return array<string, string[]>
+ */
+function inversionesjl22_site_flow_destinations(): array {
+	$config = inversionesjl22_site_config();
+	$next   = array_fill_keys( array_keys( $config['statuses'] ), array() );
+	foreach ( array_keys( $config['statuses'] ) as $to ) {
+		foreach ( (array) ( $config['flow'][ $to ] ?? array() ) as $from ) {
+			if ( isset( $next[ $from ] ) ) {
+				$next[ $from ][] = $to;
+			}
+		}
+	}
+	return $next;
+}
+
+/**
+ * What a status is in the flow: 'entry' (nothing leads to it), 'final' (it leads nowhere),
+ * 'required' (some final status can only be reached through it: Procesando, on the way to
+ * Completado) or 'optional' (every final status it leads to can also be reached around it:
+ * Reservado).
+ */
+function inversionesjl22_site_status_kind( string $slug ): string {
+	$next    = inversionesjl22_site_flow_destinations();
+	$origins = (array) ( inversionesjl22_site_config()['flow'][ $slug ] ?? array() );
+	if ( empty( $next[ $slug ] ) ) {
+		return 'final';
+	}
+	if ( ! $origins ) {
+		return 'entry';
+	}
+
+	// The statuses reached from $from without going through $without.
+	$reach = static function ( array $from, string $without ) use ( $next ): array {
+		$seen  = array();
+		$stack = $from;
+		while ( $stack ) {
+			$current = (string) array_pop( $stack );
+			if ( $current === $without || isset( $seen[ $current ] ) ) {
+				continue;
+			}
+			$seen[ $current ] = true;
+			foreach ( $next[ $current ] ?? array() as $to ) {
+				$stack[] = $to;
+			}
+		}
+		return $seen;
+	};
+
+	$entries = array();
+	foreach ( array_keys( $next ) as $status ) {
+		if ( empty( inversionesjl22_site_config()['flow'][ $status ] ) ) {
+			$entries[] = (string) $status;
+		}
+	}
+	$around = $reach( $entries, $slug );
+	foreach ( array_keys( $reach( array( $slug ), '' ) ) as $status ) {
+		if ( empty( $next[ $status ] ) && ! isset( $around[ $status ] ) ) {
+			return 'required';
+		}
+	}
+	return 'optional';
 }
 
 /**
