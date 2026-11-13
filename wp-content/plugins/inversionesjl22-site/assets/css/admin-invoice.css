@@ -20,3 +20,9 @@ ul.jl22-invoice-actions {
 ul.jl22-invoice-actions > li {
 	margin: 6px 0 0;
 }
+
+/* Visible focus: the list's action buttons do not show WordPress's focus ring on their own. */
+.column-wc_actions a.button.jl22-invoice:focus {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--wp-admin-theme-color, #2271b1);
+	outline: 2px solid transparent;
+}
