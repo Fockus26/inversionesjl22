@@ -2,7 +2,8 @@
 /**
  * WooCommerce › Roles y permisos: the screen that edits what each restricted role sees and does
  * (config.php, section 'roles'): the orders it sees per status, where it can move them from, its
- * own steps on top of the flow, and the wp-admin screens of its menu. It also creates roles (a
+ * own steps on top of the flow, the wp-admin screens of its menu and whether it scans the
+ * invoice's QR (qr-scan.php). It also creates roles (a
  * WordPress role with the capabilities of an existing restricted one) and deletes the ones it
  * created.
  *
@@ -165,7 +166,8 @@ function inversionesjl22_site_default_role_rules( string $role ): array {
  * The rules the form asks for a role, or the reasons they cannot be saved.
  *
  * @param string        $role   A role of the configuration.
- * @param array         $input  The form, unslashed: perm, flow_remove, flow_from, flow_to, menu.
+ * @param array         $input  The form, unslashed: perm, flow_remove, flow_from, flow_to, menu,
+ *                              qr_scan.
  * @param string[]|null $menus  The menu keys the screen offered; null when it is not known.
  * @param string[]      $errors Filled with what is wrong, for the user.
  */
@@ -264,6 +266,7 @@ function inversionesjl22_site_role_rules_from_form( string $role, array $input, 
 	$rules['exclude']  = $exclude;
 	$rules['flow']     = $flow;
 	$rules['menu']     = $menu;
+	$rules['qr_scan']  = ! empty( $input['qr_scan'] );
 	return $rules;
 }
 
@@ -332,6 +335,7 @@ add_action(
 		foreach ( array( 'flow_from', 'flow_to' ) as $field ) {
 			$input[ $field ] = isset( $_POST[ $field ] ) && is_scalar( $_POST[ $field ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) : '';
 		}
+		$input['qr_scan'] = isset( $_POST['qr_scan'] ) && '1' === $_POST['qr_scan'];
 		// phpcs:enable
 		$menus  = get_transient( 'inversionesjl22_site_roles_menu_' . get_current_user_id() );
 		$errors = array();
@@ -395,6 +399,7 @@ add_action(
 			'menu'      => array( 'index.php' ),
 			'screens'   => array_values( (array) ( $roles[ $base ]['screens'] ?? array() ) ),
 			'admin_bar' => array_values( (array) ( $roles[ $base ]['admin_bar'] ?? array() ) ),
+			'qr_scan'   => false,
 			'custom'    => true,
 		);
 		inversionesjl22_site_roles_save_config( $config );
@@ -764,6 +769,15 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 						<?php endforeach; ?>
 					</details>
 				<?php endif; ?>
+			</section>
+
+			<section class="jl-card" aria-labelledby="jl-role-qr">
+				<h2 id="jl-role-qr"><?php esc_html_e( 'Escaneo del QR de la factura', 'inversionesjl22-site' ); ?></h2>
+				<label class="jl-option">
+					<input type="checkbox" name="qr_scan" value="1" aria-describedby="jl-role-qr-help" <?php checked( inversionesjl22_site_role_scans_qr( $role ) ); ?>>
+					<?php esc_html_e( 'Puede escanear el QR', 'inversionesjl22-site' ); ?>
+				</label>
+				<p class="jl-field__help" id="jl-role-qr-help"><?php esc_html_e( 'Escanear el QR de la factura pasa el pedido de Impreso a Completado y muestra el aviso del escaneo en sus pantallas del sitio. Solo completa el pedido si el rol ve Impreso y Completado y su flujo tiene ese paso.', 'inversionesjl22-site' ); ?></p>
 			</section>
 		</div>
 

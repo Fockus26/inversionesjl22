@@ -8,8 +8,8 @@
  * a status checks the same rules (roles-config.php: the role's flow, the statuses it has off and
  * the per-context exclusions) before the change is made. Administrators are not restricted.
  *
- * Not covered on purpose: the QR scan (qr-scan.php), which is storage_manager's way of completing
- * a printed order and has its own check.
+ * Not covered here: the QR scan (qr-scan.php), the way the roles with the QR complete a printed
+ * order, which has its own check (inversionesjl22_site_qr_can_complete()).
  */
 
 defined( 'ABSPATH' ) || exit;

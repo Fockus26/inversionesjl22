@@ -3,12 +3,14 @@
  *
  * Cambios respecto a la versión anterior:
  * - Vuelve a consultar cada 3 segundos (como la versión original del plugin), así la transición aparece
- *   en cualquier pantalla del sitio abierta con storage_manager cuando se escanea un pedido desde otro equipo.
+ *   en cualquier pantalla del sitio abierta con un rol que tenga el QR (por defecto storage_manager) cuando
+ *   se escanea un pedido desde otro equipo.
  *   La versión anterior consultaba una sola vez al cargar la página.
  * - La consulta no usa caché del navegador.
  * - 2026-11-11: pide los escaneos posteriores al último que vio (since) en vez de uno solo que la
  *   primera pantalla borraba; así el aviso sale en todas las pantallas de bodega.
  * - 2026-11-12: el aviso es un snackbar abajo al centro, no una capa que tapa toda la pantalla.
+ * - 2026-11-13: lo carga cualquier rol con el QR (WooCommerce › Roles y permisos), no solo bodega.
  */
 function checkQrScanJs(ajaxUrl) {
     if (!ajaxUrl) {
