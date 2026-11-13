@@ -14,8 +14,8 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | Adopción (1–26) y fase 2 | — | en `main` (#5–#32) |
 | F3·1 motor, 2a pantalla Estados y flujo, 2b color e icono | — | en `main` (#33–#35) |
 | F3·2c acciones según el flujo, F3·3 Roles y permisos (+4 crear roles) | — | en `main` (#36, #37) |
-| F3·3b QR asignable por rol | `feat/qr-por-rol` | PR #38 |
-| F3·5 Documentos (PDF) | — | pendiente |
+| F3·3b QR asignable por rol | — | en `main` (#38) |
+| F3·5 Documentos (PDF): tamaño de papel 80/58 mm | `feat/pantalla-documentos` | PR #39 |
 | F3·6 reemplazar PDF Invoices | — | pendiente; César decide: ¿numeración, adjunto en correo, Mi cuenta? |
 | F3·7 identidad y 1.0.0 | — | pendiente |
 
@@ -32,7 +32,7 @@ blanco sobre terracota (D001).
 
 ## Blocked (actions for César or external)
 
-- Revisar y fusionar #38 (QR por rol); revisar staging con las cuentas de bodega y SEO.
+- Revisar y fusionar #39 (Documentos); revisar staging con las cuentas de bodega y SEO.
 - Informe de envíos (`shipping-report/`): sigue con roles fijos (pendiente, sin unidad aún).
 - Decisión de la unidad 6 (qué se usa hoy de PDF Invoices).
 - Producción: mostrar al cliente antes. Reversa del plugin:
@@ -52,4 +52,4 @@ blanco sobre terracota (D001).
 
 ## Next
 
-1. Unidad 5, Documentos.
+1. Revisar #39; luego la unidad 6 (decisión de César) o la 7.
