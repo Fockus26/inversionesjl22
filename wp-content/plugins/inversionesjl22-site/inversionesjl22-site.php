@@ -50,6 +50,7 @@ add_action(
 		}
 		$modules = array(
 			'config',
+			'pdf',
 			'clear-cart',
 			'helpers',
 			'payment-status',
