@@ -34,6 +34,10 @@ function pdfShippingReport($args) {
     $country = $args['country'];
     $company = $args['company'];
     $pdfTitle = "Informe de Envios | " . $country . " | " . $company . " | " . date('YmdHis') . ".pdf";
+    // Whatever another plugin printed into an open buffer (a stray space) would go before %PDF-.
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     $pdf->stream($pdfTitle, ["Attachment" => false]);
     exit;
 }
