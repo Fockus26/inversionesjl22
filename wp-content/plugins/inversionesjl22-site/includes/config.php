@@ -46,8 +46,11 @@ const INVERSIONESJL22_SITE_CONFIG_OPTION = 'inversionesjl22_site_config';
  */
 function inversionesjl22_site_default_config(): array {
 	return array(
-		'version'  => 1,
-		'statuses' => array(
+		'version'   => 1,
+		'documents' => array(
+			'paper_size' => '80mm',
+		),
+		'statuses'  => array(
 			'processing' => array(
 				'action_label'     => 'Procesar',
 				'core'             => true,
@@ -163,7 +166,7 @@ function inversionesjl22_site_default_config(): array {
 
 /**
  * The configuration in use: the saved one, or the defaults. A saved one that is not an array, or
- * lacks one of the three sections, falls back to the default for it, so a broken option never
+ * lacks one of the sections, falls back to the default for it, so a broken option never
  * leaves the roles without rules.
  */
 function inversionesjl22_site_config(): array {
@@ -189,9 +192,53 @@ function inversionesjl22_site_config(): array {
 					$config[ $section ] = $saved[ $section ];
 				}
 			}
+			// Only the keys it knows, and a paper size from the list: a saved one that is not (an
+			// old option, a hand-edited one) is the default size, never a PDF with no width.
+			$paper = is_array( $saved['documents'] ?? null ) ? (string) ( $saved['documents']['paper_size'] ?? '' ) : '';
+			if ( isset( inversionesjl22_site_document_papers()[ $paper ] ) ) {
+				$config['documents']['paper_size'] = $paper;
+			}
 		}
 	}
 	return $config;
+}
+
+/**
+ * The paper sizes the PDFs can take, key => label and width. A closed list: thermal rolls.
+ * The widths are in points (1 pt = 1/72 in), the unit Dompdf takes; 80 mm = 226.77 pt, and the
+ * 58 mm roll keeps the 162 pt the invoice's own paper table (custom/inversionesjl-pdf.php) has
+ * always used.
+ *
+ * @return array<string, array{label: string, mm: int, width_pt: float}>
+ */
+function inversionesjl22_site_document_papers(): array {
+	return array(
+		'80mm' => array(
+			'label'    => __( '80 mm', 'inversionesjl22-site' ),
+			'mm'       => 80,
+			'width_pt' => 226.77,
+		),
+		'58mm' => array(
+			'label'    => __( '58 mm', 'inversionesjl22-site' ),
+			'mm'       => 58,
+			'width_pt' => 162.0,
+		),
+	);
+}
+
+/**
+ * The paper size the PDFs use: the configured one, or 80 mm. The only place that answers it
+ * (the invoice, in the PDF plugin's custom/inversionesjl-pdf.php, and the shipping report).
+ *
+ * @return array{key: string, label: string, mm: int, width_pt: float}
+ */
+function inversionesjl22_site_document_paper(): array {
+	$papers = inversionesjl22_site_document_papers();
+	$key    = (string) ( inversionesjl22_site_config()['documents']['paper_size'] ?? '' );
+	if ( ! isset( $papers[ $key ] ) ) {
+		$key = '80mm';
+	}
+	return array( 'key' => $key ) + $papers[ $key ];
 }
 
 /**

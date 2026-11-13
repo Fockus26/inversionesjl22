@@ -75,7 +75,7 @@ function inversionesjl22_site_settings_enqueue_style(): void {
 }
 
 /**
- * The tabs between the plugin's settings screens (settings-roles.php is the other one).
+ * The tabs between the plugin's settings screens (settings-roles.php and settings-documents.php are the others).
  *
  * @param string $current The page slug of the screen that prints them.
  */
@@ -83,6 +83,7 @@ function inversionesjl22_site_settings_tabs( string $current ): void {
 	$tabs = array(
 		INVERSIONESJL22_SITE_STATUSES_PAGE => __( 'Estados y flujo', 'inversionesjl22-site' ),
 		INVERSIONESJL22_SITE_ROLES_PAGE    => __( 'Roles y permisos', 'inversionesjl22-site' ),
+		INVERSIONESJL22_SITE_DOCUMENTS_PAGE => __( 'Documentos', 'inversionesjl22-site' ),
 	);
 	echo '<nav class="jl-tabs" aria-label="' . esc_attr__( 'Secciones de configuración', 'inversionesjl22-site' ) . '">';
 	foreach ( $tabs as $page => $label ) {

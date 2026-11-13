@@ -19,6 +19,8 @@ function pdfUIShippingReport($args) {
 
     $cssFile = WP_PLUGIN_DIR . '/woocommerce-pdf-invoices-packing-slips/custom/shipping-report.css';
     $css = file_exists($cssFile) ? file_get_contents($cssFile) : '';
+    // The CSS is written for 80 mm; its @page takes the configured paper (WooCommerce › Documentos).
+    $css = str_replace('size: 80mm auto', 'size: ' . inversionesjl22_site_document_paper()['mm'] . 'mm auto', $css);
 
     ob_start();
     ?>

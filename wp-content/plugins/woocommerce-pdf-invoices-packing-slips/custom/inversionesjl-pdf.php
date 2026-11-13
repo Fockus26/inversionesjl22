@@ -67,6 +67,11 @@ add_filter( 'wpo_wcpdf_template_settings_paper_size', function ( $sizes ) {
 // Convertir '80mm' / '58mm' a medidas que dompdf entiende
 add_filter( 'wpo_wcpdf_paper_format', function ( $paper_size ) {
     $papers = jl_wcpdf_receipt_papers();
+    // JL22: el tamaño del papel sale de WooCommerce > Documentos (plugin inversionesjl22-site),
+    // no del ajuste "Paper size" de este plugin. Si el plugin propio no está, rige el ajuste.
+    if ( function_exists( 'inversionesjl22_site_document_paper' ) ) {
+        $paper_size = inversionesjl22_site_document_paper()['key'];
+    }
     if ( ! is_string( $paper_size ) || ! isset( $papers[ $paper_size ] ) ) {
         return $paper_size;
     }
@@ -223,6 +228,38 @@ add_action( 'wpo_wcpdf_custom_styles', function () {
         echo 'body { font-weight: ' . $weight . '; }'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- valor de la lista blanca
     }
 }, 99 );
+
+/*
+ * JL22: la plantilla Factura80mm está escrita para 76 mm útiles. Con el papel de 58 mm
+ * (WooCommerce > Documentos) se reajusta aquí, sin otra plantilla: cuerpo de 54 mm, letra algo
+ * menor, datos del cliente con la etiqueta sobre el valor y la tabla de productos con más sitio
+ * para el precio. Con 80 mm no se imprime nada.
+ */
+add_action( 'wpo_wcpdf_custom_styles', function () {
+    if ( ! function_exists( 'inversionesjl22_site_document_paper' ) || 58 !== inversionesjl22_site_document_paper()['mm'] ) {
+        return;
+    }
+    ?>
+    @page { size: 58mm auto; margin: 2mm 2mm 5mm 2mm; }
+    body { width: 54mm !important; font-size: 7.5pt; }
+    .document-title { font-size: 9pt; }
+    .heading { font-size: 1.3em; }
+    .qr-code img { width: 18mm !important; height: 18mm !important; }
+    .client-info-table td { display: block; width: 100%; padding: 0; }
+    .client-info-table tr { display: block; margin-bottom: 1mm; }
+    .items-table th, .items-table td { font-size: 7pt; }
+    .product-name { width: 50%; font-size: 6.5pt; }
+    .product-qty { width: 14%; padding: 0; }
+    .product-price { width: 36%; }
+    .product-sku { font-size: 6.5pt; }
+    .variation-attributes, .attribute { font-size: 6.5pt; }
+    .total-value { margin-left: 1mm; }
+    .delivery-info-table { font-size: 7pt; }
+    .delivery-info-table td, .delivery-info-table td:first-child { display: block; width: 100%; }
+    .delivery-info-table tr { display: block; margin-bottom: 1mm; }
+    .delivery-cut-message, .delivery-footer { font-size: 7pt; }
+    <?php
+}, 100 );
 
 /**
  * Estilos del formulario "WooCommerce > Informe de Envíos" (página shipping-report, del snippet
