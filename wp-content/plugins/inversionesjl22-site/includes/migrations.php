@@ -104,13 +104,13 @@ add_action(
 				if ( $result['ran'] ) {
 					printf(
 						'<div class="notice notice-success"><p>%s</p></div>',
-						esc_html( 'Inversionesjl22 Site: migrations run: ' . implode( ', ', $result['ran'] ) )
+						esc_html( 'Inversiones JL22 — Tienda: migraciones ejecutadas: ' . implode( ', ', $result['ran'] ) )
 					);
 				}
 				if ( $result['error'] ) {
 					printf(
 						'<div class="notice notice-error"><p>%s</p></div>',
-						esc_html( 'Inversionesjl22 Site: migration failed, nothing after it ran. ' . $result['error'] )
+						esc_html( 'Inversiones JL22 — Tienda: falló una migración y no se ejecutó ninguna después. ' . $result['error'] )
 					);
 				}
 			}

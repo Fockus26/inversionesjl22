@@ -1,18 +1,21 @@
 <?php
 /**
- * Plugin Name: Inversionesjl22 Site
- * Description: All of the site's code (web-agent-kit). Code lives here, in git, never in snippets.
- * Version:     0.1.0
- * Requires PHP: 7.4
- * Text Domain: inversionesjl22-site
- *
- * new-project.ps1 -Stack wordpress -Client <client> renames "acme" in this folder. By hand:
- * folder and file `<client>-site`, functions `<client>_site_`, constants `<CLIENT>_SITE_`.
+ * Plugin Name:       Inversiones JL22 — Tienda
+ * Description:       Estados y flujo de los pedidos, permisos por rol, facturas e informe de envíos en PDF y cierre de pedidos por QR, configurables desde WooCommerce.
+ * Version:           1.0.0
+ * Requires at least: 7.1
+ * Requires PHP:      7.4
+ * Requires Plugins:  woocommerce
+ * WC requires at least: 11.2
+ * WC tested up to:   11.2
+ * Author:            Cesar Leon
+ * Author URI:        https://github.com/Fockus26
+ * Text Domain:       inversionesjl22-site
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'INVERSIONESJL22_SITE_VERSION', '0.1.0' );
+define( 'INVERSIONESJL22_SITE_VERSION', '1.0.0' );
 define( 'INVERSIONESJL22_SITE_FILE', __FILE__ );
 define( 'INVERSIONESJL22_SITE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'INVERSIONESJL22_SITE_URL', plugin_dir_url( __FILE__ ) );
@@ -42,7 +45,7 @@ add_action(
 				'admin_notices',
 				static function () {
 					if ( current_user_can( 'activate_plugins' ) ) {
-						echo '<div class="notice notice-warning"><p>' . esc_html__( 'WPCodeBox está activo: Inversionesjl22 Site no carga sus módulos para no duplicarlos. Apaga WPCodeBox para usar los del plugin.', 'inversionesjl22-site' ) . '</p></div>';
+						echo '<div class="notice notice-warning"><p>' . esc_html__( 'WPCodeBox está activo: Inversiones JL22 — Tienda no carga sus módulos para no duplicarlos. Apaga WPCodeBox para usar los del plugin.', 'inversionesjl22-site' ) . '</p></div>';
 					}
 				}
 			);
@@ -74,6 +77,7 @@ add_action(
 			'shipping-report/ui',
 			'order-transitions',
 			'qr-scan',
+			'invoice-pdf',
 			'sku-generator',
 			'og-image',
 		);
