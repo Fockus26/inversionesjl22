@@ -63,10 +63,20 @@ add_action(
 );
 
 /**
- * The settings screens' stylesheet, with the statuses' colours (the palette of config.php).
+ * The settings screens' stylesheet, with the statuses' colours (the palette of config.php), and
+ * the own select (admin-form.css + admin-controls.js: the same one as the Shipping report's) that
+ * replaces every native <select> on them.
  */
 function inversionesjl22_site_settings_enqueue_style(): void {
-	wp_enqueue_style( 'inversionesjl22-admin-settings', INVERSIONESJL22_SITE_URL . 'assets/css/admin-settings.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-settings.css' ) );
+	wp_enqueue_style( 'inversionesjl22-admin-form', INVERSIONESJL22_SITE_URL . 'assets/css/admin-form.css', array(), inversionesjl22_site_asset_version( 'assets/css/admin-form.css' ) );
+	wp_enqueue_script(
+		'inversionesjl22-admin-controls',
+		INVERSIONESJL22_SITE_URL . 'assets/js/admin-controls.js',
+		array(),
+		inversionesjl22_site_asset_version( 'assets/js/admin-controls.js' ),
+		array( 'in_footer' => true )
+	);
+	wp_enqueue_style( 'inversionesjl22-admin-settings', INVERSIONESJL22_SITE_URL . 'assets/css/admin-settings.css', array( 'inversionesjl22-admin-form' ), inversionesjl22_site_asset_version( 'assets/css/admin-settings.css' ) );
 	$tones = '';
 	foreach ( inversionesjl22_site_status_palette() as $key => $tone ) {
 		$tones .= sprintf( '.jl-settings .jl-tone--%1$s{background:%2$s;color:%3$s;border-color:%4$s}', sanitize_html_class( $key ), $tone['bg'], $tone['fg'], $tone['border'] );

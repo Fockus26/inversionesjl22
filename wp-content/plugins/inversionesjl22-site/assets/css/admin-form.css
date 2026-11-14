@@ -94,6 +94,7 @@ form.my-form > fieldset:last-of-type {
 .my-form input[type="email"],
 .my-form input[type="search"],
 .my-form .jl-select__button,
+.jl-settings .jl-select__button,
 .my-form .jl-date__button,
 .jl-customer-status-preview .jl-select__button {
     box-sizing: border-box;
@@ -132,6 +133,7 @@ form.my-form > fieldset:last-of-type {
 
 .my-form input:hover,
 .my-form .jl-select__button:hover,
+.jl-settings .jl-select__button:hover,
 .my-form .jl-date__button:hover,
 .jl-customer-status-preview .jl-select__button:hover {
     border-color: var(--jl-secondary);
@@ -140,6 +142,7 @@ form.my-form > fieldset:last-of-type {
 /* Foco: anillo pizarra de 2 px, separado del borde (3:1 contra blanco y contra el campo). */
 .my-form input:focus,
 .my-form .jl-select__button:focus,
+.jl-settings .jl-select__button:focus,
 .my-form .jl-date__button:focus,
 .jl-customer-status-preview .jl-select__button:focus {
     border-color: var(--jl-secondary);

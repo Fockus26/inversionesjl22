@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    const SELECTORS = '.my-form select, select.jl-customer-status-select';
+    const SELECTORS = '.my-form select, .jl-settings select, select.jl-customer-status-select';
     const DATES = '.my-form input[type="date"]';
     // Fields only: a <fieldset> holding an invalid field matches :invalid too.
     const FIELDS_INVALID = 'input:invalid, select:invalid, textarea:invalid';
