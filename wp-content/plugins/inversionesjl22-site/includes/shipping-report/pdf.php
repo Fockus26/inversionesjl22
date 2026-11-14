@@ -17,18 +17,29 @@ if ( ! is_admin() ) {
 	return;
 }
 
-add_action('wpo_wcpdf_custom_report_pdf', 'pdfShippingReport');
-function pdfShippingReport($args) {
-     // Init
+/**
+ * The report rendered by Dompdf, on the configured paper (WooCommerce › Documentos). Shared by the
+ * report (streamed below) and by the preview of that screen (->output()).
+ *
+ * @return \InversionesJL22Site\Vendor\Dompdf\Dompdf
+ */
+function inversionesjl22_site_shipping_report_render($args) {
+    // Init
     $pdf = inversionesjl22_site_dompdf();
     // The width is the configured paper (WooCommerce › Documentos): 80 mm unless changed.
     $paper = [0, 0, inversionesjl22_site_document_paper()['width_pt'], 841.89];
     $pdf->setPaper($paper);
-    
+
     // Render
     $html = pdfUIShippingReport($args);
     $pdf->loadHtml($html);
     $pdf->render();
+    return $pdf;
+}
+
+add_action('wpo_wcpdf_custom_report_pdf', 'pdfShippingReport');
+function pdfShippingReport($args) {
+    $pdf = inversionesjl22_site_shipping_report_render($args);
 
     // Send
     $country = $args['country'];

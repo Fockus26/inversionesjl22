@@ -273,12 +273,40 @@ function inversionesjl22_site_document_weights(): array {
 }
 
 /**
+ * The 'documents' section of the configuration, or the values the preview of WooCommerce ›
+ * Documentos is rendering with (inversionesjl22_site_documents_override()): the same generators
+ * make the real PDF and the preview, each reading its paper, typeface and weight from here.
+ *
+ * @return array<string, mixed>
+ */
+function inversionesjl22_site_documents_settings(): array {
+	$override = inversionesjl22_site_documents_override();
+	return null === $override ? inversionesjl22_site_config()['documents'] : $override + inversionesjl22_site_config()['documents'];
+}
+
+/**
+ * Settings that replace the saved ones while a preview is made (never stored). Call it with an
+ * array to set them (keys paper_size, font, font_weight) and with null to go back to the saved
+ * configuration; without arguments it answers the current ones.
+ *
+ * @param array<string, string>|null|false $set
+ * @return array<string, string>|null
+ */
+function inversionesjl22_site_documents_override( $set = false ) {
+	static $override = null;
+	if ( false !== $set ) {
+		$override = $set;
+	}
+	return $override;
+}
+
+/**
  * The invoice's typeface and weight: keys of the lists above, '' for the template's own.
  *
  * @return array{font: string, font_weight: string}
  */
 function inversionesjl22_site_document_text(): array {
-	$documents = inversionesjl22_site_config()['documents'];
+	$documents = inversionesjl22_site_documents_settings();
 	return array(
 		'font'        => (string) $documents['font'],
 		'font_weight' => (string) $documents['font_weight'],
@@ -293,7 +321,7 @@ function inversionesjl22_site_document_text(): array {
  */
 function inversionesjl22_site_document_paper(): array {
 	$papers = inversionesjl22_site_document_papers();
-	$key    = (string) ( inversionesjl22_site_config()['documents']['paper_size'] ?? '' );
+	$key    = (string) ( inversionesjl22_site_documents_settings()['paper_size'] ?? '' );
 	if ( ! isset( $papers[ $key ] ) ) {
 		$key = '80mm';
 	}
