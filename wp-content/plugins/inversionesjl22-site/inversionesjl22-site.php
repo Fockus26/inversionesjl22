@@ -78,6 +78,7 @@ add_action(
 			'order-transitions',
 			'qr-scan',
 			'invoice-pdf',
+			'invoice-customer',
 			'sku-generator',
 			'og-image',
 		);
