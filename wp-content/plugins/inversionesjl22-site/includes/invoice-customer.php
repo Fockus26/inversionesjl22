@@ -11,7 +11,9 @@
  *
  * - Emails: the five PDF Invoices was set to attach it to (wpo_wcpdf_documents_settings_invoice
  *   › attach_to_email_ids): Nuevo pedido, Pedido completado, Pedido reembolsado, Factura / detalles
- *   del pedido, Nota para el cliente. File invoice-<order number>.pdf, as its. Generated into a
+ *   del pedido, Nota para el cliente. File factura-<order number>.pdf: PDF Invoices named it
+ *   factura-<its invoice number>.pdf, a numbering not rebuilt (the invoice shows the order
+ *   number). Generated into a
  *   temporary folder and deleted once the email is sent; if it fails the email goes without it
  *   (logged in WooCommerce › Estado › Registros, source inversionesjl22-site).
  * - Mi cuenta: PDF Invoices' setting was "available": the button only for an order whose invoice
@@ -125,7 +127,7 @@ function inversionesjl22_site_invoice_attach( $attachments, $email_id = '', $ord
 		if ( ! wp_mkdir_p( $dir ) ) {
 			throw new RuntimeException( 'no se pudo crear la carpeta temporal ' . $dir );
 		}
-		$file = $dir . '/' . sanitize_file_name( 'invoice-' . ltrim( (string) $order->get_order_number(), '#' ) . '.pdf' );
+		$file = $dir . '/' . sanitize_file_name( 'factura-' . ltrim( (string) $order->get_order_number(), '#' ) . '.pdf' );
 		if ( false === file_put_contents( $file, $pdf ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a temporary file
 			throw new RuntimeException( 'no se pudo escribir ' . $file );
 		}
@@ -231,6 +233,15 @@ function inversionesjl22_site_invoice_account_assets(): void {
 	if ( ! $account && ! $received ) {
 		return;
 	}
+	// Visible focus: the theme removes it from Mi cuenta's buttons (outline and shadow: none). The
+	// plugin's focus ring (--jl-focus of the admin screens, 9:1 on white).
+	wp_register_style( 'inversionesjl22-my-invoice', false, array(), INVERSIONESJL22_SITE_VERSION );
+	wp_enqueue_style( 'inversionesjl22-my-invoice' );
+	wp_add_inline_style(
+		'inversionesjl22-my-invoice',
+		'a.button.invoice[href*="action=' . INVERSIONESJL22_SITE_MY_INVOICE_ACTION . '"]:focus-visible{outline:2px solid #4a4959 !important;outline-offset:2px !important;}'
+	);
+
 	wp_register_script( 'inversionesjl22-my-invoice', '', array(), INVERSIONESJL22_SITE_VERSION, true );
 	wp_enqueue_script( 'inversionesjl22-my-invoice' );
 	wp_add_inline_script(
@@ -275,7 +286,7 @@ function inversionesjl22_site_my_invoice_endpoint(): void {
 		ob_end_clean();
 	}
 	header( 'Content-Type: application/pdf' );
-	header( 'Content-Disposition: inline; filename="' . rawurlencode( sanitize_file_name( 'invoice-' . ltrim( (string) $order->get_order_number(), '#' ) . '.pdf' ) ) . '"' );
+	header( 'Content-Disposition: inline; filename="' . rawurlencode( sanitize_file_name( 'factura-' . ltrim( (string) $order->get_order_number(), '#' ) . '.pdf' ) ) . '"' );
 	header( 'Content-Length: ' . strlen( $pdf ) );
 	echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the PDF's bytes
 	exit;
