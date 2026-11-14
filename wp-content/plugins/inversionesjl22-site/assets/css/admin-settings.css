@@ -91,7 +91,33 @@
     border-radius: 999px;
     font: inherit;
     font-weight: 700;
+    text-decoration: none;
     cursor: pointer;
+}
+
+/* Los <a class="jl-button"> heredan del navegador y de wp-admin un subrayado y un color propios
+   en :hover, :focus y :visited. El foco se ve con el anillo de .jl-settings :focus-visible. */
+.jl-button:hover,
+.jl-button:focus,
+.jl-button:active,
+.jl-button:visited {
+    text-decoration: none;
+    box-shadow: none;
+}
+
+.jl-button--primary:focus,
+.jl-button--primary:active,
+.jl-button--primary:visited {
+    color: #ffffff;
+}
+
+.jl-button--outline:visited {
+    color: var(--jl-secondary);
+}
+
+.jl-button--outline:hover:visited,
+.jl-button--outline:focus:hover {
+    color: #ffffff;
 }
 
 .jl-button--primary {
@@ -236,6 +262,7 @@
 /* ---------------------------------------------------------------- estado */
 
 .jl-status-list {
+    position: relative;           /* offsetTop de las tarjetas, al arrastrar (settings-statuses.js) */
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -260,7 +287,31 @@
 }
 
 .jl-status.is-dragging {
-    opacity: 0.5;
+    border-color: var(--jl-secondary);
+    border-style: dashed;
+    background: var(--jl-surface-soft);
+}
+
+/* Hueco de destino: la tarjeta arrastrada queda tenue y discontinua donde caerá. */
+.jl-status.is-dragging > * {
+    opacity: 0.35;
+}
+
+/* Elevada: sombra y un poco más grande (la imagen que sigue al puntero, y la tarjeta que se
+   mueve con las flechas mientras se desliza). `scale` es independiente del `transform` del FLIP. */
+.jl-status.is-lifting,
+.jl-status.is-moved {
+    position: relative;
+    z-index: 1;
+    border-color: var(--jl-secondary);
+    box-shadow: 0 14px 30px rgba(43, 42, 53, 0.22);
+    scale: 1.015;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .jl-status {
+        transition: box-shadow 0.18s ease-out, scale 0.18s ease-out, border-color 0.18s ease-out;
+    }
 }
 
 .jl-status.is-drop-target {
@@ -455,7 +506,8 @@
     font-weight: 500;
 }
 
-.jl-settings .jl-field input[type="text"] {
+.jl-settings .jl-field input[type="text"],
+.jl-settings .jl-field input[type="search"] {
     width: 100%;
     max-width: none;
     height: var(--jl-field-height);
@@ -470,7 +522,8 @@
     box-shadow: none;
 }
 
-.jl-settings .jl-field input[type="text"]:focus {
+.jl-settings .jl-field input[type="text"]:focus,
+.jl-settings .jl-field input[type="search"]:focus {
     border-color: var(--jl-focus);
     outline: 2px solid var(--jl-focus);
     outline-offset: 1px;
@@ -940,36 +993,134 @@
     margin: 0;
 }
 
-.jl-more summary {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--jl-accent-text);
-    font-weight: 700;
-    cursor: pointer;
+/* ------------------------------------------- Roles: pantallas del menú, en grupos plegables */
+
+.jl-menu-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
 }
 
-.jl-more summary::before {
-    content: "+";
-    width: 16px;
+.jl-menu-picker__search {
+    max-width: 420px;
+    margin: 0;
 }
 
-.jl-more[open] summary::before {
-    content: "\2212";
-}
-
-.jl-more__group {
-    min-width: 0;
-    margin: 8px 0 0;
-    padding: 0;
-    border: 0;
-}
-
-.jl-more__group legend {
-    padding: 0;
+.jl-menu-picker__status {
+    margin: 0;
     color: var(--jl-muted);
     font-size: 13px;
+}
+
+.jl-menu-picker__status:empty {
+    display: none;
+}
+
+/* Panel con altura máxima y scroll propio: la lista completa no estira la página. */
+.jl-menu-picker__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(520px, 70vh);
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid var(--jl-line);
+    border-radius: var(--jl-radius-field);
+    background: var(--jl-surface-soft);
+}
+
+.jl-menu-picker__empty {
+    margin: 0;
+    padding: 8px 4px;
+    color: var(--jl-muted);
+}
+
+.jl-menu-group {
+    flex: none;
+    border: 1px solid var(--jl-line);
+    border-radius: 12px;
+    background: var(--jl-surface);
+}
+
+.jl-menu-group[hidden] {
+    display: none;
+}
+
+.jl-menu-group > summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    min-height: 48px;
+    padding: 6px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.jl-menu-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Flecha que gira: cerrado ▸ / abierto ▾ (forma, no solo color). */
+.jl-menu-group > summary::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--jl-secondary);
+    border-bottom: 2px solid var(--jl-secondary);
+    transform: rotate(-45deg);
+}
+
+.jl-menu-group[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+.jl-menu-group__name {
+    flex: 1 1 140px;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.jl-menu-group__count {
+    color: var(--jl-muted);
+    font-size: 13px;
+}
+
+/* Con algo marcado: nombre en negrita, borde pizarra más grueso a la izquierda y el contador
+   en una píldora con ✓. Tres señales, ninguna es solo el color. */
+.jl-menu-group.has-checked {
+    border-left: 4px solid var(--jl-secondary);
+}
+
+.jl-menu-group.has-checked > summary .jl-menu-group__name {
     font-weight: 700;
+}
+
+.jl-menu-group.has-checked > summary .jl-menu-group__count {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--jl-secondary);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.jl-menu-group.has-checked > summary .jl-menu-group__count::before {
+    content: "\2713\00a0";
+}
+
+.jl-menu-group__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+    gap: 0 16px;
+    padding: 4px 14px 10px;
+}
+
+.jl-menu-group__items .jl-option[hidden] {
+    display: none;
 }
 
 @media (max-width: 782px) {
@@ -1015,11 +1166,19 @@
     accent-color: var(--jl-secondary);
 }
 
+.jl-settings .jl-option input[type="radio"]:checked {
+    border-color: var(--jl-secondary);
+    background: var(--jl-secondary);
+}
+
+/* Marcado: relleno pizarra con el punto blanco al centro (8.7:1). El punto es la señal que no
+   depende del color; también se ve en modo de alto contraste, donde el relleno se pierde. */
 .jl-settings .jl-option input[type="radio"]:checked::before {
     width: 12px;
     height: 12px;
     margin: 4px;
-    background: var(--jl-secondary);
+    background: #ffffff;
+    box-shadow: none;
 }
 
 .jl-settings .jl-option input[type="radio"]:focus {

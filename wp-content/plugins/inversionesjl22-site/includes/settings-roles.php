@@ -54,6 +54,17 @@ add_action(
 			inversionesjl22_site_asset_version( 'assets/js/settings-roles.js' ),
 			array( 'in_footer' => true )
 		);
+		wp_localize_script(
+			'inversionesjl22-settings-roles',
+			'inversionesjl22SettingsRoles',
+			array(
+				/* translators: 1: how many screens of the menu are ticked, 2: how many it has */
+				'count'   => __( '%1$d de %2$d marcadas', 'inversionesjl22-site' ),
+				/* translators: %d: how many screens match the search */
+				'results' => __( '%d pantallas coinciden con la búsqueda.', 'inversionesjl22-site' ),
+				'none'    => __( 'Ninguna pantalla coincide con la búsqueda.', 'inversionesjl22-site' ),
+			)
+		);
 	}
 );
 
@@ -730,10 +741,18 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 					</label>
 					<?php
 				};
+				// Every screen of the menu by its top-level menu (the Escritorio entry is the fixed
+				// one above). Ticked ones are the role's saved ones; one it has that is not in the
+				// menu now (its plugin is off) goes last, by its address.
 				$groups = array();
 				foreach ( $options as $key => $entry ) {
-					if ( ! in_array( $key, $saved, true ) && 'index.php' !== $key ) {
+					if ( 'index.php' !== $key ) {
 						$groups[ $entry['group'] ][ $key ] = $entry['label'];
+					}
+				}
+				foreach ( $saved as $key ) {
+					if ( 'index.php' !== $key && ! isset( $options[ $key ] ) ) {
+						$groups[ __( 'Otras (su plugin está desactivado)', 'inversionesjl22-site' ) ][ $key ] = $key;
 					}
 				}
 				?>
@@ -741,33 +760,48 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 					<?php
 					// By the menu's name (Escritorio), not its first entry's (Inicio).
 					$option( 'index.php', $options['index.php']['group'] ?? __( 'Escritorio', 'inversionesjl22-site' ), true );
-					foreach ( $saved as $key ) {
-						if ( 'index.php' === $key ) {
-							continue;
-						}
-						// One the role has that is not in the menu now (its plugin is off): by its address.
-						$label = isset( $options[ $key ] ) ? $options[ $key ]['label'] . ( $options[ $key ]['group'] !== $options[ $key ]['label'] ? ' (' . $options[ $key ]['group'] . ')' : '' ) : $key;
-						$option( $key, $label, true );
-					}
 					?>
 				</div>
 				<p class="jl-field__help" id="jl-role-menu-home"><?php esc_html_e( 'El Escritorio va siempre: es a donde llega el rol cuando una pantalla no es suya.', 'inversionesjl22-site' ); ?></p>
 				<?php if ( $groups ) : ?>
-					<details class="jl-more">
-						<summary><?php esc_html_e( 'Añadir otras pantallas', 'inversionesjl22-site' ); ?></summary>
-						<?php foreach ( $groups as $group => $entries ) : ?>
-							<fieldset class="jl-more__group">
-								<legend><?php echo esc_html( $group ); ?></legend>
-								<div class="jl-options">
-									<?php
-									foreach ( $entries as $key => $label ) {
-										$option( (string) $key, $label, false );
+					<div class="jl-menu-picker" data-jl-menu-picker>
+						<p class="jl-field jl-menu-picker__search" data-jl-menu-search hidden>
+							<label for="jl-role-menu-search"><?php esc_html_e( 'Buscar una pantalla', 'inversionesjl22-site' ); ?></label>
+							<?php // No name: the search is not part of what the form saves. ?>
+							<input type="search" id="jl-role-menu-search" autocomplete="off" aria-controls="jl-role-menu-panel" data-jl-menu-query>
+						</p>
+						<p class="jl-menu-picker__status" role="status" data-jl-menu-status></p>
+						<div class="jl-menu-picker__panel" id="jl-role-menu-panel" data-jl-menu-panel>
+							<?php foreach ( $groups as $group => $entries ) : ?>
+								<?php
+								$total   = count( $entries );
+								$checked = 0;
+								foreach ( $entries as $key => $unused ) {
+									if ( in_array( (string) $key, $saved, true ) ) {
+										++$checked;
 									}
-									?>
-								</div>
-							</fieldset>
-						<?php endforeach; ?>
-					</details>
+								}
+								?>
+								<details class="jl-menu-group<?php echo $checked ? ' has-checked' : ''; ?>" data-jl-menu-group>
+									<summary>
+										<span class="jl-menu-group__name"><?php echo esc_html( $group ); ?></span>
+										<span class="jl-menu-group__count" data-jl-menu-count data-total="<?php echo esc_attr( (string) $total ); ?>">
+											<?php /* translators: 1: how many screens of the menu are ticked, 2: how many it has */ ?>
+											<?php echo esc_html( sprintf( __( '%1$d de %2$d marcadas', 'inversionesjl22-site' ), $checked, $total ) ); ?>
+										</span>
+									</summary>
+									<div class="jl-menu-group__items">
+										<?php
+										foreach ( $entries as $key => $label ) {
+											$option( (string) $key, $label, in_array( (string) $key, $saved, true ) );
+										}
+										?>
+									</div>
+								</details>
+							<?php endforeach; ?>
+							<p class="jl-menu-picker__empty" data-jl-menu-empty hidden><?php esc_html_e( 'Ninguna pantalla coincide con la búsqueda.', 'inversionesjl22-site' ); ?></p>
+						</div>
+					</div>
 				<?php endif; ?>
 			</section>
 

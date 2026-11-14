@@ -45,6 +45,62 @@
             .replace('%3$d', all.length);
     }
 
+    var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var SLIDE_MS = 200;
+
+    /**
+     * Cambia el orden de las tarjetas con la técnica FLIP: mide dónde estaban, aplica el cambio
+     * (mutate), mide dónde quedan y desliza cada una desde su sitio anterior al nuevo. Parte de
+     * la posición visual actual, así que un movimiento nuevo a mitad de otro continúa suave.
+     * Con prefers-reduced-motion: reduce solo aplica el cambio.
+     */
+    function flip(mutate) {
+        var all = cards();
+        if (!all.length || (reduceMotion && reduceMotion.matches)) {
+            mutate();
+            return;
+        }
+        var first = all.map(function (card) { return card.getBoundingClientRect().top; });
+        mutate();
+        all.forEach(function (card) {
+            card.style.transition = 'none';
+            card.style.transform = '';
+        });
+        var moving = [];
+        all.forEach(function (card, index) {
+            var delta = first[index] - card.getBoundingClientRect().top;
+            if (Math.abs(delta) > 1) {
+                card.style.transform = 'translateY(' + delta + 'px)';
+                moving.push(card);
+            }
+        });
+        if (!moving.length) {
+            return;
+        }
+        void list.offsetHeight; // fija la posición de partida antes de animar
+        moving.forEach(function (card) {
+            card.style.transition = 'transform ' + SLIDE_MS + 'ms ease-out';
+            card.style.transform = '';
+            window.setTimeout(function () {
+                if (card.style.transform === '') {
+                    card.style.transition = '';
+                }
+            }, SLIDE_MS + 50);
+        });
+    }
+
+    /** La tarjeta que se mueve con las flechas se eleva (sombra y escala) mientras se desliza. */
+    function lift(card) {
+        if (reduceMotion && reduceMotion.matches) {
+            return;
+        }
+        card.classList.add('is-moved');
+        window.clearTimeout(card.jlLiftTimer);
+        card.jlLiftTimer = window.setTimeout(function () {
+            card.classList.remove('is-moved');
+        }, SLIDE_MS + 120);
+    }
+
     list.addEventListener('click', function (event) {
         var button = event.target.closest('[data-jl-move]');
         if (!button) {
@@ -56,7 +112,10 @@
         if (!other) {
             return;
         }
-        list.insertBefore(up ? card : other, up ? other : card);
+        flip(function () {
+            list.insertBefore(up ? card : other, up ? other : card);
+        });
+        lift(card);
         refreshMoves();
         // La flecha pulsada puede haber quedado deshabilitada (primera o última posición).
         (button.disabled ? card.querySelector('[data-jl-move]:not(:disabled)') : button).focus();
@@ -71,11 +130,20 @@
             event.preventDefault();
             return;
         }
-        dragged = handle.closest('[data-jl-status]');
-        dragged.classList.add('is-dragging');
+        var card = handle.closest('[data-jl-status]');
+        dragged = card;
         event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', dragged.getAttribute('data-name'));
-        event.dataTransfer.setDragImage(dragged, 20, 20);
+        event.dataTransfer.setData('text/plain', card.getAttribute('data-name'));
+        // La imagen que sigue al puntero se toma ahora: elevada (sombra y escala). Un instante
+        // después la tarjeta de la lista pasa a ser el hueco de destino (discontinuo y atenuado).
+        card.classList.add('is-lifting');
+        event.dataTransfer.setDragImage(card, 20, 20);
+        window.setTimeout(function () {
+            card.classList.remove('is-lifting');
+            if (dragged === card) {
+                card.classList.add('is-dragging');
+            }
+        }, 0);
     });
 
     list.addEventListener('dragover', function (event) {
@@ -87,9 +155,17 @@
         if (!over || over === dragged) {
             return;
         }
-        var box = over.getBoundingClientRect();
-        var after = event.clientY > box.top + box.height / 2;
-        list.insertBefore(dragged, after ? over.nextElementSibling : over);
+        // Se decide con la posición de diseño (sin la transformación de la animación en curso),
+        // para que una tarjeta que aún se desliza no haga oscilar el orden.
+        var pointer = event.clientY - list.getBoundingClientRect().top;
+        var after = pointer > over.offsetTop + over.offsetHeight / 2;
+        var ref = after ? over.nextElementSibling : over;
+        if (ref === dragged || ref === dragged.nextElementSibling) {
+            return;
+        }
+        flip(function () {
+            list.insertBefore(dragged, ref);
+        });
     });
 
     list.addEventListener('drop', function (event) {
@@ -102,7 +178,7 @@
         if (!dragged) {
             return;
         }
-        dragged.classList.remove('is-dragging');
+        dragged.classList.remove('is-lifting', 'is-dragging');
         refreshMoves();
         announce(dragged);
         dragged = null;
