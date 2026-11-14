@@ -17,6 +17,7 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·3b QR asignable por rol | — | en `main` (#38) |
 | F3·5 Documentos (PDF): papel 80/58 mm (+ tipografía/grosor, que quedó fuera de #39: va en F3·6) | — | en `main` (#39) |
 | F3·6 PDF propios (Dompdf + informe; factura + entradas + migración 007) | `feat/pdf-propio` → `feat/factura-propia` | PR #40 y #41 en cadena; 007 espera la respuesta de César (adjunto en correos, Mi cuenta) |
+| F3·6b factura en correos y Mi cuenta | `feat/factura-correo-cuenta` | PR #44 → `main` (completa la 007 ya en staging; #42 redundante). Pendiente: contraste 1,78:1 de los botones de Mi cuenta del tema (decisión de César) |
 | F3·7 identidad y 1.0.0 | `chore/identidad-1-0-0` | PR #43 (sobre `feat/pdf-propio`: fusionar #42 antes) |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
@@ -33,7 +34,8 @@ blanco sobre terracota (D001).
 ## Blocked (actions for César or external)
 
 - Revisar staging con las cuentas de bodega y SEO.
-- F3·6: ¿se mantienen el adjunto de la factura en correos (en uso: «Nuevo pedido» de cada pedido) y el botón de Mi cuenta? Sin respuesta no se despliega la 007.
+- Staging ya tiene la 007 (PDF Invoices desactivado) sin adjunto ni botón de Mi cuenta hasta fusionar #44.
+- Botones de Mi cuenta del tema: blanco sobre #ffb16f (1,78:1). ¿Pasarlos a terracota (D001)?
 - Informe de envíos (`shipping-report/`): sigue con roles fijos (pendiente, sin unidad aún).
 - Producción: mostrar al cliente antes. Reversa del plugin:
   `wp plugin activate wpcodebox2 wpcodebox_functionality_plugin && wp plugin deactivate inversionesjl22-site`.
