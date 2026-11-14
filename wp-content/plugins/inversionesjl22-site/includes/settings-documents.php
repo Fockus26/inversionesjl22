@@ -37,9 +37,33 @@ add_action(
 add_action(
 	'admin_enqueue_scripts',
 	static function ( $hook ) {
-		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_DOCUMENTS_PAGE === $hook ) {
-			inversionesjl22_site_settings_enqueue_style();
+		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_DOCUMENTS_PAGE !== $hook ) {
+			return;
 		}
+		inversionesjl22_site_settings_enqueue_style();
+		// The live preview (documents-preview.php is its endpoint); without JS the panel still works.
+		wp_enqueue_script(
+			'inversionesjl22-documents-preview',
+			INVERSIONESJL22_SITE_URL . 'assets/js/documents-preview.js',
+			array( 'inversionesjl22-admin-controls' ),
+			inversionesjl22_site_asset_version( 'assets/js/documents-preview.js' ),
+			array( 'in_footer' => true )
+		);
+		wp_localize_script(
+			'inversionesjl22-documents-preview',
+			'jl22Preview',
+			array(
+				'url'      => inversionesjl22_site_preview_url(),
+				'delay'    => 450,
+				'messages' => array(
+					'loading' => __( 'Generando previsualización…', 'inversionesjl22-site' ),
+					/* translators: %s: document name, e.g. Factura */
+					'ready'   => __( 'Previsualización lista: %s.', 'inversionesjl22-site' ),
+					'failed'  => __( 'No se pudo generar la previsualización. Inténtalo de nuevo.', 'inversionesjl22-site' ),
+					'network' => __( 'No se pudo conectar para generar la previsualización. Revisa tu conexión e inténtalo de nuevo.', 'inversionesjl22-site' ),
+				),
+			)
+		);
 	}
 );
 
@@ -192,6 +216,7 @@ function inversionesjl22_site_documents_screen(): void {
 			</div>
 		<?php endif; ?>
 
+		<div class="jl-documents-layout">
 		<form id="jl-documents-form" class="jl-card jl-card--narrow" method="post" action="<?php echo esc_url( $post ); ?>">
 			<input type="hidden" name="action" value="inversionesjl22_site_save_documents">
 			<?php wp_nonce_field( 'inversionesjl22_site_save_documents' ); ?>
@@ -241,6 +266,73 @@ function inversionesjl22_site_documents_screen(): void {
 				<button type="submit" class="jl-button jl-button--primary"><?php esc_html_e( 'Guardar cambios', 'inversionesjl22-site' ); ?></button>
 			</p>
 		</form>
+
+		<?php inversionesjl22_site_documents_preview_panel(); ?>
+		</div>
 	</div>
+	<?php
+}
+
+/**
+ * The "Previsualización" panel: a select with the documents of the engine
+ * (inversionesjl22_site_pdf_documents()) and the real PDF of the chosen one in a frame. With
+ * JavaScript (assets/js/documents-preview.js) it follows the form without saving; without it, the
+ * button reloads the screen and the frame shows the saved configuration.
+ */
+function inversionesjl22_site_documents_preview_panel(): void {
+	$documents = inversionesjl22_site_pdf_documents();
+	if ( ! $documents ) {
+		return;
+	}
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- a read-only view of the screen.
+	$doc = isset( $_GET['preview_doc'] ) && is_string( $_GET['preview_doc'] ) ? sanitize_key( wp_unslash( $_GET['preview_doc'] ) ) : '';
+	if ( ! isset( $documents[ $doc ] ) ) {
+		$doc = (string) array_key_first( $documents );
+	}
+	$order = isset( $_GET['preview_order'] ) && is_string( $_GET['preview_order'] ) && ctype_digit( wp_unslash( $_GET['preview_order'] ) ) ? absint( wp_unslash( $_GET['preview_order'] ) ) : 0;
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+	$url = inversionesjl22_site_preview_url(
+		array(
+			'doc'      => $doc,
+			'order_id' => $documents[ $doc ]['needs_order'] ? $order : 0,
+		)
+	);
+	?>
+	<section class="jl-card jl-preview" aria-labelledby="jl-preview-title" data-jl-preview>
+		<h2 id="jl-preview-title"><?php esc_html_e( 'Previsualización', 'inversionesjl22-site' ); ?></h2>
+		<p class="jl-field__help" id="jl-preview-help"><?php esc_html_e( 'El PDF real, con el papel, la tipografía y el grosor del formulario aunque no los hayas guardado. No guarda nada ni cambia ningún pedido.', 'inversionesjl22-site' ); ?></p>
+
+		<form class="jl-preview__controls" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+			<input type="hidden" name="page" value="<?php echo esc_attr( INVERSIONESJL22_SITE_DOCUMENTS_PAGE ); ?>">
+			<p class="jl-field">
+				<label for="jl-preview-doc"><?php esc_html_e( 'Documento', 'inversionesjl22-site' ); ?></label>
+				<select id="jl-preview-doc" name="preview_doc" aria-describedby="jl-preview-doc-help">
+					<?php foreach ( $documents as $slug => $document ) : ?>
+						<option value="<?php echo esc_attr( $slug ); ?>" data-needs-order="<?php echo $document['needs_order'] ? '1' : '0'; ?>" data-description="<?php echo esc_attr( $document['description'] ); ?>" <?php selected( $doc, $slug ); ?>><?php echo esc_html( $document['label'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<span class="jl-field__help" id="jl-preview-doc-help"><?php echo esc_html( $documents[ $doc ]['description'] ); ?></span>
+			</p>
+			<p class="jl-field" data-preview-order <?php echo $documents[ $doc ]['needs_order'] ? '' : 'hidden'; ?>>
+				<label for="jl-preview-order"><?php esc_html_e( 'N.º de pedido (opcional)', 'inversionesjl22-site' ); ?></label>
+				<input type="number" id="jl-preview-order" name="preview_order" min="1" step="1" inputmode="numeric" value="<?php echo $order ? esc_attr( (string) $order ) : ''; ?>" aria-describedby="jl-preview-order-help">
+				<span class="jl-field__help" id="jl-preview-order-help"><?php esc_html_e( 'Vacío: el pedido más reciente que puedas ver.', 'inversionesjl22-site' ); ?></span>
+			</p>
+			<p class="jl-preview__refresh">
+				<button type="submit" class="jl-button jl-button--outline"><?php esc_html_e( 'Actualizar previsualización', 'inversionesjl22-site' ); ?></button>
+			</p>
+		</form>
+
+		<p class="jl-preview__status" id="jl-preview-status" role="status" aria-live="polite"></p>
+		<div class="jl-preview__stage" data-paper="<?php echo esc_attr( inversionesjl22_site_document_paper()['key'] ); ?>">
+			<iframe class="jl-preview__frame" title="<?php esc_attr_e( 'Previsualización del documento en PDF', 'inversionesjl22-site' ); ?>"></iframe>
+			<noscript>
+				<iframe class="jl-preview__frame jl-preview__frame--static" src="<?php echo esc_url( $url ); ?>" title="<?php esc_attr_e( 'Previsualización del documento en PDF, con la configuración guardada', 'inversionesjl22-site' ); ?>"></iframe>
+			</noscript>
+		</div>
+		<p class="jl-preview__open">
+			<a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir en una pestaña nueva', 'inversionesjl22-site' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(se abre en una pestaña nueva)', 'inversionesjl22-site' ); ?></span></a>
+		</p>
+	</section>
 	<?php
 }

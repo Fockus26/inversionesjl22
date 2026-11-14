@@ -18,22 +18,16 @@ defined( 'ABSPATH' ) || exit;
     return $string;
 }
 
-add_action('admin_post_shipping_report', 'shippingReport');
-function shippingReport() {
-    $user = wp_get_current_user();
-    $allowedRoles = ['administrator', 'storage_manager', 'seo_manager'];
-
-    $isUserAllowed = array_intersect($allowedRoles, (array) $user->roles);
-    if (!$isUserAllowed) wp_die('No autorizado');
-    check_admin_referer('shipping_report');
-
+/**
+ * The completed orders of a shipping report: those shipped to $country by $company ('all' for
+ * every courier of the country) completed between the two dates (Y-m-d) in the shift
+ * ('all_day', 'morning' or 'evening'). Used by the report and by the preview of WooCommerce ›
+ * Documentos.
+ *
+ * @return WC_Order[]
+ */
+function shippingReportOrders($country, $company, $startDate, $endDate, $shift) {
     global $wpdb;
-
-    $country      = isset($_GET['country']) ? sanitize_text_field($_GET['country']) : '';
-    $company      = isset($_GET['company']) ? sanitize_text_field($_GET['company']) : 'all';
-    $startDate = isset($_GET['startDate']) ? sanitize_text_field($_GET['startDate']) : '';
-    $endDate    = isset($_GET['endDate']) ? sanitize_text_field($_GET['endDate']) : '';
-    $shift = isset($_GET['shift']) ? sanitize_text_field($_GET['shift']) : 'all_day';
 
     // --- Normalizar empresa recibida desde GET ---
     $queryFilterCompanies = "";
@@ -164,6 +158,27 @@ function shippingReport() {
             $orders[] = $order;
         }
     }
+
+    return $orders;
+}
+
+add_action('admin_post_shipping_report', 'shippingReport');
+function shippingReport() {
+    $user = wp_get_current_user();
+    $allowedRoles = ['administrator', 'storage_manager', 'seo_manager'];
+
+    $isUserAllowed = array_intersect($allowedRoles, (array) $user->roles);
+    if (!$isUserAllowed) wp_die('No autorizado');
+    check_admin_referer('shipping_report');
+
+    $country      = isset($_GET['country']) ? sanitize_text_field($_GET['country']) : '';
+    $company      = isset($_GET['company']) ? sanitize_text_field($_GET['company']) : 'all';
+    $startDate = isset($_GET['startDate']) ? sanitize_text_field($_GET['startDate']) : '';
+    $endDate    = isset($_GET['endDate']) ? sanitize_text_field($_GET['endDate']) : '';
+    $shift = isset($_GET['shift']) ? sanitize_text_field($_GET['shift']) : 'all_day';
+
+
+    $orders = shippingReportOrders($country, $company, $startDate, $endDate, $shift);
 
     $countries = [
         'VE' => 'Venezuela',
