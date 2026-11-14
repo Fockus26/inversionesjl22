@@ -373,6 +373,12 @@ function inversionesjl22_site_invoice_endpoint(): void {
 	}
 
 	$pdf = inversionesjl22_site_invoice_pdf( $ids );
+	if ( function_exists( 'inversionesjl22_site_invoice_mark_created' ) ) {
+		// From now on Mi cuenta offers it to the customer (invoice-customer.php), as with PDF Invoices.
+		foreach ( $ids as $id ) {
+			inversionesjl22_site_invoice_mark_created( wc_get_order( $id ) );
+		}
+	}
 
 	// The name PDF Invoices gave it: invoice-<number>.pdf, or invoice-<date>.pdf for several.
 	$name = 1 === count( $ids ) ? ltrim( (string) wc_get_order( $ids[0] )->get_order_number(), '#' ) : gmdate( 'Y-m-d' );
