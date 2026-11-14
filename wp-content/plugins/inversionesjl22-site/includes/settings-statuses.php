@@ -56,6 +56,17 @@ add_action(
 				'moved'        => __( '%1$s, posición %2$d de %3$d', 'inversionesjl22-site' ),
 				'edit'         => __( 'Editar', 'inversionesjl22-site' ),
 				'close'        => __( 'Cerrar', 'inversionesjl22-site' ),
+				'liveHint'     => __( 'Refleja lo que ves abajo, también lo que aún no has guardado; se guarda con «Guardar cambios». Pasa el cursor sobre un estado, enfócalo o púlsalo para resaltar sus flechas.', 'inversionesjl22-site' ),
+				'optional'     => __( 'Opcional', 'inversionesjl22-site' ),
+				'finalStatus'  => __( 'Estado final', 'inversionesjl22-site' ),
+				/* translators: %s: status names */
+				'canGoTo'      => __( 'Puede pasar a: %s', 'inversionesjl22-site' ),
+				'stages'       => array(
+					'entry'   => __( 'Entrada', 'inversionesjl22-site' ),
+					'process' => __( 'En proceso', 'inversionesjl22-site' ),
+					'final'   => __( 'Final', 'inversionesjl22-site' ),
+					'orphan'  => __( 'Sin conexión', 'inversionesjl22-site' ),
+				),
 				'confirmReset' => __( '¿Restaurar los estados y el flujo iniciales? Se pierde lo que hayas cambiado en esta pantalla.', 'inversionesjl22-site' ),
 			)
 		);
@@ -131,32 +142,94 @@ function inversionesjl22_site_status_pill( string $slug ): string {
 }
 
 /**
- * The statuses in the order the flow walks them: from each entry, down its first destination
- * before the next one. For the flow's summary, where the lists' order would not read as a path.
+ * The flow as stages for the diagram: Entrada (where orders start), En proceso (the statuses in
+ * between, in columns by depth: the longest path from an entry, so the main path reads left to
+ * right) and Final. Statuses in the middle that no entry leads to (a loop with no way in) go in
+ * a last stage, "Sin conexión". A shop's flow may have loops: the depth only follows the edges
+ * that go forward (an edge back to a status on the path being walked is left out). The script
+ * (assets/js/settings-statuses.js) lays out the form the same way, so the two must agree.
  *
- * @return string[]
+ * @return array<int, array{key:string,label:string,cols:string[][]}> Only the stages that have statuses.
  */
-function inversionesjl22_site_statuses_in_flow_order(): array {
+function inversionesjl22_site_flow_stages(): array {
 	$next  = inversionesjl22_site_flow_destinations();
-	$seen  = array();
-	$visit = static function ( string $slug ) use ( &$visit, &$seen, $next ) {
-		if ( isset( $seen[ $slug ] ) ) {
-			return;
-		}
-		$seen[ $slug ] = true;
+	$slugs = array_map( 'strval', array_keys( $next ) );
+	$kinds = array();
+	foreach ( $slugs as $slug ) {
+		$kinds[ $slug ] = inversionesjl22_site_status_kind( $slug );
+	}
+
+	// Depth from the entries, over forward edges only.
+	$depth = array();
+	$state = array(); // 1: on the path being walked, 2: done.
+	$back  = array();
+	$post  = array();
+	$visit = static function ( string $slug ) use ( &$visit, &$state, &$back, &$post, $next ) {
+		$state[ $slug ] = 1;
 		foreach ( $next[ $slug ] ?? array() as $to ) {
-			$visit( $to );
+			if ( ! isset( $state[ $to ] ) ) {
+				$visit( (string) $to );
+			} elseif ( 1 === $state[ $to ] ) {
+				$back[ $slug . '>' . $to ] = true;
+			}
 		}
+		$state[ $slug ] = 2;
+		$post[]         = $slug;
 	};
-	foreach ( array_keys( $next ) as $slug ) {
-		if ( 'entry' === inversionesjl22_site_status_kind( $slug ) ) {
+	foreach ( $slugs as $slug ) {
+		if ( 'entry' === $kinds[ $slug ] && ! isset( $state[ $slug ] ) ) {
 			$visit( $slug );
+			$depth[ $slug ] = 0;
 		}
 	}
-	foreach ( array_keys( $next ) as $slug ) {
-		$visit( $slug );
+	foreach ( array_reverse( $post ) as $slug ) {
+		foreach ( $next[ $slug ] ?? array() as $to ) {
+			if ( ! isset( $back[ $slug . '>' . $to ] ) ) {
+				$depth[ $to ] = max( $depth[ $to ] ?? 0, ( $depth[ $slug ] ?? 0 ) + 1 );
+			}
+		}
 	}
-	return array_keys( $seen );
+
+	$entry   = array();
+	$final   = array();
+	$orphans = array();
+	$levels  = array();
+	foreach ( $slugs as $slug ) {
+		if ( 'entry' === $kinds[ $slug ] ) {
+			$entry[] = $slug;
+		} elseif ( 'final' === $kinds[ $slug ] ) {
+			$final[] = $slug;
+		} elseif ( isset( $depth[ $slug ] ) ) {
+			$levels[ $depth[ $slug ] ][] = $slug;
+		} else {
+			$orphans[] = $slug;
+		}
+	}
+	ksort( $levels );
+
+	$stages = array(
+		array(
+			'key'   => 'entry',
+			'label' => __( 'Entrada', 'inversionesjl22-site' ),
+			'cols'  => $entry ? array( $entry ) : array(),
+		),
+		array(
+			'key'   => 'process',
+			'label' => __( 'En proceso', 'inversionesjl22-site' ),
+			'cols'  => array_values( $levels ),
+		),
+		array(
+			'key'   => 'final',
+			'label' => __( 'Final', 'inversionesjl22-site' ),
+			'cols'  => $final ? array( $final ) : array(),
+		),
+		array(
+			'key'   => 'orphan',
+			'label' => __( 'Sin conexión', 'inversionesjl22-site' ),
+			'cols'  => $orphans ? array( $orphans ) : array(),
+		),
+	);
+	return array_values( array_filter( $stages, static fn( $stage ) => ! empty( $stage['cols'] ) ) );
 }
 
 /**
@@ -455,6 +528,52 @@ function inversionesjl22_site_statuses_screen(): void {
 			</div>
 		<?php endif; ?>
 
+		<section class="jl-flowmap" aria-labelledby="jl-flow-title" data-jl-flowmap>
+			<h2 id="jl-flow-title"><?php esc_html_e( 'Vista del flujo', 'inversionesjl22-site' ); ?></h2>
+			<p class="jl-settings__hint" data-jl-flowmap-hint><?php esc_html_e( 'Lo que está guardado.', 'inversionesjl22-site' ); ?></p>
+			<div class="jl-flowmap__canvas" data-jl-flowmap-canvas>
+				<div class="jl-flowmap__stages" data-jl-flowmap-stages>
+					<?php foreach ( inversionesjl22_site_flow_stages() as $stage ) : ?>
+						<div class="jl-stage jl-stage--<?php echo esc_attr( $stage['key'] ); ?>">
+							<h3 class="jl-stage__title"><?php echo esc_html( $stage['label'] ); ?></h3>
+							<div class="jl-stage__cols">
+								<?php foreach ( $stage['cols'] as $col ) : ?>
+									<ul class="jl-stage__col">
+										<?php
+										foreach ( $col as $slug ) :
+											$kind    = inversionesjl22_site_status_kind( (string) $slug );
+											$targets = array_map( 'inversionesjl22_site_status_label', $next[ $slug ] );
+											?>
+											<li class="jl-node<?php echo 'optional' === $kind ? ' jl-node--optional' : ''; ?>" data-jl-node="<?php echo esc_attr( $slug ); ?>">
+												<span class="jl-node__main">
+													<?php echo inversionesjl22_site_status_pill( (string) $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the function. ?>
+													<?php if ( 'optional' === $kind ) : ?>
+														<span class="jl-tag"><?php esc_html_e( 'Opcional', 'inversionesjl22-site' ); ?></span>
+													<?php endif; ?>
+												</span>
+												<span class="jl-node__to">
+													<?php
+													echo esc_html(
+														$targets
+															/* translators: %s: status names */
+															? sprintf( __( 'Puede pasar a: %s', 'inversionesjl22-site' ), implode( ', ', $targets ) )
+															: __( 'Estado final', 'inversionesjl22-site' )
+													);
+													?>
+												</span>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<svg class="jl-flowmap__arrows" aria-hidden="true" focusable="false" hidden></svg>
+			</div>
+			<p class="jl-settings__note"><?php echo wp_kses( __( '<b>Opcional</b> quiere decir que un pedido puede llegar al final sin pasar por ese estado.', 'inversionesjl22-site' ), array( 'b' => array() ) ); ?></p>
+		</section>
+
 		<div class="jl-settings__layout">
 			<form id="jl-statuses-form" class="jl-settings__main" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="inversionesjl22_site_save_statuses">
@@ -472,7 +591,7 @@ function inversionesjl22_site_statuses_screen(): void {
 						$field  = 'statuses[' . $slug . ']';
 						$id     = 'jl-status-' . $slug;
 						?>
-						<li class="jl-status" data-jl-status data-name="<?php echo esc_attr( $name ); ?>">
+						<li class="jl-status" data-jl-status data-slug="<?php echo esc_attr( $slug ); ?>" data-name="<?php echo esc_attr( $name ); ?>"<?php echo $core ? ' data-default-name="' . esc_attr( inversionesjl22_site_core_status_label( (string) $slug ) ) . '"' : ''; ?>>
 							<div class="jl-status__row">
 								<span class="jl-status__handle" draggable="true" data-jl-handle aria-hidden="true">
 									<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="8" cy="6" r="1.8"/><circle cx="16" cy="6" r="1.8"/><circle cx="8" cy="12" r="1.8"/><circle cx="16" cy="12" r="1.8"/><circle cx="8" cy="18" r="1.8"/><circle cx="16" cy="18" r="1.8"/></svg>
@@ -593,27 +712,6 @@ function inversionesjl22_site_statuses_screen(): void {
 				</p>
 			</form>
 
-			<aside class="jl-settings__aside" aria-labelledby="jl-flow-title">
-				<h2 id="jl-flow-title"><?php esc_html_e( 'Vista del flujo', 'inversionesjl22-site' ); ?></h2>
-				<p class="jl-settings__hint"><?php esc_html_e( 'Lo que está guardado. Se actualiza al guardar.', 'inversionesjl22-site' ); ?></p>
-				<ol class="jl-flow">
-					<?php foreach ( inversionesjl22_site_statuses_in_flow_order() as $slug ) : ?>
-						<li>
-							<span class="jl-flow__step">
-								<?php echo inversionesjl22_site_status_pill( (string) $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the function. ?>
-								<span class="jl-status__kind"><?php echo esc_html( $kinds[ inversionesjl22_site_status_kind( $slug ) ] ); ?></span>
-							</span>
-							<?php if ( $next[ $slug ] ) : ?>
-								<span class="jl-flow__next">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-									<?php echo esc_html( implode( ', ', array_map( 'inversionesjl22_site_status_label', $next[ $slug ] ) ) ); ?>
-								</span>
-							<?php endif; ?>
-						</li>
-					<?php endforeach; ?>
-				</ol>
-				<p class="jl-settings__note"><?php echo wp_kses( __( '<b>Opcional</b> quiere decir que un pedido puede llegar al final sin pasar por ese estado.', 'inversionesjl22-site' ), array( 'b' => array() ) ); ?></p>
-			</aside>
 		</div>
 	</div>
 	<?php
