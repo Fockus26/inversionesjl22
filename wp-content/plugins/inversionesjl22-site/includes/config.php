@@ -35,7 +35,9 @@ const INVERSIONESJL22_SITE_CONFIG_OPTION = 'inversionesjl22_site_config';
  * - flow: destination => the statuses an order can come from.
  * - roles: per restricted role (administrators are never restricted).
  *     statuses      slug => whether the role sees orders in it.
- *     exclude       context => the destinations (or bulk actions) the role does not get there.
+ *     exclude       context => the destinations (or bulk actions) the role does not get there;
+ *                   'combine_orders' in bulk_actions takes "Combinar pedidos" from it
+ *                   (combined-orders.php).
  *                   Contexts: quick_actions, bulk_actions, order_preview_actions, order_view
  *                   (opening the order), order_view_actions (its status selector), qr_actions.
  *     flow          transitions the role has on top of the global flow.
@@ -151,7 +153,7 @@ function inversionesjl22_site_default_config(): array {
 				),
 				'exclude'   => array(
 					'quick_actions'         => array( 'completed' ),
-					'bulk_actions'          => array( 'completed', 'wuoc_combine' ),
+					'bulk_actions'          => array( 'completed', 'combine_orders' ),
 					'order_preview_actions' => array( 'completed' ),
 					'order_view'            => array( 'impressed' ),
 					'order_view_actions'    => array( 'impressed' ),
@@ -376,7 +378,8 @@ function inversionesjl22_site_custom_statuses(): array {
  * @return string[] slugs without wc-
  */
 function inversionesjl22_site_reserved_status_slugs(): array {
-	return array( 'pending', 'refunded', 'failed', 'checkout-draft', 'draft', 'trash', 'auto-draft', 'publish', 'private', 'inherit', 'future', 'any', 'all' );
+	// combined and wuoc-custom: "Combinado", the system status of combined-orders.php.
+	return array( 'pending', 'refunded', 'failed', 'checkout-draft', 'draft', 'trash', 'auto-draft', 'publish', 'private', 'inherit', 'future', 'any', 'all', 'combined', 'wuoc-custom' );
 }
 
 /**

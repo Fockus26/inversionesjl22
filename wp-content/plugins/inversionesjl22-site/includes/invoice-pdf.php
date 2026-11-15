@@ -55,7 +55,8 @@ function inversionesjl22_site_user_can_get_invoice( $order ): bool {
 		return false;
 	}
 	$status = $order->get_status();
-	if ( 'trash' === $status ) {
+	// Nor of a combined order: its invoice is the new order's (combined-orders.php).
+	if ( 'trash' === $status || ( function_exists( 'inversionesjl22_site_is_combined' ) && inversionesjl22_site_is_combined( $status ) ) ) {
 		return false;
 	}
 	$ruleset = function_exists( 'getUserPermissions' ) ? getUserPermissions() : null;
