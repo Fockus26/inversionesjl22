@@ -20,7 +20,7 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·6b factura en correos y Mi cuenta | `feat/factura-correo-cuenta` | PR #44 → `main` (completa la 007 ya en staging; #42 redundante). Pendiente: contraste 1,78:1 de los botones de Mi cuenta del tema (decisión de César) |
 | F3·7 identidad y 1.0.0 | `chore/identidad-1-0-0` | PR #43 (sobre `feat/pdf-propio`: fusionar #42 antes) |
 | F3·8–F3·10 pulido UI, diagrama del flujo, previsualización PDF | — | en `main` (#45–#47) |
-| F3·11 combinar pedidos propio (acción en lote; mismo estado, se conserva; originales al estado de sistema «Combinado» `wc-combined`, sin deshacer) + migración 008 (desactiva Ultimate Order Combination, renombra `wuoc_combine` → `combine_orders`) | `feat/combinar-pedidos` | PR → `main` (sin fusionar) |
+| F3·11 combinar pedidos propio (mismo estado; originales en «Combinado» `wc-combined`, sin deshacer; un envío y «Por cobrar» recalculado; no Pendiente de pago en línea) + 008 | — | en `main` (#48), en staging 2026-11-15 (008 corrió) |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
 a producción hasta que él se lo muestre al cliente (César, 2026-11-13).
@@ -35,7 +35,7 @@ blanco sobre terracota (D001).
 
 ## Blocked (actions for César or external)
 
-- Revisar staging con las cuentas de bodega y SEO.
+- Revisar staging con las cuentas de bodega y SEO (incluye Combinar pedidos, #48).
 - Staging ya tiene la 007 (PDF Invoices desactivado) sin adjunto ni botón de Mi cuenta hasta fusionar #44.
 - Botones de Mi cuenta del tema: blanco sobre #ffb16f (1,78:1). ¿Pasarlos a terracota (D001)?
 - Informe de envíos (`shipping-report/`): sigue con roles fijos (pendiente, sin unidad aún).
