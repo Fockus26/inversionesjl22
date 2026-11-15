@@ -140,6 +140,14 @@ if ( !is_admin() ) {
             $message = $messages[$status];
 
             inversionesjl22_site_qr_add_event($message, $color);
+        } elseif (function_exists('inversionesjl22_site_is_combined') && inversionesjl22_site_is_combined($status)) {
+            // A combined order is not a live one: nothing changes (combined-orders.php refuses
+            // it anyway), and the notice points to the order it went into.
+            $into = (int) $order->get_meta(INVERSIONESJL22_SITE_COMBINED_INTO);
+            inversionesjl22_site_qr_add_event(
+                $into ? sprintf('La orden se combinó en la #%d: escanea la factura de esa orden', $into) : 'La orden se combinó en otra: escanea la factura de esa orden',
+                'rgb(229, 229, 229)'
+            );
         }
 
         wp_safe_redirect($doneUrl);

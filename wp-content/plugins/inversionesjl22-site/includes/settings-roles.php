@@ -15,7 +15,8 @@
  * before restoring or deleting).
  *
  * Not edited here, kept as they are: each role's 'screens' and 'admin_bar', and the entries of
- * 'exclude' that are not statuses (wuoc_combine, another plugin's bulk action).
+ * 'exclude' that are not statuses, except 'combine_orders' (or the old 'wuoc_combine') in
+ * 'bulk_actions', which is the "Puede combinar pedidos" box (combined-orders.php).
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -178,7 +179,7 @@ function inversionesjl22_site_default_role_rules( string $role ): array {
  *
  * @param string        $role   A role of the configuration.
  * @param array         $input  The form, unslashed: perm, flow_remove, flow_from, flow_to, menu,
- *                              qr_scan.
+ *                              qr_scan, combine.
  * @param string[]|null $menus  The menu keys the screen offered; null when it is not known.
  * @param string[]      $errors Filled with what is wrong, for the user.
  */
@@ -222,6 +223,13 @@ function inversionesjl22_site_role_rules_from_form( string $role, array $input, 
 		}
 		$exclude[ $context ] = $out;
 	}
+
+	// Combinar pedidos: an entry of its bulk actions that is not a status (the old key goes).
+	$bulk = array_values( array_diff( (array) ( $exclude['bulk_actions'] ?? array() ), array( INVERSIONESJL22_SITE_COMBINE_ACTION, INVERSIONESJL22_SITE_COMBINE_ACTION_OLD ) ) );
+	if ( empty( $input['combine'] ) ) {
+		$bulk[] = INVERSIONESJL22_SITE_COMBINE_ACTION;
+	}
+	$exclude['bulk_actions'] = $bulk;
 
 	// Its own steps: the ones it had, minus the ones ticked to remove, plus the new one.
 	$remove = array_filter( (array) ( $input['flow_remove'] ?? array() ), 'is_string' );
@@ -347,6 +355,7 @@ add_action(
 			$input[ $field ] = isset( $_POST[ $field ] ) && is_scalar( $_POST[ $field ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) : '';
 		}
 		$input['qr_scan'] = isset( $_POST['qr_scan'] ) && '1' === $_POST['qr_scan'];
+		$input['combine'] = isset( $_POST['combine'] ) && '1' === $_POST['combine'];
 		// phpcs:enable
 		$menus  = get_transient( 'inversionesjl22_site_roles_menu_' . get_current_user_id() );
 		$errors = array();
@@ -812,6 +821,15 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 					<?php esc_html_e( 'Puede escanear el QR', 'inversionesjl22-site' ); ?>
 				</label>
 				<p class="jl-field__help" id="jl-role-qr-help"><?php esc_html_e( 'Escanear el QR de la factura pasa el pedido de Impreso a Completado y muestra el aviso del escaneo en sus pantallas del sitio. Solo completa el pedido si el rol ve Impreso y Completado y su flujo tiene ese paso.', 'inversionesjl22-site' ); ?></p>
+			</section>
+
+			<section class="jl-card" aria-labelledby="jl-role-combine">
+				<h2 id="jl-role-combine"><?php esc_html_e( 'Combinar pedidos', 'inversionesjl22-site' ); ?></h2>
+				<label class="jl-option">
+					<input type="checkbox" name="combine" value="1" aria-describedby="jl-role-combine-help" <?php checked( inversionesjl22_site_role_can_combine( $role ) ); ?>>
+					<?php esc_html_e( 'Puede combinar pedidos', 'inversionesjl22-site' ); ?>
+				</label>
+				<p class="jl-field__help" id="jl-role-combine-help"><?php esc_html_e( 'La acción en lote «Combinar pedidos» une dos o más pedidos del mismo cliente, moneda y estado en uno nuevo con ese estado; los originales quedan en Combinado, enlazados al nuevo. Solo combina pedidos de estados que el rol ve.', 'inversionesjl22-site' ); ?></p>
 			</section>
 		</div>
 

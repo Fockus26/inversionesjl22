@@ -178,6 +178,9 @@ function inversionesjl22_site_customer_can_get_invoice( $order ): bool {
 	if ( ! $order instanceof WC_Order || 'shop_order' !== $order->get_type() || 'trash' === $order->get_status() ) {
 		return false;
 	}
+	if ( function_exists( 'inversionesjl22_site_is_combined' ) && inversionesjl22_site_is_combined( $order ) ) {
+		return false; // Its invoice is the new order's (combined-orders.php).
+	}
 	$user_id = get_current_user_id();
 	return $user_id > 0 && (int) $order->get_customer_id() === $user_id;
 }

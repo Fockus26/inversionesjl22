@@ -400,51 +400,5 @@ function filterBulkActionsOderStatuses($bulk_actions) {
     return $filtered;
 }
 
-// Remover acciones en lote forzadas por plugins
-add_action('admin_footer', 'filterBulkActionsPlugins');
-function filterBulkActionsPlugins() {
-    // Solo en lista de pedidos
-    if (get_current_screen()->id !== 'edit-shop_order') {
-        return;
-    }
-
-    // Obtener reglas del usuario actual
-    $ruleset = getUserPermissions();
-    if (!$ruleset) {
-        return;
-    }
-
-    $excluded_bulk = $ruleset['exclude_status_actions']['bulk_actions'] ?? [];
-
-    // Si en el config está bloqueado wuoc_combine → inyectamos el JS
-    if (in_array('wuoc_combine', $excluded_bulk)) : ?>
-        <script>
-        (function () {
-            /**
-             * Elimina la acción "wuoc_combine" de los select de acciones en lote. El plugin la
-             * reinyecta con JS: antes se borraba cada 500 ms para siempre; ahora solo cuando el
-             * formulario cambia (MutationObserver).
-             */
-            function removeWuocAction() {
-                document.querySelectorAll('#bulk-action-selector-top option[value="wuoc_combine"], #bulk-action-selector-bottom option[value="wuoc_combine"]')
-                    .forEach(function (option) { option.remove(); });
-            }
-
-            function watch() {
-                removeWuocAction();
-                // El formulario entero: el plugin puede añadir la opción o rehacer el select.
-                new MutationObserver(removeWuocAction).observe(
-                    document.getElementById('posts-filter') || document.body,
-                    { childList: true, subtree: true }
-                );
-            }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', watch);
-            } else {
-                watch();
-            }
-        })();
-        </script>
-    <?php endif;
-}
+// «Combinar pedidos» ya no la inyecta un plugin por JS: combined-orders.php solo la añade a quien
+// puede combinar (sin 'combine_orders' en sus acciones en lote excluidas).
