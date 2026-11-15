@@ -19,6 +19,8 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·6 PDF propios (Dompdf + informe; factura + entradas + migración 007) | `feat/pdf-propio` → `feat/factura-propia` | PR #40 y #41 en cadena; 007 espera la respuesta de César (adjunto en correos, Mi cuenta) |
 | F3·6b factura en correos y Mi cuenta | `feat/factura-correo-cuenta` | PR #44 → `main` (completa la 007 ya en staging; #42 redundante). Pendiente: contraste 1,78:1 de los botones de Mi cuenta del tema (decisión de César) |
 | F3·7 identidad y 1.0.0 | `chore/identidad-1-0-0` | PR #43 (sobre `feat/pdf-propio`: fusionar #42 antes) |
+| F3·8–F3·10 pulido UI, diagrama del flujo, previsualización PDF | — | en `main` (#45–#47) |
+| F3·11 combinar pedidos propio (acción en lote; mismo estado, se conserva; originales al estado de sistema «Combinado» `wc-combined`, sin deshacer) + migración 008 (desactiva Ultimate Order Combination, renombra `wuoc_combine` → `combine_orders`) | `feat/combinar-pedidos` | PR → `main` (sin fusionar) |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
 a producción hasta que él se lo muestre al cliente (César, 2026-11-13).
@@ -26,7 +28,7 @@ a producción hasta que él se lo muestre al cliente (César, 2026-11-13).
 **Entornos:** producción en `main` 3125c1b (#23, desplegado 2026-11-11; respaldo
 `~/backups-claude/prod-pre-plugin-20261111-2150.sql.gz` en el servidor). Fase 2 (#24–#32) y fase 3:
 solo en staging. Al desplegar a producción corren las migraciones 004 (desactiva URE) y 005
-(Loco/YITH POS); luego purgar Cloudflare.
+(Loco/YITH POS), y las de fase 3 (007 PDF Invoices, 008 Ultimate Order Combination); luego purgar Cloudflare.
 
 **Decisiones vigentes:** editor del flujo A y matriz por rol A (canvas de diseño); botón primario
 blanco sobre terracota (D001).
