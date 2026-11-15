@@ -17,7 +17,7 @@
  *     the coupons count one use for the new order instead of one per original (cancelling it gives
  *     back one per code);
  *   - the payment status of cash on delivery (Pagado / Por cobrar, payment-status.php) when all
- *     the originals have the same one, with the amounts to collect added up;
+ *     the originals have the same one; the amount to collect is recomputed from the new total;
  *   - the originals get a note and the link to the new order, and go to the status "Combinado"
  *     (César, 2026-11-14; the old plugin sent them to the trash), which they never leave
  *     (combined-orders.php).
@@ -68,6 +68,26 @@ function inversionesjl22_site_combine_same_customer( WC_Order $a, WC_Order $b ):
 	}
 	$phone_a = preg_replace( '/\D+/', '', (string) $a->get_billing_phone() );
 	return '' !== $phone_a && preg_replace( '/\D+/', '', (string) $b->get_billing_phone() ) === $phone_a;
+}
+
+/**
+ * Whether the order is paid online (a gateway that takes the payment through a link or a
+ * redirect, as Mercado Pago), not offline (cash on delivery, transfer, cheque: the team marks
+ * them paid by hand). Offline are WooCommerce's own offline gateways and anything built on them
+ * (subclasses of WC_Gateway_COD, _BACS, _Cheque), and an order without a payment method (made
+ * in wp-admin). Anything else is online, also a gateway that is no longer installed: when in
+ * doubt, it is not combined. The filter can tell otherwise for a gateway this cannot see.
+ */
+function inversionesjl22_site_combine_online_payment( WC_Order $order ): bool {
+	$method = (string) $order->get_payment_method();
+	if ( '' === $method ) {
+		$online = false;
+	} else {
+		$gateways = WC()->payment_gateways() ? WC()->payment_gateways()->payment_gateways() : array();
+		$gateway  = $gateways[ $method ] ?? null;
+		$online   = ! ( $gateway instanceof WC_Gateway_COD || $gateway instanceof WC_Gateway_BACS || $gateway instanceof WC_Gateway_Cheque );
+	}
+	return (bool) apply_filters( 'inversionesjl22_site_combine_online_payment', $online, $order, $method );
 }
 
 /**
@@ -165,6 +185,24 @@ function inversionesjl22_site_combine_check( array $ids ) {
 	if ( in_array( $status, inversionesjl22_site_combine_closed_statuses(), true ) ) {
 		/* translators: %s: status name */
 		return new WP_Error( 'closed', sprintf( __( 'Los pedidos en estado %s no se combinan.', 'inversionesjl22-site' ), wc_get_order_status_name( $status ) ) );
+	}
+	// Pendiente de pago with an online gateway: never (César, 2026-11-14). The customer can still
+	// pay each original's payment link, and that payment would land on an order that is no longer
+	// in play (combined-orders.php keeps a note of it, as a safety net).
+	if ( 'pending' === $status ) {
+		foreach ( $orders as $order ) {
+			if ( inversionesjl22_site_combine_online_payment( $order ) ) {
+				return new WP_Error(
+					'online',
+					sprintf(
+						/* translators: 1: order number, 2: payment method */
+						__( 'El pedido #%1$s está en Pendiente de pago con %2$s, un pago en línea: el cliente aún puede pagarlo por su enlace, así que no se combina. Combínalo cuando esté pagado, o cancélalo.', 'inversionesjl22-site' ),
+						$order->get_order_number(),
+						$order->get_payment_method_title() ? $order->get_payment_method_title() : $order->get_payment_method()
+					)
+				);
+			}
+		}
 	}
 	// A role combines only the orders it sees (storage_manager: not on hold or reserved).
 	if ( null !== $ruleset && empty( $ruleset[ $status ] ) ) {
@@ -330,9 +368,11 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	}
 
 	// Cash on delivery: the payment status (payment-status.php) when every original has the same
-	// one; "Por cobrar" adds up the amounts to collect when they are in the same currency. Mixed
-	// or missing: left empty, so the team sets it before moving the order on (order-transitions.php
-	// asks for it).
+	// one. "Por cobrar": the amount to collect is the new order's total (one shipping, not one per
+	// original: César, 2026-11-14), less what was already paid of the originals (their total minus
+	// their amount to collect). Only when the amounts are in the order's currency (pesos for COP,
+	// dólares for USD): otherwise, or with mixed or missing data, it is left empty with a note, so
+	// the team sets it before moving the order on (order-transitions.php asks for it).
 	// Read and written as payment-status.php does, as post meta: through WC_Order, '_currency'
 	// would be the order's own currency (set_currency('pesos') throws).
 	$payment = array();
@@ -341,19 +381,32 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	}
 	$payment      = array_values( array_unique( $payment ) );
 	$payment_meta = array();
+	$paid_before  = null; // Set: the amount to collect is recomputed from the total.
+	$payment_note = '';
 	if ( 1 === count( $payment ) && '' !== $payment[0] ) {
 		$payment_meta['_payment-status'] = $payment[0];
 		if ( 'pending' === $payment[0] ) {
-			$amount     = 0.0;
 			$currencies = array();
+			$paid       = 0.0;
+			$complete   = true;
 			foreach ( $orders as $original ) {
-				$amount      += (float) get_post_meta( $original->get_id(), '_amount', true );
 				$currencies[] = (string) get_post_meta( $original->get_id(), '_currency', true );
+				$amount       = get_post_meta( $original->get_id(), '_amount', true );
+				$complete     = $complete && is_numeric( $amount );
+				$paid        += max( 0.0, (float) $original->get_total() - (float) $amount );
 			}
 			$currencies = array_values( array_unique( $currencies ) );
-			if ( $amount > 0 && 1 === count( $currencies ) && '' !== $currencies[0] ) {
-				$payment_meta['_amount']   = $amount;
+			$own        = array(
+				'COP' => 'pesos',
+				'USD' => 'dolares',
+			);
+			if ( 1 === count( $currencies ) && '' !== $currencies[0] ) {
 				$payment_meta['_currency'] = $currencies[0];
+			}
+			if ( $complete && 1 === count( $currencies ) && ( $own[ $latest->get_currency() ] ?? '' ) === $currencies[0] ) {
+				$paid_before = $paid;
+			} else {
+				$payment_note = __( 'Por cobrar: el monto a cobrar quedó vacío (los originales no lo tenían en la moneda del pedido). Fíjalo antes de mover el pedido.', 'inversionesjl22-site' );
 			}
 		}
 	}
@@ -504,6 +557,19 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	// The lines carry their taxes: add them up, do not recompute them with today's rates.
 	$order->update_taxes();
 	$order->calculate_totals( false );
+	if ( null !== $paid_before ) {
+		$amount = round( max( 0.0, (float) $order->get_total() - $paid_before ), wc_get_price_decimals() );
+		update_post_meta( $order->get_id(), '_amount', $amount );
+		$payment_note = sprintf(
+			/* translators: %s: amount */
+			__( 'Por cobrar: el monto a cobrar se recalculó con el total del pedido combinado (un solo envío): %s.', 'inversionesjl22-site' ),
+			wp_strip_all_tags( wc_price( $amount, array( 'currency' => $order->get_currency() ) ) )
+		) . ( $paid_before > 0 ? ' ' . sprintf(
+			/* translators: %s: amount */
+			__( 'Se descontó lo ya pagado de los originales: %s.', 'inversionesjl22-site' ),
+			wp_strip_all_tags( wc_price( $paid_before, array( 'currency' => $order->get_currency() ) ) )
+		) : '' );
+	}
 
 	// Before the status, what the originals already counted: the move to on-hold, processing or
 	// completed must not reduce the stock, add the sales or use the coupons again. On the object
@@ -568,6 +634,10 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	}
 	foreach ( $mailer->get_emails() as $email ) {
 		remove_filter( 'woocommerce_email_enabled_' . $email->id, '__return_false', PHP_INT_MAX );
+	}
+
+	if ( '' !== $payment_note ) {
+		$order->add_order_note( $payment_note );
 	}
 
 	// The admins' "Nuevo pedido", once, as the old plugin sent it.
