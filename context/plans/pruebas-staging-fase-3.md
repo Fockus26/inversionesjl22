@@ -62,6 +62,17 @@ Preparada el 2026-11-14 a partir de los PR #33–#44.
 - [ ] Los pedidos creados en staging entre el 2026-11-13 21:25Z y el deploy de #44 no muestran el botón: es esperado.
 - [ ] Adjunto en correos: en staging no sale correo. Opciones: (a) darlo por probado en la copia local (5 correos, PDF válido); (b) permitir temporalmente el envío en staging a una sola dirección tuya y hacer un pedido de prueba; decide César.
 
+## 7b. Combinar pedidos (#48)
+- [ ] Plugins: «Ultimate Order Combination» aparece desactivado (lo hizo la migración 008).
+- [ ] Roles y permisos: la casilla «Combinar pedidos» conserva lo que tenía cada rol antes (la clave `wuoc_combine` pasó a `combine_orders`).
+- [ ] Como administrador, en Pedidos › En espera: marca 2 pedidos de prueba del mismo cliente y elige «Combinar pedidos». Debe aparecer «Se combinaron #A y #B en el pedido #N…». El nuevo pedido queda En espera, con las líneas sumadas y un solo envío. Los originales quedan en la pestaña «Combinado» (pastilla lila) y su ficha enlaza al nuevo.
+- [ ] En un original: el selector de estado solo ofrece Combinado, no hay botón de reembolso ni de factura, y escanear su QR da «La orden se combinó en la #N».
+- [ ] Rechazos con mensaje claro: estados distintos; clientes distintos; Pendiente de pago con Mercado Pago.
+- [ ] Contraentrega «Por cobrar»: el monto a cobrar del nuevo pedido es igual a su total, y tiene una nota que lo explica.
+- [ ] Con la cuenta de bodega (storage_manager) no aparece «Combinar pedidos». Con la de SEO aparece en sus estados, pero solo si su rol tiene la casilla marcada.
+- [ ] Inventario: el stock de los productos no cambia al combinar. Al cancelar el nuevo pedido, el stock vuelve una sola vez.
+- [ ] Limpieza: cancela el pedido combinado de prueba. Los originales se quedan en Combinado: no hay deshacer.
+
 ## 8. Tienda pública (humo)
 - [ ] Inicio, una categoría, un producto, carrito, checkout de visitante hasta el pedido: sin errores.
 - [ ] El pedido nuevo aparece en wp-admin en el estado correcto y con su estado de pago.
@@ -75,6 +86,6 @@ Preparada el 2026-11-14 a partir de los PR #33–#44.
 - La carpeta de PDF Invoices sigue en el repo (solo se desactiva). Borrarla es un paso posterior.
 
 ## Al pasar a producción (después de mostrarlo al cliente)
-- Corren las migraciones 004–007 en ese deploy; luego purgar Cloudflare.
+- Corren las migraciones 004–008 en ese deploy (la 008 desactiva Ultimate Order Combination); luego purgar Cloudflare.
 - Comprobar que Cloudflare no cachea `/wp-admin/admin-ajax.php`.
 - Vuelta atrás de los PDF: reactivar PDF Invoices (el plugin propio se aparta solo).
