@@ -8,13 +8,14 @@
  *     them refunded or combined before; the new order keeps that status (César, 2026-11-14);
  *   - the new order gets the product lines (the same product, variation and visible line meta
  *     become one line: quantities and the prices paid added up), the coupons and the fees, the
- *     customer, the billing and shipping address, the cédula and the barrio of the most recent
- *     order, and one shipping line: the first one found, as combinedOrderFields() did, with its
+ *     customer's account (of whichever original has one; two accounts are never combined), the
+ *     billing and shipping address, the cédula and the barrio of the most recent order, and one shipping line: the first one found, as combinedOrderFields() did, with its
  *     name in the shipping company field (the shipping report reads it);
  *   - the stock moves with the lines: what the originals reduced is now the new order's
  *     (_reduced_stock on its lines), so it is never reduced twice, and cancelling the new order
- *     gives it back once; the same for the products' sales and the coupons' uses, which the
- *     originals already counted;
+ *     gives it back once; the same for the products' sales, which the originals already counted;
+ *     the coupons count one use for the new order instead of one per original (cancelling it gives
+ *     back one per code);
  *   - the payment status of cash on delivery (Pagado / Por cobrar, payment-status.php) when all
  *     the originals have the same one, with the amounts to collect added up;
  *   - the originals get a note and the link to the new order, and go to the status "Combinado"
@@ -134,14 +135,31 @@ function inversionesjl22_site_combine_check( array $ids ) {
 				)
 			);
 		}
-		if ( ! inversionesjl22_site_combine_same_customer( $first, $order ) ) {
-			/* translators: 1: order number, 2: order number */
-			return new WP_Error( 'customer', sprintf( __( 'Los pedidos #%1$s y #%2$s no son del mismo cliente (ni la cuenta, ni el correo, ni el teléfono coinciden).', 'inversionesjl22-site' ), $first->get_order_number(), $number ) );
-		}
 		if ( $order->get_total_refunded() > 0 ) {
 			/* translators: %s: order number */
 			return new WP_Error( 'refunded', sprintf( __( 'El pedido #%s tiene reembolsos: no se combina.', 'inversionesjl22-site' ), $number ) );
 		}
+	}
+
+	// The same customer: every pair (a guest order in the middle does not join two others that
+	// share nothing), and at most one account among them (two accounts are two customers, even
+	// with the same email).
+	$accounts = array();
+	foreach ( $orders as $i => $a ) {
+		if ( $a->get_customer_id() ) {
+			$accounts[ $a->get_customer_id() ] = $a;
+		}
+		foreach ( array_slice( $orders, $i + 1 ) as $b ) {
+			if ( ! inversionesjl22_site_combine_same_customer( $a, $b ) ) {
+				/* translators: 1: order number, 2: order number */
+				return new WP_Error( 'customer', sprintf( __( 'Los pedidos #%1$s y #%2$s no son del mismo cliente (ni la cuenta, ni el correo, ni el teléfono coinciden).', 'inversionesjl22-site' ), $a->get_order_number(), $b->get_order_number() ) );
+			}
+		}
+	}
+	if ( count( $accounts ) > 1 ) {
+		$two = array_slice( array_values( $accounts ), 0, 2 );
+		/* translators: 1: order number, 2: order number */
+		return new WP_Error( 'accounts', sprintf( __( 'Los pedidos #%1$s y #%2$s son de dos cuentas de cliente distintas: no se combinan.', 'inversionesjl22-site' ), $two[0]->get_order_number(), $two[1]->get_order_number() ) );
 	}
 
 	if ( in_array( $status, inversionesjl22_site_combine_closed_statuses(), true ) ) {
@@ -266,7 +284,13 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	$order->set_order_key( wc_generate_order_key() );
 	$order->set_currency( $latest->get_currency() );
 	$order->set_prices_include_tax( $latest->get_prices_include_tax() );
-	$order->set_customer_id( $latest->get_customer_id() );
+	// The account of whichever original has one (check() allows one at most): an order made as a
+	// guest with the same email must not take the combined order out of the customer's Mi cuenta.
+	$customer_id = 0;
+	foreach ( $orders as $original ) {
+		$customer_id = $customer_id ? $customer_id : (int) $original->get_customer_id();
+	}
+	$order->set_customer_id( $customer_id );
 	$order->set_address( $latest->get_address( 'billing' ), 'billing' );
 	$order->set_address( $latest->get_address( 'shipping' ), 'shipping' );
 	$order->set_payment_method( $latest->get_payment_method() );
@@ -486,10 +510,31 @@ function inversionesjl22_site_combine_build( WC_Order $order, array $orders ): v
 	// (its props) and in the store, so the save of update_status() does not write them back.
 	$sales   = false;
 	$coupons = false;
+	$used    = array(); // The coupon uses the originals counted: code => [ who used it, … ].
 	foreach ( $orders as $original ) {
-		$store   = $original->get_data_store();
-		$sales   = $sales || $store->get_recorded_sales( $original );
-		$coupons = $coupons || ( $original->get_items( 'coupon' ) && $store->get_recorded_coupon_usage_counts( $original ) );
+		$store = $original->get_data_store();
+		$sales = $sales || $store->get_recorded_sales( $original );
+		if ( $original->get_items( 'coupon' ) && $store->get_recorded_coupon_usage_counts( $original ) ) {
+			$coupons = true;
+			$who     = $original->get_user_id() ? $original->get_user_id() : $original->get_billing_email();
+			foreach ( $original->get_items( 'coupon' ) as $item ) {
+				$used[ wc_format_coupon_code( $item->get_code() ) ][] = $who;
+			}
+		}
+	}
+	// One order, one use of each coupon: the new order has one line per code, and cancelling it
+	// gives back one use per line. The originals' uses go, the new order's one is counted (with
+	// its customer, for the limits per user).
+	$who = $order->get_user_id() ? $order->get_user_id() : $order->get_billing_email();
+	foreach ( $used as $code => $users ) {
+		$coupon = new WC_Coupon( $code );
+		if ( ! $coupon->get_id() ) {
+			continue;
+		}
+		foreach ( $users as $user_used ) {
+			$coupon->decrease_usage_count( $user_used );
+		}
+		$coupon->increase_usage_count( $who );
 	}
 	$store = $order->get_data_store();
 	if ( $reduced ) {

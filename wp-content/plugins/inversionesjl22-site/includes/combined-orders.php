@@ -202,6 +202,82 @@ add_action(
 	PHP_INT_MAX
 );
 
+/**
+ * No refunds on a combined original: its payment and its lines are the new order's (refund that
+ * one). The button is hidden in its screen, and wc_create_refund() (the screen's AJAX, the REST
+ * API, a gateway) gets an error: it deletes the refund it started and sends no email.
+ */
+add_filter(
+	'woocommerce_admin_order_should_render_refunds',
+	static function ( $render, $order_id, $order = null ) {
+		$order = $order instanceof WC_Order ? $order : wc_get_order( $order_id );
+		return $order && inversionesjl22_site_is_combined( $order ) ? false : $render;
+	},
+	10,
+	3
+);
+add_action(
+	'woocommerce_create_refund',
+	static function ( $refund ) {
+		$parent = $refund instanceof WC_Order_Refund ? wc_get_order( $refund->get_parent_id() ) : null;
+		if ( $parent && inversionesjl22_site_is_combined( $parent ) ) {
+			$into = (int) $parent->get_meta( INVERSIONESJL22_SITE_COMBINED_INTO );
+			throw new Exception(
+				$into
+					/* translators: %d: order id */
+					? sprintf( __( 'Este pedido se combinó en el #%d: el reembolso se hace en ese pedido.', 'inversionesjl22-site' ), $into )
+					: __( 'Este pedido se combinó en otro: no admite reembolsos.', 'inversionesjl22-site' )
+			);
+		}
+	}
+);
+
+/**
+ * A payment that reaches a combined original (the customer paid the link of an order that was
+ * pending when it was combined): WooCommerce does not move it (Combinado is not a status that
+ * takes payments) and would record nothing. It is kept: the transaction on the original, and a
+ * note on it and on the new order, so the team checks it there. The new order is not marked paid:
+ * the payment covers only one of the orders in it.
+ */
+add_action(
+	'woocommerce_payment_complete_order_status_' . INVERSIONESJL22_SITE_COMBINED_STATUS,
+	static function ( $order_id, $transaction_id = '' ) {
+		$original = wc_get_order( $order_id );
+		if ( ! $original instanceof WC_Order ) {
+			return;
+		}
+		$into  = wc_get_order( (int) $original->get_meta( INVERSIONESJL22_SITE_COMBINED_INTO ) );
+		$where = $original->get_payment_method_title() . ( $transaction_id ? ' (' . $transaction_id . ')' : '' );
+		if ( $transaction_id ) {
+			$original->set_transaction_id( $transaction_id );
+		}
+		if ( ! $original->get_date_paid( 'edit' ) ) {
+			$original->set_date_paid( time() );
+		}
+		$original->save();
+		$original->add_order_note(
+			$into
+				/* translators: 1: payment method and transaction, 2: order number */
+				? sprintf( __( 'Llegó un pago por %1$s para este pedido, que ya estaba combinado: revísalo en el pedido #%2$s.', 'inversionesjl22-site' ), $where, $into->get_order_number() )
+				/* translators: %s: payment method and transaction */
+				: sprintf( __( 'Llegó un pago por %s para este pedido, que ya estaba combinado.', 'inversionesjl22-site' ), $where )
+		);
+		if ( $into ) {
+			$into->add_order_note(
+				sprintf(
+					/* translators: 1: order number, 2: amount, 3: payment method and transaction */
+					__( 'Llegó un pago del pedido original #%1$s (%2$s, por %3$s), que ya está combinado en este: revisa el cobro de este pedido.', 'inversionesjl22-site' ),
+					$original->get_order_number(),
+					wp_strip_all_tags( wc_price( $original->get_total(), array( 'currency' => $original->get_currency() ) ) ),
+					$where
+				)
+			);
+		}
+	},
+	10,
+	2
+);
+
 // Not in the reports nor in WooCommerce Analytics: their sales are the new order's.
 add_filter(
 	'woocommerce_analytics_excluded_order_statuses',
