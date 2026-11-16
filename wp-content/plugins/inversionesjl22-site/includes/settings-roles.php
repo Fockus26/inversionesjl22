@@ -814,22 +814,27 @@ function inversionesjl22_site_roles_role_form( string $role, array $rules, array
 				<?php endif; ?>
 			</section>
 
-			<section class="jl-card" aria-labelledby="jl-role-qr">
-				<h2 id="jl-role-qr"><?php esc_html_e( 'Escaneo del QR de la factura', 'inversionesjl22-site' ); ?></h2>
+			<section class="jl-card" aria-labelledby="jl-role-extras">
+				<h2 id="jl-role-extras"><?php esc_html_e( 'Otros permisos', 'inversionesjl22-site' ); ?></h2>
+				<div class="jl-card__options">
+				<div class="jl-card__option">
+				<h3 id="jl-role-qr"><?php esc_html_e( 'Escaneo del QR de la factura', 'inversionesjl22-site' ); ?></h3>
 				<label class="jl-option">
 					<input type="checkbox" name="qr_scan" value="1" aria-describedby="jl-role-qr-help" <?php checked( inversionesjl22_site_role_scans_qr( $role ) ); ?>>
 					<?php esc_html_e( 'Puede escanear el QR', 'inversionesjl22-site' ); ?>
 				</label>
 				<p class="jl-field__help" id="jl-role-qr-help"><?php esc_html_e( 'Escanear el QR de la factura pasa el pedido de Impreso a Completado y muestra el aviso del escaneo en sus pantallas del sitio. Solo completa el pedido si el rol ve Impreso y Completado y su flujo tiene ese paso.', 'inversionesjl22-site' ); ?></p>
-			</section>
+				</div>
 
-			<section class="jl-card" aria-labelledby="jl-role-combine">
-				<h2 id="jl-role-combine"><?php esc_html_e( 'Combinar pedidos', 'inversionesjl22-site' ); ?></h2>
+				<div class="jl-card__option">
+				<h3 id="jl-role-combine"><?php esc_html_e( 'Combinar pedidos', 'inversionesjl22-site' ); ?></h3>
 				<label class="jl-option">
 					<input type="checkbox" name="combine" value="1" aria-describedby="jl-role-combine-help" <?php checked( inversionesjl22_site_role_can_combine( $role ) ); ?>>
 					<?php esc_html_e( 'Puede combinar pedidos', 'inversionesjl22-site' ); ?>
 				</label>
 				<p class="jl-field__help" id="jl-role-combine-help"><?php esc_html_e( 'La acción en lote «Combinar pedidos» une dos o más pedidos del mismo cliente, moneda y estado en uno nuevo con ese estado; los originales quedan en Combinado, enlazados al nuevo. Solo combina pedidos de estados que el rol ve.', 'inversionesjl22-site' ); ?></p>
+				</div>
+				</div>
 			</section>
 		</div>
 
