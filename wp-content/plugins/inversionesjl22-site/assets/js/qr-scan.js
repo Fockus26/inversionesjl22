@@ -10,7 +10,7 @@
  * - 2026-11-11: pide los escaneos posteriores al último que vio (since) en vez de uno solo que la
  *   primera pantalla borraba; así el aviso sale en todas las pantallas de bodega.
  * - 2026-11-12: el aviso es un snackbar abajo al centro, no una capa que tapa toda la pantalla.
- * - 2026-11-13: lo carga cualquier rol con el QR (WooCommerce › Roles y permisos), no solo bodega.
+ * - 2026-11-13: lo carga cualquier rol con el QR (Inversiones JL22 › Roles y permisos), no solo bodega.
  */
 function checkQrScanJs(ajaxUrl) {
     if (!ajaxUrl) {

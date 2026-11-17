@@ -1,5 +1,5 @@
 /**
- * WooCommerce › Roles y permisos (includes/settings-roles.php).
+ * Inversiones JL22 › Roles y permisos (includes/settings-roles.php).
  *
  * - Al marcar o desmarcar "Ver los pedidos" de un estado, enciende o apaga el resto de su fila
  *   (sin JS hay que guardar para que la fila se encienda).

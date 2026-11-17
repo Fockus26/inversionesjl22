@@ -1,7 +1,7 @@
 <?php
 /**
  * Warehouse QR: the QR on the 80 mm invoice (generateQrCode()) points to
- * ?action=qr_scan&order_id=N; scanning it with a role that has the QR (WooCommerce › Roles y
+ * ?action=qr_scan&order_id=N; scanning it with a role that has the QR (Inversiones JL22 › Roles y
  * permisos, inversionesjl22_site_user_can_scan_qr(); by default storage_manager) moves an Impreso
  * order to Completado, and every screen of those roles open on the site shows the result (checked
  * every 3 s, assets/js/qr-scan.js). The move also needs the role's own rules: it sees Impreso and

@@ -1,6 +1,6 @@
 <?php
 /**
- * WooCommerce › Roles y permisos: the screen that edits what each restricted role sees and does
+ * Inversiones JL22 › Roles y permisos: the screen that edits what each restricted role sees and does
  * (config.php, section 'roles'): the orders it sees per status, where it can move them from, its
  * own steps on top of the flow, the wp-admin screens of its menu and whether it scans the
  * invoice's QR (qr-scan.php). It also creates roles (a
@@ -27,24 +27,12 @@ if ( ! is_admin() ) {
 
 const INVERSIONESJL22_SITE_ROLES_PAGE = 'jl22-roles';
 
-add_action(
-	'admin_menu',
-	static function () {
-		add_submenu_page(
-			'woocommerce',
-			__( 'Roles y permisos', 'inversionesjl22-site' ),
-			__( 'Roles y permisos', 'inversionesjl22-site' ),
-			'manage_options',
-			INVERSIONESJL22_SITE_ROLES_PAGE,
-			'inversionesjl22_site_roles_screen'
-		);
-	}
-);
+// Its menu entry: admin-menu.php (Inversiones JL22 › Roles y permisos).
 
 add_action(
 	'admin_enqueue_scripts',
 	static function ( $hook ) {
-		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_ROLES_PAGE !== $hook ) {
+		if ( ! inversionesjl22_site_is_plugin_screen( (string) $hook, INVERSIONESJL22_SITE_ROLES_PAGE ) ) {
 			return;
 		}
 		inversionesjl22_site_settings_enqueue_style();

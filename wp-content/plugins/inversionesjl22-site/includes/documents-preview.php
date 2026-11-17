@@ -1,6 +1,6 @@
 <?php
 /**
- * Preview of the plugin's own PDFs (WooCommerce › Documentos): the registry of the documents the
+ * Preview of the plugin's own PDFs (Inversiones JL22 › Documentos): the registry of the documents the
  * engine makes and the endpoint that renders one with the settings of the form, saved or not.
  *
  * The preview is the real document: the same generator (invoice-pdf.php, shipping-report/pdf.php)
@@ -42,7 +42,7 @@ function inversionesjl22_site_pdf_documents(): array {
 	);
 
 	/**
-	 * Filters the PDF documents listed in WooCommerce › Documentos' preview.
+	 * Filters the PDF documents listed in Inversiones JL22 › Documentos' preview.
 	 *
 	 * @param array $documents slug => array( label, description, needs_order, render ).
 	 */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Shipping report (WooCommerce › Informe de Envíos): a form picks country, courier, dates and
+ * Shipping report (Inversiones JL22 › Informe de Envíos): a form picks country, courier, dates and
  * shift; admin-post.php?action=shipping_report finds the completed orders and streams an 80 mm
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
@@ -20,7 +20,7 @@ function pdfUIShippingReport($args) {
 
     $cssFile = INVERSIONESJL22_SITE_DIR . 'assets/css/pdf-shipping-report.css';
     $css = file_exists($cssFile) ? file_get_contents($cssFile) : '';
-    // The CSS is written for 80 mm; its @page takes the configured paper (WooCommerce › Documentos).
+    // The CSS is written for 80 mm; its @page takes the configured paper (Inversiones JL22 › Documentos).
     $css = str_replace('size: 80mm auto', 'size: ' . inversionesjl22_site_document_paper()['mm'] . 'mm auto', $css);
 
     ob_start();

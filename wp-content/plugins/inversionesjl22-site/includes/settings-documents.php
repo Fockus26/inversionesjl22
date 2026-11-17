@@ -1,6 +1,6 @@
 <?php
 /**
- * WooCommerce › Documentos: the screen that picks the paper size of the PDFs the shop prints
+ * Inversiones JL22 › Documentos: the screen that picks the paper size of the PDFs the shop prints
  * (config.php, section 'documents'): the invoice and the shipping report. 80 mm unless it is
  * changed.
  *
@@ -20,24 +20,12 @@ if ( ! is_admin() ) {
 
 const INVERSIONESJL22_SITE_DOCUMENTS_PAGE = 'jl22-documents';
 
-add_action(
-	'admin_menu',
-	static function () {
-		add_submenu_page(
-			'woocommerce',
-			__( 'Documentos', 'inversionesjl22-site' ),
-			__( 'Documentos', 'inversionesjl22-site' ),
-			'manage_options',
-			INVERSIONESJL22_SITE_DOCUMENTS_PAGE,
-			'inversionesjl22_site_documents_screen'
-		);
-	}
-);
+// Its menu entry: admin-menu.php (Inversiones JL22 › Documentos).
 
 add_action(
 	'admin_enqueue_scripts',
 	static function ( $hook ) {
-		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_DOCUMENTS_PAGE !== $hook ) {
+		if ( ! inversionesjl22_site_is_plugin_screen( (string) $hook, INVERSIONESJL22_SITE_DOCUMENTS_PAGE ) ) {
 			return;
 		}
 		inversionesjl22_site_settings_enqueue_style();

@@ -49,6 +49,17 @@ add_action(
 );
 
 /**
+ * Whether a screen id (or an admin_enqueue_scripts hook suffix) is the plugin page <slug>. By its
+ * suffix: wp-admin prefixes it with the parent menu's sanitized title ('inversiones-jl22_page_…',
+ * 'toplevel_page_…'; 'woocommerce_page_…' when the pages hung from WooCommerce, or with WPCodeBox
+ * back on), which this does not depend on.
+ */
+function inversionesjl22_site_is_plugin_screen( string $screen_id, string $slug ): bool {
+	$suffix = '_page_' . $slug;
+	return strlen( $screen_id ) > strlen( $suffix ) && substr( $screen_id, -strlen( $suffix ) ) === $suffix;
+}
+
+/**
  * Which of the plugin's admin screens this is: 'order' (one order, posts or HPOS storage),
  * 'orders' (the list), 'shipping-report', or '' for any other. WPCodeBox loaded the forms' CSS
  * and the payment-status JS on every wp-admin page; now each goes only where it is used.
@@ -58,7 +69,7 @@ function inversionesjl22_site_admin_screen(): string {
 	if ( ! $screen ) {
 		return '';
 	}
-	if ( 'woocommerce_page_shipping-report' === $screen->id ) {
+	if ( inversionesjl22_site_is_plugin_screen( (string) $screen->id, 'shipping-report' ) ) {
 		return 'shipping-report';
 	}
 	if ( 'shop_order' === $screen->id ) {

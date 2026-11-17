@@ -1,6 +1,6 @@
 <?php
 /**
- * Shipping report (WooCommerce › Informe de Envíos): a form picks country, courier, dates and
+ * Shipping report (Inversiones JL22 › Informe de Envíos): a form picks country, courier, dates and
  * shift; admin-post.php?action=shipping_report finds the completed orders and streams an 80 mm
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *

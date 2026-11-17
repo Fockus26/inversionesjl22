@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Inversiones JL22 — Tienda
- * Description:       Estados y flujo de los pedidos, permisos por rol, facturas e informe de envíos en PDF y cierre de pedidos por QR, configurables desde WooCommerce.
+ * Description:       Estados y flujo de los pedidos, permisos por rol, facturas e informe de envíos en PDF y cierre de pedidos por QR, configurables desde su propio menú en wp-admin.
  * Version:           1.0.0
  * Requires at least: 7.1
  * Requires PHP:      7.4
@@ -75,6 +75,7 @@ add_action(
 			'customer-status',
 			'shipping-report/pdf-ui',
 			'shipping-report/ui',
+			'admin-menu',
 			'order-transitions',
 			'qr-scan',
 			'invoice-pdf',
