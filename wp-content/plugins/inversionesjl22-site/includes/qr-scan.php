@@ -360,17 +360,65 @@ function checkQrScanCallback() {
     ]);
 }
 
+/**
+ * The QR of $text as a PNG data URI, or false if it cannot be made (the invoice then prints
+ * without it, as it did when the old service did not answer).
+ *
+ * Made here with chillerlan/php-qrcode (vendor/autoload.php): before, the image came from
+ * api.qrserver.com, which received the site's link and the order ID of every invoice and left
+ * the QR depending on a third party being up. The PNG is written below without GD (only zlib),
+ * so it does not depend on an image extension of the host: one byte per pixel, black or white,
+ * at least $size pixels wide and a whole number of pixels per module, so the modules stay sharp
+ * when Dompdf scales it to the invoice's 20 mm. ECC level M (15 %) for the thermal printers.
+ *
+ * @param string $text
+ * @param int    $size minimum width in pixels.
+ * @return string|false
+ */
 function generateQrCode($text = '', $size = 100) {
-    $encoded_text = urlencode($text);
-    $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data={$encoded_text}";
+    if ('' === (string) $text || !function_exists('gzcompress')) {
+        return false;
+    }
+    require_once INVERSIONESJL22_SITE_DIR . 'vendor/autoload.php';
 
-    $response = wp_remote_get( $qr_url );
-    if ( ! is_wp_error( $response ) ) {
-        $image_data = wp_remote_retrieve_body( $response );
-        return 'data:image/png;base64,' . base64_encode( $image_data );
+    try {
+        $options = new \InversionesJL22Site\Vendor\chillerlan\QRCode\QROptions([
+            'eccLevel'      => \InversionesJL22Site\Vendor\chillerlan\QRCode\Common\EccLevel::M,
+            'addQuietzone'  => true,
+            'quietzoneSize' => 4,
+        ]);
+        $qr = new \InversionesJL22Site\Vendor\chillerlan\QRCode\QRCode($options);
+        $qr->addByteSegment((string) $text);
+        $matrix = $qr->getQRMatrix()->getMatrix(true);
+    } catch (\Throwable $e) {
+        return false;
     }
 
-    return false;
+    $modules = count($matrix);
+    if ($modules < 21) {
+        return false;
+    }
+    $scale = max(4, (int) ceil(max(1, (int) $size) * 4 / $modules)); // ~4× $size: crisp in print
+    $width = $modules * $scale;
+
+    $raw = '';
+    foreach ($matrix as $row) {
+        $line = "\0"; // filter: none
+        foreach ($row as $dark) {
+            $line .= str_repeat($dark ? "\x00" : "\xFF", $scale);
+        }
+        $raw .= str_repeat($line, $scale);
+    }
+
+    $chunk = static function (string $type, string $data): string {
+        return pack('N', strlen($data)) . $type . $data . pack('N', crc32($type . $data));
+    };
+    $png = "\x89PNG\r\n\x1a\n"
+        . $chunk('IHDR', pack('NNCCCCC', $width, $width, 8, 0, 0, 0, 0)) // 8-bit greyscale
+        . $chunk('IDAT', gzcompress($raw, 9))
+        . $chunk('IEND', '');
+
+    return 'data:image/png;base64,' . base64_encode($png);
 }
 
 if (class_exists('WPO_WCPDF')) {
