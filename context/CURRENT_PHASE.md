@@ -21,6 +21,8 @@ sesión, con el modelo y el esfuerzo que la tarea pida (César, 2026-11-13).
 | F3·7 identidad y 1.0.0 | `chore/identidad-1-0-0` | PR #43 (sobre `feat/pdf-propio`: fusionar #42 antes) |
 | F3·8–F3·10 pulido UI, diagrama del flujo, previsualización PDF | — | en `main` (#45–#47) |
 | F3·11 combinar pedidos propio (mismo estado; originales en «Combinado» `wc-combined`, sin deshacer; un envío y «Por cobrar» recalculado; no Pendiente de pago en línea) + 008 | — | en `main` (#48), en staging 2026-11-15 (008 corrió) |
+| F3·12 menú propio «Inversiones JL22» (pantallas del plugin fuera de WooCommerce; probado con admin, bodega y SEO) | — | en `main` (#50, 2026-11-17) |
+| Seguridad: QR firmado + confirmación POST, QR generado en el sitio (chillerlan 5.0.5), roles no configurados restringidos | `fix/seguridad-qr-roles` | PR abierto, espera revisión (`PHASE_LOG/fix-seguridad-qr-roles.md`) |
 
 **Al terminar toda la fase 3:** entregar a César la lista de pruebas a hacer en staging. Nada pasa
 a producción hasta que él se lo muestre al cliente (César, 2026-11-13).
