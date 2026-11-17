@@ -1,6 +1,6 @@
 <?php
 /**
- * Shipping report (WooCommerce › Informe de Envíos): a form picks country, courier, dates and
+ * Shipping report (Inversiones JL22 › Informe de Envíos): a form picks country, courier, dates and
  * shift; admin-post.php?action=shipping_report finds the completed orders and streams an 80 mm
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The completed orders of a shipping report: those shipped to $country by $company ('all' for
  * every courier of the country) completed between the two dates (Y-m-d) in the shift
- * ('all_day', 'morning' or 'evening'). Used by the report and by the preview of WooCommerce ›
+ * ('all_day', 'morning' or 'evening'). Used by the report and by the preview of Inversiones JL22 ›
  * Documentos.
  *
  * @return WC_Order[]

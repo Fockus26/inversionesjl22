@@ -1,6 +1,6 @@
 <?php
 /**
- * WooCommerce › Estados y flujo: the screen that edits the order statuses of the configuration
+ * Inversiones JL22 › Estados y flujo: the screen that edits the order statuses of the configuration
  * (config.php): their order, their names, colours and icons, what their buttons say, which
  * statuses each one can move to, and the shop's own statuses (create, delete).
  *
@@ -20,24 +20,12 @@ if ( ! is_admin() ) {
 
 const INVERSIONESJL22_SITE_STATUSES_PAGE = 'jl22-statuses';
 
-add_action(
-	'admin_menu',
-	static function () {
-		add_submenu_page(
-			'woocommerce',
-			__( 'Estados y flujo', 'inversionesjl22-site' ),
-			__( 'Estados y flujo', 'inversionesjl22-site' ),
-			'manage_options',
-			INVERSIONESJL22_SITE_STATUSES_PAGE,
-			'inversionesjl22_site_statuses_screen'
-		);
-	}
-);
+// Its menu entry: admin-menu.php (Inversiones JL22 › Estados y flujo).
 
 add_action(
 	'admin_enqueue_scripts',
 	static function ( $hook ) {
-		if ( 'woocommerce_page_' . INVERSIONESJL22_SITE_STATUSES_PAGE !== $hook ) {
+		if ( ! inversionesjl22_site_is_plugin_screen( (string) $hook, INVERSIONESJL22_SITE_STATUSES_PAGE ) ) {
 			return;
 		}
 		inversionesjl22_site_settings_enqueue_style();

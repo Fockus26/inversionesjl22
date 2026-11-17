@@ -275,7 +275,7 @@ function inversionesjl22_site_document_weights(): array {
 }
 
 /**
- * The 'documents' section of the configuration, or the values the preview of WooCommerce ›
+ * The 'documents' section of the configuration, or the values the preview of Inversiones JL22 ›
  * Documentos is rendering with (inversionesjl22_site_documents_override()): the same generators
  * make the real PDF and the preview, each reading its paper, typeface and weight from here.
  *

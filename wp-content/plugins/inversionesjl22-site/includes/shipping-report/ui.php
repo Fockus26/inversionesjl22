@@ -1,10 +1,10 @@
 <?php
 /**
- * Shipping report (WooCommerce › Informe de Envíos): a form picks country, courier, dates and
+ * Shipping report (Inversiones JL22 › Informe de Envíos): a form picks country, courier, dates and
  * shift; admin-post.php?action=shipping_report finds the completed orders and streams an 80 mm
  * PDF. Split in one file per WPCodeBox snippet, each moved as is.
  *
- * This file: the submenu page with the form, and its JS (assets/js/shipping-report.js, from
+ * This file: the page with the form (its menu entry is in admin-menu.php), and its JS (assets/js/shipping-report.js, from
  * snippet 50, which WPCodeBox printed in the <head> of the admin pages whose URL contains
  * "shipping-report": enqueued in the same place). From Shipping Report › UI (snippet 53). Only
  * change: the form carries a nonce (checked in init.php). The form's styles
@@ -39,17 +39,7 @@ add_action(
 	5
 );
 
-// Agrega submenú en WooCommerce para el informe
-add_action('admin_menu', function() {
-    add_submenu_page(
-        'woocommerce',
-        'Informe de Envíos',
-        'Informe de Envíos',
-        'manage_woocommerce',
-        'shipping-report',
-        'shippingReportUI'
-    );
-});
+// Su entrada del menú: admin-menu.php (Inversiones JL22 › Informe de Envíos, manage_woocommerce).
 
 // Renderiza el formulario para seleccionar filtros
 function shippingReportUI() {

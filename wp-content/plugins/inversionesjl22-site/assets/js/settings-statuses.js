@@ -1,5 +1,5 @@
 /**
- * WooCommerce › Estados y flujo (includes/settings-statuses.php).
+ * Inversiones JL22 › Estados y flujo (includes/settings-statuses.php).
  *
  * - Ordenar los estados: flechas (teclado y táctil) y arrastrar por el asa (ratón). El orden que
  *   se guarda es el de las tarjetas en el formulario.

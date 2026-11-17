@@ -1,5 +1,5 @@
 /*
- * WooCommerce › Documentos: the live preview of the PDFs. Asks the endpoint of
+ * Inversiones JL22 › Documentos: the live preview of the PDFs. Asks the endpoint of
  * includes/documents-preview.php for the real document with the values of the form (saved or
  * not), after a short pause, and shows it in the frame. Nothing is saved.
  *

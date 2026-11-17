@@ -5,7 +5,7 @@
  *
  * What it replaces from PDF Invoices & Packing Slips (vendored, 5.16.6): its template
  * templates/Factura80mm/ (now templates/pdf/invoice.php and assets/css/pdf-invoice.css) and the
- * shop's customizations in its custom/inversionesjl-pdf.php: paper from WooCommerce › Documentos,
+ * shop's customizations in its custom/inversionesjl-pdf.php: paper from Inversiones JL22 › Documentos,
  * the automatic sheet height, the typeface and weight, the 58 mm adjustments. The HTML handed to
  * Dompdf is the one that plugin built, and Dompdf is the same version with the same options, so
  * the PDF comes out the same (context/PHASE_LOG/feat-pdf-propio.md has the comparison).
@@ -43,7 +43,7 @@ function inversionesjl22_site_own_invoice(): bool {
 
 /**
  * Whether the current user may get the invoice of an order: someone who edits orders and, with a
- * role of WooCommerce › Roles y permisos, only for an order in a status the role sees and not
+ * role of Inversiones JL22 › Roles y permisos, only for an order in a status the role sees and not
  * excluded in its "Factura PDF" column (exclude['qr_actions']). The rule the orders list's
  * invoice button already followed (roles-actions.php), now for every way of getting it.
  */
@@ -157,7 +157,7 @@ function inversionesjl22_site_invoice_total( WC_Order $order ): ?array {
 }
 
 /**
- * The CSS family of each typeface of WooCommerce › Documentos (keys of
+ * The CSS family of each typeface of Inversiones JL22 › Documentos (keys of
  * inversionesjl22_site_document_fonts()): the families Dompdf has, its own or assets/fonts/.
  *
  * @return array<string, string>
@@ -178,7 +178,7 @@ function inversionesjl22_site_document_font_families(): array {
 
 /**
  * The styles after the template's: the currency symbol's font, the typeface and weight of
- * WooCommerce › Documentos, and the 58 mm adjustments. In that order, as PDF Invoices printed them
+ * Inversiones JL22 › Documentos, and the 58 mm adjustments. In that order, as PDF Invoices printed them
  * (its currency font, then custom/inversionesjl-pdf.php's two blocks).
  */
 function inversionesjl22_site_invoice_extra_css(): string {

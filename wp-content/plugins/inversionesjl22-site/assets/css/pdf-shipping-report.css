@@ -1,8 +1,8 @@
 /**
- * Estilos del PDF "Informe de Envíos" (WooCommerce > Informe de Envíos).
+ * Estilos del PDF "Informe de Envíos" (Inversiones JL22 › Informe de Envíos).
  *
  * Los inserta pdfUIShippingReport() (includes/shipping-report/pdf-ui.php) dentro de un <style>;
- * el @page toma el ancho de WooCommerce > Documentos. Venían de custom/shipping-report.css de
+ * el @page toma el ancho de Inversiones JL22 › Documentos. Venían de custom/shipping-report.css de
  * PDF Invoices (y antes del snippet CSS "PDF" de WPCodeBox), sin cambios.
  */
 @page {
