@@ -60,11 +60,17 @@ function inversionesjl22_site_admin_pages(): array {
 add_action(
 	'admin_menu',
 	static function () {
-		$pages   = inversionesjl22_site_admin_pages();
+		// Only the screens the user can open are registered: the ones for administrators
+		// (manage_options) by capability, the shipping report also only for a role the
+		// configuration has (roles-config.php). A role without rules gets none, even with
+		// manage_woocommerce; a screen not registered answers WordPress's "no permission".
 		$visible = array_filter(
-			$pages,
+			inversionesjl22_site_admin_pages(),
 			static function ( array $page ): bool {
-				return current_user_can( $page['capability'] );
+				if ( ! current_user_can( $page['capability'] ) ) {
+					return false;
+				}
+				return 'manage_options' === $page['capability'] || inversionesjl22_site_user_has_configured_role();
 			}
 		);
 		if ( ! $visible ) {
@@ -82,7 +88,7 @@ add_action(
 			'dashicons-store',
 			'55.51'
 		);
-		foreach ( $pages as $slug => $page ) {
+		foreach ( $visible as $slug => $page ) {
 			add_submenu_page(
 				INVERSIONESJL22_SITE_MENU,
 				$page['title'],
