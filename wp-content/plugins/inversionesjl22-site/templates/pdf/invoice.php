@@ -41,7 +41,8 @@ $customer_status_label = isset($customer_statuses[$customer_status])
 
 $order_id = $order->get_id();
 
-$qr_text  = "https://inversionesjl22.com?action=qr_scan&order_id={$order_id}";
+// Con la firma del pedido (includes/qr-scan.php): un escaneo lo completa sin pasos de más
+$qr_text  = function_exists( 'inversionesjl22_site_qr_url' ) ? inversionesjl22_site_qr_url( $order ) : "https://inversionesjl22.com?action=qr_scan&order_id={$order_id}";
 
 // generateQrCode() vive en includes/qr-scan.php; si no está, el PDF sale sin QR en vez de fallar
 $qr_image = function_exists( 'generateQrCode' ) ? generateQrCode( $qr_text ) : false;

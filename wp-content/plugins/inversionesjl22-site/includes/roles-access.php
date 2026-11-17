@@ -69,6 +69,13 @@ function filterSearchOrderStatuses($query) {
 
     $allowed = array_unique($allowed);
 
+    // No status at all (a role without rules, roles-config.php): no orders. An empty
+    // post_status would be ignored by WP_Query and list every order.
+    if (!$allowed) {
+        $query->set('post__in', [0]);
+        return;
+    }
+
     // === 2️⃣ Detectar el filtro actual de estado en la URL
     $filter = isset($_GET['post_status']) ? sanitize_key($_GET['post_status']) : 'all';
 

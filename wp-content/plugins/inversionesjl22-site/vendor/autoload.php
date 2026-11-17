@@ -10,6 +10,12 @@
  * files (no document of the shop uses italics: installed-fonts.dist.json points those variants to
  * the upright files) and the metric caches (*.ufm.json, written at run time to uploads/).
  * To update it: copy a newer strauss build and replace the prefix (context/PHASE_LOG/feat-pdf-propio.md).
+ *
+ * Also the invoice's QR (includes/qr-scan.php, generateQrCode()): chillerlan/php-qrcode 5.0.5 with
+ * chillerlan/php-settings-container 2.1.6 (MIT; 5.x is the last line for PHP 7.4, 6.x needs 8.4):
+ * their src/ and licences as Composer installs them, with chillerlan\ prefixed as
+ * InversionesJL22Site\Vendor\chillerlan\. To update it: `composer require chillerlan/php-qrcode:^5`
+ * in a scratch folder with config.platform.php 7.4.0, copy src/ and prefix the namespaces again.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -26,6 +32,8 @@ spl_autoload_register(
 				'InversionesJL22Site\\Vendor\\Svg\\'        => $dir . '/dompdf/php-svg-lib/src/Svg/',
 				'InversionesJL22Site\\Vendor\\Masterminds\\' => $dir . '/masterminds/html5/src/',
 				'InversionesJL22Site\\Vendor\\Sabberworm\\CSS\\' => $dir . '/sabberworm/php-css-parser/src/',
+				'InversionesJL22Site\\Vendor\\chillerlan\\QRCode\\' => $dir . '/chillerlan/php-qrcode/src/',
+				'InversionesJL22Site\\Vendor\\chillerlan\\Settings\\' => $dir . '/chillerlan/php-settings-container/src/',
 			);
 		}
 		if ( 0 !== strpos( $class, 'InversionesJL22Site\\Vendor\\' ) ) {

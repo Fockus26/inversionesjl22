@@ -1,7 +1,9 @@
 <?php
 /**
  * Warehouse QR: the QR on the 80 mm invoice (generateQrCode()) points to
- * ?action=qr_scan&order_id=N; scanning it with a role that has the QR (Inversiones JL22 › Roles y
+ * ?action=qr_scan&order_id=N&sig=<signature of the order> (inversionesjl22_site_qr_url()). A link
+ * without a valid signature (the invoices printed before it) changes nothing on its own: it shows
+ * a confirmation page whose button posts with a nonce. Scanning it with a role that has the QR (Inversiones JL22 › Roles y
  * permisos, inversionesjl22_site_user_can_scan_qr(); by default storage_manager) moves an Impreso
  * order to Completado, and every screen of those roles open on the site shows the result (checked
  * every 3 s, assets/js/qr-scan.js). The move also needs the role's own rules: it sees Impreso and
@@ -66,6 +68,8 @@ if ( !is_admin() ) {
 
     add_action('template_redirect', 'scanQrUI');
     function scanQrUI() {
+        // phpcs:disable WordPress.Security.NonceVerification -- the GET is authorised by the QR's
+        // signature, the POST by its nonce, both checked below before anything changes.
         if (empty($_GET['action']) || $_GET['action'] !== 'qr_scan') {
             return;
         }
@@ -77,12 +81,17 @@ if ( !is_admin() ) {
         // Nunca guardar en caché la respuesta del escaneo (ni en Cloudflare ni en el navegador)
         nocache_headers();
 
+        $order_id  = absint($_GET['order_id']);
+        $signature = isset($_GET['sig']) ? sanitize_key(wp_unslash($_GET['sig'])) : '';
+        $is_post   = isset($_SERVER['REQUEST_METHOD']) && 'POST' === strtoupper(sanitize_key(wp_unslash($_SERVER['REQUEST_METHOD'])));
+
         if (!is_user_logged_in()) {
-            // Iniciar sesión y volver a este mismo QR
-            $qrUrl = add_query_arg([
+            // Iniciar sesión y volver a este mismo QR (con su firma, si la trae)
+            $qrUrl = add_query_arg(array_filter([
                 'action'   => 'qr_scan',
-                'order_id' => intval($_GET['order_id']),
-            ], home_url('/'));
+                'order_id' => $order_id,
+                'sig'      => $signature,
+            ]), home_url('/'));
             wp_safe_redirect(wp_login_url($qrUrl));
             exit;
         }
@@ -95,13 +104,32 @@ if ( !is_admin() ) {
             exit;
         }
 
-        $order_id = intval($_GET['order_id']);
         $order = wc_get_order($order_id);
 
         if (!$order) {
             wp_safe_redirect($doneUrl);
             exit;
         }
+
+        // Who may scan is checked above; here, that the scan is really one. The new invoices carry
+        // a signature of the order in the QR: one scan does it, as always. The QR of an invoice
+        // printed before the signature (or any link without a valid one, which a third party could
+        // put in front of the warehouse) changes nothing until the person confirms it on a page
+        // of the site, whose button posts with a nonce.
+        if ($is_post) {
+            $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
+            if (!wp_verify_nonce($nonce, inversionesjl22_site_qr_nonce_action($order_id))) {
+                wp_die(
+                    esc_html__('La confirmación del escaneo caducó o no es válida. Escanea el código QR otra vez.', 'inversionesjl22-site'),
+                    esc_html__('Escaneo no confirmado', 'inversionesjl22-site'),
+                    ['response' => 403, 'link_url' => esc_url(home_url('/')), 'link_text' => esc_html__('Ir al inicio', 'inversionesjl22-site')]
+                );
+            }
+        } elseif (!inversionesjl22_site_qr_signature_is_valid($order, $signature)) {
+            inversionesjl22_site_qr_confirm_screen($order);
+            exit;
+        }
+        // phpcs:enable
 
         $status = $order->get_status();
 
@@ -153,6 +181,103 @@ if ( !is_admin() ) {
         wp_safe_redirect($doneUrl);
         exit;
     }
+}
+
+/**
+ * The signature the invoice's QR carries (&sig=): an HMAC of the order's ID and its order key with
+ * the site's auth salt, so only the site can make it and it holds for that order alone. 20 hex
+ * characters (80 bits) keep the QR small enough for the 20 mm square of the 58 mm invoice.
+ * '' when the order has no key: its QR then goes through the confirmation page.
+ */
+function inversionesjl22_site_qr_signature(WC_Order $order): string {
+    $key = (string) $order->get_order_key();
+    if ('' === $key) {
+        return '';
+    }
+    return substr(hash_hmac('sha256', 'qr_scan|' . $order->get_id() . '|' . $key, wp_salt('auth')), 0, 20);
+}
+
+function inversionesjl22_site_qr_signature_is_valid(WC_Order $order, string $signature): bool {
+    $expected = inversionesjl22_site_qr_signature($order);
+    return '' !== $expected && '' !== $signature && hash_equals($expected, $signature);
+}
+
+/**
+ * The link the invoice's QR holds. The host stays the shop's, as the invoice always printed it.
+ */
+function inversionesjl22_site_qr_url(WC_Order $order): string {
+    return add_query_arg(array_filter([
+        'action'   => 'qr_scan',
+        'order_id' => $order->get_id(),
+        'sig'      => inversionesjl22_site_qr_signature($order),
+    ]), 'https://inversionesjl22.com');
+}
+
+function inversionesjl22_site_qr_nonce_action(int $order_id): string {
+    return 'inversionesjl22_site_qr_scan_' . $order_id;
+}
+
+/**
+ * The page a QR without a valid signature gets: what the scan would do and one button that posts
+ * it with a nonce. A page of its own, not the theme's: it is read on the warehouse phone and must
+ * load fast, and the response is not cacheable (nocache_headers() above).
+ */
+function inversionesjl22_site_qr_confirm_screen(WC_Order $order): void {
+    $order_id  = $order->get_id();
+    $status    = $order->get_status();
+    $completes = 'impressed' === $status;
+    $action    = add_query_arg(['action' => 'qr_scan', 'order_id' => $order_id], home_url('/'));
+    /* translators: %s: order number */
+    $title     = sprintf(__('Confirmar el escaneo del pedido #%s', 'inversionesjl22-site'), $order->get_order_number());
+
+    status_header(200);
+    header('Content-Type: text/html; charset=' . get_option('blog_charset'));
+    header('X-Robots-Tag: noindex, nofollow');
+    ?><!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="<?php echo esc_attr(get_option('blog_charset')); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title><?php echo esc_html($title . ' · ' . get_bloginfo('name')); ?></title>
+<style>
+    :root { --jl-text: #1f1a17; --jl-muted: #4d4540; --jl-bg: #ffffff; --jl-surface: #faf6f2; --jl-border: #d9cfc6; --jl-primary: #a4521a; --jl-primary-hover: #8a4415; --jl-on-primary: #ffffff; --jl-focus: #1f1a17; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--jl-bg); color: var(--jl-text); font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 30rem; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { font-size: 1.375rem; line-height: 1.3; margin: 0 0 1rem; overflow-wrap: anywhere; }
+    p { margin: 0 0 1rem; }
+    .jl-qr-status { background: var(--jl-surface); border: 1px solid var(--jl-border); border-radius: 0.5rem; padding: 0.75rem 1rem; }
+    .jl-qr-note { color: var(--jl-muted); font-size: 0.9375rem; }
+    .jl-qr-actions { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; margin-top: 1.5rem; }
+    button { font: inherit; font-weight: 600; min-height: 2.75rem; padding: 0.625rem 1.25rem; border: 0; border-radius: 0.375rem; background: var(--jl-primary); color: var(--jl-on-primary); cursor: pointer; }
+    button:hover { background: var(--jl-primary-hover); }
+    a { color: var(--jl-primary); text-decoration: underline; text-underline-offset: 0.15em; display: inline-block; padding: 0.625rem 0; }
+    button:focus-visible, a:focus-visible { outline: 3px solid var(--jl-focus); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+    <h1><?php echo esc_html($title); ?></h1>
+    <p class="jl-qr-status"><?php
+        /* translators: %s: order status */
+        echo esc_html(sprintf(__('Estado actual: %s', 'inversionesjl22-site'), wc_get_order_status_name($status)));
+    ?></p>
+    <p><?php
+        echo esc_html($completes
+            ? __('Al confirmar, el pedido pasa a Completado.', 'inversionesjl22-site')
+            : __('Al confirmar se registra el escaneo; el estado del pedido no cambia.', 'inversionesjl22-site'));
+    ?></p>
+    <p class="jl-qr-note"><?php esc_html_e('Este código QR es de una factura anterior y pide un paso más. Las facturas nuevas completan el pedido con un solo escaneo.', 'inversionesjl22-site'); ?></p>
+    <form method="post" action="<?php echo esc_url($action); ?>" class="jl-qr-actions">
+        <?php wp_nonce_field(inversionesjl22_site_qr_nonce_action($order_id)); ?>
+        <button type="submit"><?php echo esc_html($completes ? __('Completar pedido', 'inversionesjl22-site') : __('Registrar escaneo', 'inversionesjl22-site')); ?></button>
+        <a href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Cancelar', 'inversionesjl22-site'); ?></a>
+    </form>
+</main>
+</body>
+</html>
+<?php
 }
 
 /**
@@ -235,17 +360,65 @@ function checkQrScanCallback() {
     ]);
 }
 
+/**
+ * The QR of $text as a PNG data URI, or false if it cannot be made (the invoice then prints
+ * without it, as it did when the old service did not answer).
+ *
+ * Made here with chillerlan/php-qrcode (vendor/autoload.php): before, the image came from
+ * api.qrserver.com, which received the site's link and the order ID of every invoice and left
+ * the QR depending on a third party being up. The PNG is written below without GD (only zlib),
+ * so it does not depend on an image extension of the host: one byte per pixel, black or white,
+ * at least $size pixels wide and a whole number of pixels per module, so the modules stay sharp
+ * when Dompdf scales it to the invoice's 20 mm. ECC level M (15 %) for the thermal printers.
+ *
+ * @param string $text
+ * @param int    $size minimum width in pixels.
+ * @return string|false
+ */
 function generateQrCode($text = '', $size = 100) {
-    $encoded_text = urlencode($text);
-    $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data={$encoded_text}";
+    if ('' === (string) $text || !function_exists('gzcompress')) {
+        return false;
+    }
+    require_once INVERSIONESJL22_SITE_DIR . 'vendor/autoload.php';
 
-    $response = wp_remote_get( $qr_url );
-    if ( ! is_wp_error( $response ) ) {
-        $image_data = wp_remote_retrieve_body( $response );
-        return 'data:image/png;base64,' . base64_encode( $image_data );
+    try {
+        $options = new \InversionesJL22Site\Vendor\chillerlan\QRCode\QROptions([
+            'eccLevel'      => \InversionesJL22Site\Vendor\chillerlan\QRCode\Common\EccLevel::M,
+            'addQuietzone'  => true,
+            'quietzoneSize' => 4,
+        ]);
+        $qr = new \InversionesJL22Site\Vendor\chillerlan\QRCode\QRCode($options);
+        $qr->addByteSegment((string) $text);
+        $matrix = $qr->getQRMatrix()->getMatrix(true);
+    } catch (\Throwable $e) {
+        return false;
     }
 
-    return false;
+    $modules = count($matrix);
+    if ($modules < 21) {
+        return false;
+    }
+    $scale = max(4, (int) ceil(max(1, (int) $size) * 4 / $modules)); // ~4× $size: crisp in print
+    $width = $modules * $scale;
+
+    $raw = '';
+    foreach ($matrix as $row) {
+        $line = "\0"; // filter: none
+        foreach ($row as $dark) {
+            $line .= str_repeat($dark ? "\x00" : "\xFF", $scale);
+        }
+        $raw .= str_repeat($line, $scale);
+    }
+
+    $chunk = static function (string $type, string $data): string {
+        return pack('N', strlen($data)) . $type . $data . pack('N', crc32($type . $data));
+    };
+    $png = "\x89PNG\r\n\x1a\n"
+        . $chunk('IHDR', pack('NNCCCCC', $width, $width, 8, 0, 0, 0, 0)) // 8-bit greyscale
+        . $chunk('IDAT', gzcompress($raw, 9))
+        . $chunk('IEND', '');
+
+    return 'data:image/png;base64,' . base64_encode($png);
 }
 
 if (class_exists('WPO_WCPDF')) {
