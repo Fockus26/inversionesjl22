@@ -105,3 +105,8 @@ wp-content/debug.log
 
 # Claude Desktop worktrees (web-agent-kit)
 .claude/worktrees/
+
+# ===================
+# Showcase: frames of the trailer take (scratch)
+# ===================
+docs/showcase/take/
