@@ -12,7 +12,10 @@
     "local:wp": "docker compose --env-file .env.local --profile cli run --rm wpcli wp",
     "shots:publish": "bash scripts/publish-pr-shots.sh .pr-shots",
     "local:down": "docker compose --env-file .env.local down",
-    "build:css": "sass --no-source-map --style=expanded wp-content/plugins/inversionesjl22-site/assets/scss/site.scss wp-content/plugins/inversionesjl22-site/assets/site.css"
+    "build:css": "sass --no-source-map --style=expanded wp-content/plugins/inversionesjl22-site/assets/scss/site.scss wp-content/plugins/inversionesjl22-site/assets/site.css",
+    "demo:up": "bash scripts/demo-up.sh",
+    "demo:down": "docker compose --env-file /dev/null -f docker-compose.demo.yml down",
+    "demo:wp": "docker compose --env-file /dev/null -f docker-compose.demo.yml --profile cli run --rm wpcli wp"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

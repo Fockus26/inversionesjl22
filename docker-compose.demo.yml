@@ -1,0 +1,74 @@
+# Demo copy: WordPress + WooCommerce + the site plugin, with invented data only.
+# No production backup, no premium theme, no customer data: it is what the trailer, the
+# portfolio and anyone without access to the hosting can run.
+#
+#   bun run demo:up      (starts it and seeds it the first time: scripts/demo-up.sh)
+#   bun run demo:down    (stops it; `docker compose --env-file /dev/null -f docker-compose.demo.yml down -v` wipes it)
+#
+# http://localhost:8090 · email in Mailpit http://localhost:8026 · accounts in .env.demo.local
+name: inversionesjl22-demo
+
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_PASSWORD: wordpress
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DEBUG: 1
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    define( 'WP_HOME', 'http://localhost:${DEMO_PORT:-8090}' );
+    define( 'WP_SITEURL', 'http://localhost:${DEMO_PORT:-8090}' );
+    define( 'WP_DEBUG_LOG', true );
+    define( 'WP_DEBUG_DISPLAY', false );
+
+x-wp-volumes: &wp-volumes
+  - wp:/var/www/html
+  - ./wp-content/plugins/inversionesjl22-site:/var/www/html/wp-content/plugins/inversionesjl22-site
+  - ./scripts/demo:/demo:ro
+  - ./local/mu-plugins/kit-mailpit.php:/var/www/html/wp-content/mu-plugins/kit-mailpit.php:ro
+  - ./local/php-local.ini:/usr/local/etc/php/conf.d/zz-kit-local.ini:ro
+
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5m
+
+  wordpress:
+    image: wordpress:7.1.4-php8.3-apache
+    depends_on:
+      db: { condition: service_healthy }
+    ports:
+      - "${DEMO_PORT:-8090}:80"
+    environment: *wp-env
+    volumes: *wp-volumes
+
+  wpcli:
+    image: wordpress:cli-php8.3
+    profiles: [cli]
+    user: "33:33"
+    entrypoint: ["/usr/bin/env"]
+    depends_on:
+      db: { condition: service_healthy }
+    environment: *wp-env
+    volumes: *wp-volumes
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "${DEMO_MAILPIT_PORT:-8026}:8025"
+
+volumes:
+  db:
+  wp:
