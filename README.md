@@ -10,8 +10,7 @@ pedidos de su etapa.*
 
 [Live store](https://inversionesjl22.com) · In production · CI: PHP lint (7.4 and 8.3) and compiled-CSS check
 
-<!-- Poster of the trailer (docs/showcase/media/poster.jpg): the orders list in wp-admin with
-     the store's own statuses, from the demo copy. Added when the trailer is recorded. -->
+![The orders list in wp-admin with the store's own statuses (demo copy, invented data)](docs/showcase/media/poster.jpg)
 
 ## What it does
 
