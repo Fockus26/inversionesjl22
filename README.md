@@ -10,7 +10,7 @@ pedidos de su etapa.*
 
 [Live store](https://inversionesjl22.com) · In production · CI: PHP lint (7.4 and 8.3) and compiled-CSS check
 
-![The orders list in wp-admin with the store's own statuses (demo copy, invented data)](docs/showcase/media/poster.jpg)
+![The plugin's Estados y flujo screen: the live diagram of the order flow (demo copy, invented data)](docs/showcase/media/poster.jpg)
 
 ## What it does
 

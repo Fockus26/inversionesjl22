@@ -26,6 +26,7 @@ x-wp-volumes: &wp-volumes
   - ./wp-content/plugins/inversionesjl22-site:/var/www/html/wp-content/plugins/inversionesjl22-site
   - ./scripts/demo:/demo:ro
   - ./local/mu-plugins/kit-mailpit.php:/var/www/html/wp-content/mu-plugins/kit-mailpit.php:ro
+  - ./scripts/demo/mu-demo.php:/var/www/html/wp-content/mu-plugins/mu-demo.php:ro
   - ./local/php-local.ini:/usr/local/etc/php/conf.d/zz-kit-local.ini:ro
 
 services:

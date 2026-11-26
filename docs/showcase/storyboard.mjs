@@ -1,7 +1,10 @@
-// Trailer of the demo copy (docker-compose.demo.yml, invented data): the orders list in
-// wp-admin with the store's own statuses, the preview of one order, and back to the list.
+// Trailer of the plugin's own screens in the demo copy (docker-compose.demo.yml, invented
+// data, the same plugin as staging and production): the live flow diagram of Estados y flujo
+// (hovering a status lights up its arrows), the permissions matrix of Roles y permisos for
+// each role, and back to the diagram. Documentos is left out: its PDF preview is an embedded
+// PDF, which the headless browser draws blank.
 // Credentials come from .env.demo.local (scripts/demo-up.sh), passed in the environment.
-export const start = "/wp-admin/edit.php?post_type=shop_order";
+export const start = "/wp-admin/admin.php?page=jl22-statuses";
 
 export async function setup(page) {
   const base = process.env.DEMO_URL ?? "http://localhost:8090";
@@ -12,15 +15,24 @@ export async function setup(page) {
   await page.waitForURL("**/wp-admin/**");
 }
 
+const node = (page, name) => page.locator(".jl-node__button").filter({ hasText: name });
+const tab = (page, name) => page.locator("a.jl-tab").filter({ hasText: name });
+
 export async function scene(page, h) {
-  await h.pause(1800);
-  const row = page.locator("#the-list tr").filter({ hasText: "Procesando" }).first();
-  await row.hover();
-  await h.pause(900);
-  await row.locator("a.order-preview").click();
-  await page.locator(".wc-backbone-modal-content").waitFor();
-  await h.pause(3200);
-  await page.locator(".wc-backbone-modal .modal-close").first().click();
-  await page.mouse.move(0, 0);
-  await h.pause(1800);
+  await h.pause(1000);
+  await node(page, "Reservado").hover();
+  await h.pause(1100);
+  await node(page, "Impreso").hover();
+  await h.pause(1100);
+  await page.mouse.move(0, 1079);
+  await tab(page, "Roles y permisos").click();
+  await page.waitForLoadState("networkidle");
+  await h.pause(1300);
+  await tab(page, "Storage Manager").click();
+  await page.waitForLoadState("networkidle");
+  await h.pause(1300);
+  await tab(page, "Estados y flujo").click();
+  await page.waitForLoadState("networkidle");
+  await page.mouse.move(0, 1079);
+  await h.pause(1000);
 }

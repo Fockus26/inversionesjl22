@@ -41,6 +41,8 @@ wp option update woocommerce_default_country CO:NSA
 wp option update woocommerce_price_num_decimals 0
 wp option update woocommerce_price_thousand_sep .
 wp option update woocommerce_price_decimal_sep ,
+# Open store: without it WooCommerce marks a new site "coming soon" in the admin bar.
+wp option update woocommerce_coming_soon no
 wp plugin activate inversionesjl22-site
 # On a site they run on the first admin visit; here now. The roles (004) come from them.
 wp eval 'print_r( inversionesjl22_site_run_migrations() );' --user=demo-admin
